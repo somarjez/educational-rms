@@ -5,6 +5,7 @@ import './styles/BookingsVisualization.css';
 
 const BookingsVisualization = () => {
   const [bookings, setBookings] = useState([]);
+  const [totalBookings, setTotalBookings] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filterStatus, setFilterStatus] = useState('');
@@ -17,22 +18,27 @@ const BookingsVisualization = () => {
     setLoading(true);
     setError(null);
     try {
-      const params = {};
+      const params = { page_size: 100 };
       if (filterStatus) params.status = filterStatus;
 
       const response = await getBookings(params);
       
       // Handle paginated response
       let allBookings = [];
+      let totalCount = 0;
       if (response.results) {
         allBookings = response.results;
+        totalCount = Number(response.count || allBookings.length);
       } else if (Array.isArray(response)) {
         allBookings = response;
+        totalCount = allBookings.length;
       } else {
-        allBookings = response || [];
+        allBookings = response ? [response] : [];
+        totalCount = allBookings.length;
       }
 
       setBookings(allBookings);
+      setTotalBookings(totalCount);
     } catch (err) {
       setError('Failed to fetch bookings');
       console.error('Error fetching bookings:', err);
@@ -119,7 +125,7 @@ const BookingsVisualization = () => {
       {/* Summary Stats */}
       <div className="summary-stats">
         <div className="stat-card">
-          <div className="stat-value">{bookings.length}</div>
+          <div className="stat-value">{totalBookings}</div>
           <div className="stat-label">Total Bookings</div>
         </div>
         <div className="stat-card">
