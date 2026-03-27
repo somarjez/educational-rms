@@ -9,7 +9,7 @@ import ConfirmModal from '../../Common/Modal/ConfirmModal';
 import AlertModal from '../../Common/Modal/AlertModal';
 import './styles/BookingManagement.css';
 
-const BookingManagement = () => {
+const BookingManagement = ({ initialStatus = '', heading = 'Booking Management', showCreateButton = true }) => {
   const [bookings, setBookings] = useState([]);
   const [totalBookings, setTotalBookings] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -30,12 +30,17 @@ const BookingManagement = () => {
   const [alertModal, setAlertModal] = useState({ isOpen: false, title: '', message: '', type: 'info' });
   
   const [filters, setFilters] = useState({
-    status: '',
+    status: initialStatus,
     room_id: '',
     start_date: '',
     end_date: '',
     is_recurring: ''
   });
+
+  useEffect(() => {
+    setFilters(prev => ({ ...prev, status: initialStatus }));
+    setCurrentPage(1);
+  }, [initialStatus]);
 
   const statusOptions = [
     { value: '', label: 'All Status' },
@@ -328,14 +333,16 @@ const BookingManagement = () => {
   return (
     <div className="booking-management">
       <div className="booking-management-header">
-        <h2>Booking Management</h2>
+        <h2>{heading}</h2>
         <div className="header-actions">
-          <button
-            className="btn btn-primary"
-            onClick={() => setShowCreateBooking(true)}
-          >
-            + New Booking
-          </button>
+          {showCreateButton && (
+            <button
+              className="btn btn-primary"
+              onClick={() => setShowCreateBooking(true)}
+            >
+              + New Booking
+            </button>
+          )}
           {selectedBookings.length > 0 && (
             <>
               <button

@@ -14,6 +14,12 @@ const QuickBookingApproval = ({ booking, onApproved, onRejected }) => {
     try {
       await approveBooking(booking.id);
       onApproved(booking.id);
+      setAlertModal({
+        isOpen: true,
+        title: 'Success',
+        message: 'Booking approved successfully',
+        type: 'success'
+      });
     } catch (error) {
       console.error('Failed to approve booking:', error);
       setAlertModal({
@@ -40,9 +46,16 @@ const QuickBookingApproval = ({ booking, onApproved, onRejected }) => {
 
     setLoading(true);
     try {
-      await rejectBooking(booking.id, { rejection_reason: rejectionReason });
+      await rejectBooking(booking.id, rejectionReason.trim());
       onRejected(booking.id);
       setShowRejectModal(false);
+      setRejectionReason('');
+      setAlertModal({
+        isOpen: true,
+        title: 'Success',
+        message: 'Booking rejected successfully',
+        type: 'success'
+      });
     } catch (error) {
       console.error('Failed to reject booking:', error);
       setAlertModal({

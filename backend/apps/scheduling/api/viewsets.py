@@ -284,7 +284,7 @@ class BookingViewSet(viewsets.ModelViewSet):
         queryset = Booking.objects.select_related('room', 'user', 'time_slot', 'approved_by')
         
         # Admin sees all, others see only their bookings
-        if not user.role.upper().upper() == 'ADMIN':
+        if user.role.upper() != 'ADMIN':
             queryset = queryset.filter(user=user)
         
         # Filter by status

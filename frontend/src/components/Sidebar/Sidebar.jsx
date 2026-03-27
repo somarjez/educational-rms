@@ -26,11 +26,11 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check if user is admin - handle multiple role formats
-  const isAdmin = userRole === 'ADMIN' 
-    || userRole === 'FACULTY' 
-    || userRole?.toUpperCase?.() === 'ADMIN'
-    || userRole?.toUpperCase?.() === 'FACULTY';
+  const normalizedRole = userRole?.toUpperCase?.() || '';
+  const isAdmin = normalizedRole === 'ADMIN';
+  const isFaculty = normalizedRole === 'FACULTY';
+  const isAdminLike = isAdmin || isFaculty;
+  const isStudent = normalizedRole === 'STUDENT' || !normalizedRole;
 
   const handleToggleCollapse = () => {
     const newCollapsedState = !isCollapsed;
@@ -40,7 +40,7 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
     }
   };
 
-  const menuItems = [
+  const adminMenuItems = [
     {
       id: 'dashboard',
       label: 'Dashboard',
@@ -52,7 +52,7 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
       id: 'scheduling',
       label: 'Scheduling & Resources',
       icon: <FiCalendar />,
-      available: isAdmin,
+      available: isAdminLike,
       path: '/admin-scheduling',
       state: { tab: 'calendar' },
       description: 'Manage scheduling, bookings, and rooms',
@@ -61,15 +61,23 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
       id: 'bookings',
       label: 'Bookings Overview',
       icon: <FiCalendar />,
-      available: isAdmin,
+      available: isAdminLike,
       path: '/bookings',
       description: 'View and manage all resource bookings',
+    },
+    {
+      id: 'capacity-analysis',
+      label: 'Capacity Analysis',
+      icon: <FiBarChart2 />,
+      available: isAdminLike,
+      path: '/modeling/resource-utilization',
+      description: 'Analyze current room and resource utilization',
     },
     {
       id: 'modeling-simulation',
       label: 'Modeling & Simulation',
       icon: <FiActivity />,
-      available: isAdmin,
+      available: isAdminLike,
       submenu: [
         {
           id: 'modeling',
@@ -153,6 +161,53 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
       ],
     },
   ];
+
+  const studentMenuItems = [
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: <FiGrid />,
+      path: '/dashboard',
+      available: isStudent,
+    },
+    {
+      id: 'bookings',
+      label: 'Bookings',
+      icon: <FiCalendar />,
+      path: '/student/bookings',
+      available: isStudent,
+    },
+    {
+      id: 'schedule',
+      label: 'Schedule',
+      icon: <FiClock />,
+      path: '/student/schedule',
+      available: isStudent,
+    },
+    {
+      id: 'equipment',
+      label: 'Equipment',
+      icon: <FiTool />,
+      path: '/student/equipment',
+      available: isStudent,
+    },
+    {
+      id: 'notifications',
+      label: 'Notifications',
+      icon: <FiAlertCircle />,
+      path: '/student/notifications',
+      available: isStudent,
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: <FiSettings />,
+      path: '/student/settings',
+      available: isStudent,
+    },
+  ];
+
+  const menuItems = isAdminLike ? adminMenuItems : studentMenuItems;
 
   const toggleSubmenu = (menuId) => {
     setExpandedMenus((prev) => ({

@@ -4,6 +4,7 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   padding: 2rem;
   margin-bottom: 2rem;
+  overflow-x: hidden;
 }
 
 .sectionHeader {
@@ -30,9 +31,21 @@
 
 .schedulingStatsGrid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 1rem;
   margin-bottom: 2rem;
+}
+
+.schedulingStatsGrid :global(.scheduling-stat-card) {
+  min-width: 0;
+}
+
+.schedulingStatsGrid :global(.stat-info) {
+  min-width: 0;
+}
+
+.schedulingStatsGrid :global(.stat-info .stat-label) {
+  overflow-wrap: anywhere;
 }
 
 .pendingRequestsSection {
@@ -44,4 +57,101 @@
   font-weight: 600;
   color: #1e293b;
   margin-bottom: 0.5rem;
+}
+
+.pendingOverviewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.reviewRequestsBtn {
+  background: #1d4ed8;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.45rem 0.95rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.pendingOverviewCard {
+  border: 1px solid #dbeafe;
+  background: #f8fbff;
+  border-radius: 10px;
+  padding: 0.9rem;
+}
+
+.pendingOverviewText {
+  margin: 0;
+  color: #334155;
+}
+
+.pendingPreviewList {
+  list-style: none;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.pendingPreviewItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+}
+
+.pendingPreviewPrimary {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.pendingPreviewSecondary {
+  color: #64748b;
+  font-size: 0.88rem;
+}
+
+@media (max-width: 1280px) {
+  .schedulingStatsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .adminSchedulingSection {
+    padding: 1.25rem;
+  }
+
+  .schedulingStatsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+
+  .schedulingStatsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .pendingPreviewItem {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .reviewRequestsBtn {
+    width: 100%;
+  }
 }

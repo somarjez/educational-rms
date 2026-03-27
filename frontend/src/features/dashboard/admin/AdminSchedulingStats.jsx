@@ -2,17 +2,13 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiClock, FiHome, FiWatch, FiList, FiCalendar, FiAlertTriangle } from 'react-icons/fi';
 import SchedulingStatCard from './Stats/SchedulingStatCard';
-import PendingRequestsList from './Requests/PendingRequestsList';
-import usePendingRequests from '../../../hooks/booking/usePendingRequests';
 import styles from './styles/AdminSchedulingStats.module.css';
 
-const AdminSchedulingStats = ({ schedulingStats, onBookingUpdate }) => {
+const AdminSchedulingStats = ({ schedulingStats, onBookingUpdate, userRole }) => {
   const navigate = useNavigate();
-  const {
-    pendingRequests,
-    handleBookingApproved,
-    handleBookingRejected
-  } = usePendingRequests(schedulingStats?.pending_requests || [], onBookingUpdate);
+  const pendingRequests = schedulingStats?.pending_requests || [];
+  const normalizedRole = userRole?.toUpperCase?.() || '';
+  const isAdminOnly = normalizedRole === 'ADMIN';
 
   if (!schedulingStats) return null;
 
@@ -65,14 +61,31 @@ const AdminSchedulingStats = ({ schedulingStats, onBookingUpdate }) => {
       </div>
 
       {/* Pending Requests with Quick Actions */}
-      {pendingRequests && pendingRequests.length > 0 && (
+      {isAdminOnly && pendingRequests && pendingRequests.length > 0 && (
         <div className={styles.pendingRequestsSection}>
-          <h3 className={styles.subsectionTitle}>Pending Approval Requests</h3>
-          <PendingRequestsList
-            requests={pendingRequests}
-            onApproved={handleBookingApproved}
-            onRejected={handleBookingRejected}
-          />
+          <div className={styles.pendingOverviewHeader}>
+            <h3 className={styles.subsectionTitle}>Pending Approval Requests</h3>
+            <button
+              className={styles.reviewRequestsBtn}
+              onClick={() => navigate('/approval-requests')}
+            >
+              Review Requests
+            </button>
+          </div>
+
+          <div className={styles.pendingOverviewCard}>
+            <p className={styles.pendingOverviewText}>
+              You currently have <strong>{schedulingStats.pending_approvals || pendingRequests.length}</strong> request(s) waiting for approval review.
+            </p>
+            <ul className={styles.pendingPreviewList}>
+              {pendingRequests.slice(0, 3).map((request) => (
+                <li key={request.id} className={styles.pendingPreviewItem}>
+                  <span className={styles.pendingPreviewPrimary}>{request.user_name} - {request.room_name}</span>
+                  <span className={styles.pendingPreviewSecondary}>{request.date}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       )}
     </div>

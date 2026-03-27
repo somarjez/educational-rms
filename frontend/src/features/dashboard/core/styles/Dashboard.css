@@ -93,6 +93,13 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+.profile-trigger {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
 .user-info {
   display: flex;
   flex-direction: column;
@@ -403,6 +410,104 @@
   width: 100%;
 }
 
+.dashboard-row-two {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-row-three {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-row-legacy {
+  margin-top: 0.5rem;
+}
+
+.equipment-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.equipment-loading {
+  color: #64748b;
+}
+
+.equipment-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.equipment-metric {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.equipment-metric-label {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.equipment-metric-value {
+  color: #1e293b;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.notification-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.notification-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+}
+
+.notification-title {
+  margin: 0;
+  color: #1e293b;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.notification-message {
+  margin: 0.25rem 0 0;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.notification-empty {
+  color: #64748b;
+  margin: 0;
+}
+
+.compact-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.compact-panel-text {
+  color: #64748b;
+  margin: 0 0 1rem;
+}
+
 .section-card {
   background: white;
   padding: 2rem;
@@ -656,6 +761,11 @@
 /* Responsive Design */
 @media (max-width: 1024px) {
   .content-sections {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-row-two,
+  .dashboard-row-three {
     grid-template-columns: 1fr;
   }
 

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../../services/api';
 
-const DASHBOARD_CACHE_TTL_MS = 30 * 1000;
 const dashboardMemoryCache = new Map();
 
 const getCacheKey = (user) => `${user?.id || 'anon'}:${user?.role || 'UNKNOWN'}`;
@@ -18,11 +17,6 @@ const useDashboardData = (user, navigate) => {
     }
 
     const cacheKey = getCacheKey(user);
-    const cached = dashboardMemoryCache.get(cacheKey);
-    if (cached && Date.now() - cached.ts < DASHBOARD_CACHE_TTL_MS) {
-      setDashboardData(cached.data);
-      setLoading(false);
-    }
 
     const fetchDashboardData = async () => {
       try {

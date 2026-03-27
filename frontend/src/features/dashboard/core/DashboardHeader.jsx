@@ -3,7 +3,7 @@ import { FaUserCircle, FaChalkboardTeacher } from 'react-icons/fa';
 import { getInitials } from '../../../utils/userUtils';
 import './styles/Dashboard.css';
 
-const DashboardHeader = ({ user, onLogout }) => {
+const DashboardHeader = ({ user, onLogout, onProfileClick }) => {
   return (
     <div className="dashboard-header">
       <div className="header-content">
@@ -21,16 +21,16 @@ const DashboardHeader = ({ user, onLogout }) => {
           </div>
         </div>
         <div className="header-user">
-          <div className="user-avatar">
+          <button className="user-avatar profile-trigger" onClick={onProfileClick}>
             <FaUserCircle size={32} color="#2563eb" style={{ marginRight: '0.5em' }} />
             <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>
               {getInitials(user.first_name, user.last_name, user.username)}
             </span>
-          </div>
+          </button>
           <div className="user-info">
-            <p className="user-name" style={{ fontWeight: 700, fontSize: '1rem', color: '#1e293b' }}>
+            <button className="user-name profile-trigger" style={{ fontWeight: 700, fontSize: '1rem', color: '#1e293b' }} onClick={onProfileClick}>
               {user.first_name} {user.last_name}
-            </p>
+            </button>
             <p className="user-role" style={{ color: '#64748b', fontSize: '0.95rem' }}>{user.role || 'User'}</p>
           </div>
           <button className="logout-btn" onClick={onLogout}>

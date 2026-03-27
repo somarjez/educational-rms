@@ -1,6 +1,6 @@
 .admin-scheduling {
   width: 100%;
-  min-height: 100vh;
+  min-height: 100%;
   background: linear-gradient(135deg, #f0f4f8 0%, #e8ecf1 100%);
   font-family: 'Roboto', Arial, sans-serif;
 }
@@ -225,6 +225,8 @@
   border-bottom: 2px solid #e5e7eb;
   position: relative;
   font-family: 'Roboto', Arial, sans-serif;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .tab-wrapper {
@@ -246,6 +248,14 @@
   transition: all 0.3s ease;
   margin-bottom: -2px;
   font-family: 'Roboto', Arial, sans-serif;
+  white-space: nowrap;
+}
+
+.tab-btn:focus-visible,
+.guide-btn:focus-visible,
+.feature-item:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
 }
 
 .tab-btn:hover {
@@ -297,7 +307,7 @@
 
 .tab-content {
   background: #f0f4f8;
-  min-height: calc(100vh - 200px);
+  min-height: 60vh;
   font-family: 'Roboto', Arial, sans-serif;
 }
 
@@ -306,6 +316,14 @@
   .feature-guide {
     width: 90vw;
     right: 5vw;
+  }
+
+  .tab-navigation {
+    padding: 0 20px;
+  }
+
+  .tab-tooltip {
+    display: none;
   }
 }
 
@@ -325,7 +343,6 @@
 
   .tab-navigation {
     padding: 0 10px;
-    overflow-x: auto;
   }
 
   .tab-btn {
@@ -382,7 +399,8 @@
 
   .feature-guide {
     width: 95vw;
-    max-height: 70vh;  }
+    max-height: 70vh;
+  }
 }
 
 /* Quick Reference Modal */

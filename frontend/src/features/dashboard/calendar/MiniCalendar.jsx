@@ -5,10 +5,12 @@ import DateDisplay from './MiniCalendar/DateDisplay';
 import useCalendarEvents from '../../../hooks/booking/useCalendarEvents';
 import styles from './styles/MiniCalendar.module.css';
 
-const MiniCalendar = () => {
+const MiniCalendar = ({ userRole, user }) => {
   const navigate = useNavigate();
   const [selectedDate] = useState(new Date());
-  const { events, loading } = useCalendarEvents(selectedDate);
+  const { events, loading } = useCalendarEvents(selectedDate, userRole, user);
+  const normalizedRole = userRole?.toUpperCase?.() || '';
+  const isAdminLike = normalizedRole === 'ADMIN' || normalizedRole === 'FACULTY';
 
   const getStatusColor = (status) => {
     const colors = {
@@ -22,14 +24,14 @@ const MiniCalendar = () => {
   };
 
   return (
-    <div className={styles.miniCalendarWidget}>
+    <div className={styles.miniCalendarWidget} id="schedule-panel">
       <div className={styles.widgetHeader}>
         <h3>Today's Schedule</h3>
         <button 
           className={styles.viewFullBtn}
-          onClick={() => navigate('/admin-scheduling', { state: { tab: 'calendar' } })}
+          onClick={() => navigate(isAdminLike ? '/admin-scheduling' : '/student/schedule')}
         >
-          Full Calendar
+          {isAdminLike ? 'Full Calendar' : 'View Schedule'}
         </button>
       </div>
 

@@ -21,6 +21,13 @@ import EquipmentUsageSimulation from '../components/Simulation/EquipmentUsageSim
 import PeakHourScenario from '../components/Simulation/PeakHourScenario';
 import ShortageScenario from '../components/Simulation/ShortageScenario';
 import WhatIfAnalysis from '../components/Simulation/WhatIfAnalysis';
+import PendingApprovalRequestsPage from '../pages/Admin/PendingApprovalRequestsPage';
+import StudentBookingsPage from '../pages/Student/StudentBookingsPage';
+import StudentSchedulePage from '../pages/Student/StudentSchedulePage';
+import StudentEquipmentPage from '../pages/Student/StudentEquipmentPage';
+import StudentNotificationsPage from '../pages/Student/StudentNotificationsPage';
+import StudentSettingsPage from '../pages/Student/StudentSettingsPage';
+import StudentProfilePage from '../pages/Student/StudentProfilePage';
 
 const AppRoutes = () => {
   const { user, initAuth } = useAuthStore();
@@ -51,9 +58,20 @@ const AppRoutes = () => {
         <Route
           path="/admin-scheduling"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRole={["ADMIN", "FACULTY"]}>
               <MainLayout userRole={user?.role}>
                 <AdminScheduling />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <MainLayout userRole={user?.role}>
+                <Dashboard />
               </MainLayout>
             </ProtectedRoute>
           }
@@ -65,6 +83,83 @@ const AppRoutes = () => {
             <ProtectedRoute requiredRole={["ADMIN", "FACULTY"]}>
               <MainLayout userRole={user?.role}>
                 <BookingsVisualization />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/approval-requests"
+          element={
+            <ProtectedRoute requiredRole={["ADMIN"]}>
+              <MainLayout userRole={user?.role}>
+                <PendingApprovalRequestsPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/student/bookings"
+          element={
+            <ProtectedRoute requiredRole={["STUDENT"]}>
+              <MainLayout userRole={user?.role}>
+                <StudentBookingsPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/student/schedule"
+          element={
+            <ProtectedRoute requiredRole={["STUDENT"]}>
+              <MainLayout userRole={user?.role}>
+                <StudentSchedulePage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/student/equipment"
+          element={
+            <ProtectedRoute requiredRole={["STUDENT"]}>
+              <MainLayout userRole={user?.role}>
+                <StudentEquipmentPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/student/notifications"
+          element={
+            <ProtectedRoute requiredRole={["STUDENT"]}>
+              <MainLayout userRole={user?.role}>
+                <StudentNotificationsPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/student/settings"
+          element={
+            <ProtectedRoute requiredRole={["STUDENT"]}>
+              <MainLayout userRole={user?.role}>
+                <StudentSettingsPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/student/profile"
+          element={
+            <ProtectedRoute requiredRole={["STUDENT"]}>
+              <MainLayout userRole={user?.role}>
+                <StudentProfilePage />
               </MainLayout>
             </ProtectedRoute>
           }
@@ -175,7 +270,7 @@ const AppRoutes = () => {
         <Route
           path="/features/*"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRole={["ADMIN", "FACULTY"]}>
               <MainLayout userRole={user?.role}>
                 <AdminScheduling />
               </MainLayout>
