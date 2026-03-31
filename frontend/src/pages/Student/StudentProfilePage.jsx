@@ -5,7 +5,7 @@ import EditProfileModal from '../../components/Profile/EditProfileModal';
 import './styles/StudentPages.css';
 
 const StudentProfilePage = () => {
-  const { setUser } = useAuthStore();
+  const { user } = useAuthStore();
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,22 +15,25 @@ const StudentProfilePage = () => {
     setLoading(true);
     setError('');
 
+    if (!user) {
+      setError('Unable to load your profile details right now.');
+      setProfileData(null);
+      setLoading(false);
+      return;
+    }
+
     try {
-      const [currentUser, profile] = await Promise.all([
-        authApi.getCurrentUser(),
-        authApi.getProfile(),
-      ]);
+      const profile = await authApi.getProfile();
 
       const mergedUser = {
-        ...currentUser,
+        ...user,
         profile: {
-          ...currentUser.profile,
+          ...user.profile,
           ...profile,
         },
       };
 
       setProfileData(mergedUser);
-      setUser(mergedUser);
     } catch (loadError) {
       setError('Unable to load your profile details right now.');
       setProfileData(null);
@@ -41,7 +44,7 @@ const StudentProfilePage = () => {
 
   useEffect(() => {
     loadProfile();
-  }, []);
+  }, [user]);
 
   return (
     <div className="student-page">

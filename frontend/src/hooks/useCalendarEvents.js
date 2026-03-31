@@ -9,7 +9,7 @@ const useCalendarEvents = (selectedDate) => {
     const fetchEvents = async () => {
       try {
         const dateStr = selectedDate.toISOString().split('T')[0];
-        const response = await getCalendarEvents('day', dateStr);
+        const response = await getCalendarEvents(dateStr, dateStr);
         setEvents(response.data);
       } catch (error) {
         setEvents([]);

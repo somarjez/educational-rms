@@ -58,7 +58,7 @@ const AppRoutes = () => {
         <Route
           path="/admin-scheduling"
           element={
-            <ProtectedRoute requiredRole={["ADMIN", "FACULTY"]}>
+            <ProtectedRoute>
               <MainLayout userRole={user?.role}>
                 <AdminScheduling />
               </MainLayout>
@@ -270,7 +270,7 @@ const AppRoutes = () => {
         <Route
           path="/features/*"
           element={
-            <ProtectedRoute requiredRole={["ADMIN", "FACULTY"]}>
+            <ProtectedRoute>
               <MainLayout userRole={user?.role}>
                 <AdminScheduling />
               </MainLayout>

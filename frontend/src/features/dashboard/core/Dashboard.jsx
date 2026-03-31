@@ -8,7 +8,6 @@ import WelcomeSection from './WelcomeSection';
 import useInactivityLogout from '../../../hooks/useInactivityLogout';
 import useDashboardData from '../../../hooks/booking/useDashboardData';
 import ErrorMessage from '../../../components/Error/ErrorMessage';
-import { authApi } from '../../../services/authApi';
 import { getEquipment } from '../../../services/schedulingApi';
 import './styles/Dashboard.css';
 
@@ -45,7 +44,7 @@ const Dashboard = () => {
   const [equipmentLoading, setEquipmentLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout, setUser } = useAuthStore();
+  const { user, logout } = useAuthStore();
   useInactivityLogout(logout, navigate);
   const { dashboardData, loading, error, refreshDashboard } = useDashboardData(user, navigate);
   const normalizedUserRole = user?.role?.toUpperCase?.() || '';
@@ -135,24 +134,8 @@ const Dashboard = () => {
 
   const handleProfileUpdate = async () => {
     try {
-      const [currentUser, profile] = await Promise.all([
-        authApi.getCurrentUser(),
-        authApi.getProfile(),
-      ]);
-
-      const mergedUser = {
-        ...currentUser,
-        profile: {
-          ...currentUser.profile,
-          phone_number: profile.phone_number,
-          bio: profile.bio,
-          office_location: profile.office_location,
-        },
-      };
-
-      setUser(mergedUser);
       await refreshDashboard();
-    } catch (profileError) {
+    } catch (error) {
       await refreshDashboard();
     }
   };

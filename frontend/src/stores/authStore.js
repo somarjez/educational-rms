@@ -179,9 +179,6 @@ export const useAuthStore = create((set, get) => ({
 
   // Clear error
   clearError: () => set({ error: null }),
-
-  // Update cached authenticated user payload
-  setUser: (user) => set({ user }),
 }));
 
 export default useAuthStore;

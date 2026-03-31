@@ -1,15 +1,24 @@
 """Views for simulation app."""
-import math
-import random
-from collections import deque
+from datetime import datetime
 from django.db.models import Q
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from ..models import SimulationScenario, SimulationResult
-from .serializers import SimulationScenarioSerializer, SimulationResultSerializer
-from apps.scheduling.models import Room, Equipment, RoomEquipment, Booking
+from ..models import SimulationScenario, SimulationResult, SimulationAuditLog
+from ..simulation_engine import estimate_mm_c, simulate_replication
+from .payload_mappers import (
+    serialize_backup_result,
+    serialize_backup_scenario,
+    serialize_history_run,
+)
+from .serializers import (
+    SimulationScenarioSerializer,
+    SimulationResultSerializer,
+    SimulationAuditLogSerializer,
+)
+from .query_filters import build_result_category_filter, build_scenario_filter
+from .snapshot_service import build_system_snapshot_payload
 
 
 class SimulationViewSet(viewsets.ModelViewSet):
@@ -21,17 +30,21 @@ class SimulationViewSet(viewsets.ModelViewSet):
     ordering_fields = ['created_at', 'name']
 
     HISTORY_RETENTION_PER_CATEGORY = 10
-    HISTORY_TYPE_KEYWORDS = {
-        'room-usage': ['room usage simulation', 'room usage'],
-        'equipment-usage': ['equipment usage simulation', 'equipment usage'],
-        'peak-hour': ['peak-hour scenario simulation', 'peak-hour', 'peak hour'],
-        'what-if': ['what-if analysis', 'what-if', 'what if'],
-        'shortage': ['shortage scenario simulation', 'shortage scenario', 'shortage'],
-    }
+    AUDIT_LOG_RETENTION_COUNT = 500
     
     def get_queryset(self):
         """Get all simulations."""
         return SimulationScenario.objects.all()
+
+    def _parse_int_query_param(self, request, name, default, *, min_value=1, max_value=500):
+        """Parse and clamp integer query params, returning (value, error_response)."""
+        raw_value = request.query_params.get(name, default)
+        try:
+            value = int(raw_value)
+        except (TypeError, ValueError):
+            return None, Response({'error': f'{name} must be an integer'}, status=status.HTTP_400_BAD_REQUEST)
+
+        return max(min_value, min(value, max_value)), None
 
     @action(detail=False, methods=['get'])
     def system_snapshot(self, request):
@@ -39,250 +52,33 @@ class SimulationViewSet(viewsets.ModelViewSet):
         start_date = request.query_params.get('start_date')
         end_date = request.query_params.get('end_date')
 
-        rooms = Room.objects.all().prefetch_related('room_equipment__equipment')
-        equipment = Equipment.objects.all()
+        payload = build_system_snapshot_payload(start_date=start_date, end_date=end_date)
+        return Response(payload)
 
-        room_payload = []
-        for room in rooms:
-            eq_list = []
-            for re in room.room_equipment.all():
-                eq_list.append({
-                    'id': re.equipment.id,
-                    'name': re.equipment.name,
-                    'quantity': re.quantity,
-                })
-            room_payload.append({
-                'id': room.id,
-                'name': room.name,
-                'capacity': room.capacity,
-                'equipment': eq_list,
-            })
-
-        equipment_payload = [
-            {
-                'id': eq.id,
-                'name': eq.name,
-                'quantity': eq.quantity,
-                'is_active': eq.is_active,
-            }
-            for eq in equipment
-        ]
-
-        booking_summary = {}
-        bookings = Booking.objects.select_related('room', 'time_slot')
-        if start_date:
-            bookings = bookings.filter(date__gte=start_date)
-        if end_date:
-            bookings = bookings.filter(date__lte=end_date)
-
-        for booking in bookings:
-            duration = (
-                (booking.time_slot.end_time.hour + booking.time_slot.end_time.minute / 60)
-                - (booking.time_slot.start_time.hour + booking.time_slot.start_time.minute / 60)
+    def _log_audit(self, request, action, message, *, level='info', scenario=None, result=None, metadata=None):
+        try:
+            SimulationAuditLog.objects.create(
+                action=action,
+                level=level,
+                message=message,
+                metadata=metadata or {},
+                user=request.user if getattr(request, 'user', None) and request.user.is_authenticated else None,
+                scenario=scenario,
+                result=result,
             )
-            room_id = booking.room_id
-            if room_id not in booking_summary:
-                booking_summary[room_id] = {
-                    'room_id': room_id,
-                    'room_name': booking.room.name,
-                    'total_bookings': 0,
-                    'total_hours': 0.0,
-                }
-            booking_summary[room_id]['total_bookings'] += 1
-            booking_summary[room_id]['total_hours'] += max(duration, 0.0)
+            self._prune_audit_logs()
+        except Exception:
+            # Audit logging failures must not break simulation flows.
+            pass
 
-        return Response({
-            'rooms': room_payload,
-            'equipment': equipment_payload,
-            'booking_summary': list(booking_summary.values())
-        })
-
-    def _get_rng(self, prng, seed):
-        if prng == 'system':
-            return random.SystemRandom()
-        rng = random.Random()
-        if seed is not None:
-            rng.seed(seed)
-        return rng
-
-    def _service_time(self, rng, service_distribution, service_rate, service_time):
-        if service_distribution == 'fixed':
-            return service_time
-        return rng.expovariate(service_rate)
-
-    def _simulate_replication(self, params):
-        arrival_rate = params.get('arrival_rate')
-        service_distribution = params.get('service_distribution', 'exponential')
-        service_rate = params.get('service_rate', 1.0)
-        service_time = params.get('service_time')
-        num_servers = int(params.get('num_servers') or 1)
-        simulation_hours = float(params.get('simulation_hours') or 8)
-        prng = params.get('prng', 'mt19937')
-        seed = params.get('seed')
-
-        rng = self._get_rng(prng, seed)
-
-        if arrival_rate is None or arrival_rate <= 0:
-            raise ValueError('arrival_rate must be greater than 0')
-
-        if service_distribution == 'exponential' and (service_rate is None or service_rate <= 0):
-            raise ValueError('service_rate must be greater than 0 for exponential distribution')
-
-        if service_distribution == 'fixed' and (service_time is None or service_time <= 0):
-            raise ValueError('service_time must be greater than 0 for fixed distribution')
-
-        # Simulation clock in hours
-        t = 0.0
-        max_time = simulation_hours
-
-        next_arrival = rng.expovariate(arrival_rate)
-        # Tracks only currently busy servers. Idle servers are implied by
-        # num_servers - len(busy_end_times) and prevent zero-time departure loops.
-        busy_end_times = []
-        queue = deque()
-
-        total_wait = 0.0
-        total_system = 0.0
-        total_service = 0.0
-        served_count = 0
-        max_queue_length = 0
-        last_event_time = 0.0
-        area_queue = 0.0
-
-        while t < max_time:
-            next_departure = min(busy_end_times) if busy_end_times else math.inf
-            next_event = min(next_arrival, next_departure)
-
-            # Advance time and accumulate queue length
-            if next_event > max_time:
-                area_queue += len(queue) * (max_time - last_event_time)
-                break
-
-            area_queue += len(queue) * (next_event - last_event_time)
-            t = next_event
-            last_event_time = t
-
-            if next_arrival <= next_departure:
-                # Arrival
-                if len(busy_end_times) < num_servers:
-                    service_duration = self._service_time(rng, service_distribution, service_rate, service_time)
-                    total_wait += 0.0
-                    total_system += service_duration
-                    total_service += service_duration
-                    served_count += 1
-                    busy_end_times.append(t + service_duration)
-                else:
-                    queue.append(t)
-                    max_queue_length = max(max_queue_length, len(queue))
-
-                next_arrival = t + rng.expovariate(arrival_rate)
-            else:
-                # Departure
-                busy_end_times.remove(next_departure)
-                if queue:
-                    arrival_time = queue.popleft()
-                    wait_time = t - arrival_time
-                    service_duration = self._service_time(rng, service_distribution, service_rate, service_time)
-                    total_wait += wait_time
-                    total_system += wait_time + service_duration
-                    total_service += service_duration
-                    served_count += 1
-                    busy_end_times.append(t + service_duration)
-
-        avg_queue_length = area_queue / max_time if max_time > 0 else 0.0
-        avg_waiting_time = total_wait / served_count if served_count > 0 else 0.0
-        avg_system_time = total_system / served_count if served_count > 0 else 0.0
-        server_utilization = total_service / (num_servers * max_time) if max_time > 0 else 0.0
-
-        return {
-            'avg_queue_length': avg_queue_length,
-            'avg_waiting_time': avg_waiting_time,
-            'avg_system_time': avg_system_time,
-            'server_utilization': server_utilization,
-            'max_queue_length': max_queue_length,
-            'served_count': served_count
-        }
-
-    def _estimate_mm_c(self, params):
-        arrival_rate = params.get('arrival_rate')
-        service_distribution = params.get('service_distribution', 'exponential')
-        service_rate = params.get('service_rate')
-        service_time = params.get('service_time')
-        num_servers = int(params.get('num_servers', 1))
-        simulation_hours = float(params.get('simulation_hours', 8))
-
-        if arrival_rate is None or arrival_rate <= 0:
-            raise ValueError('arrival_rate must be greater than 0')
-        if service_distribution == 'fixed':
-            if service_time is None or service_time <= 0:
-                raise ValueError('service_time must be greater than 0 for fixed distribution')
-            service_rate = 1.0 / service_time
-        if service_rate is None or service_rate <= 0:
-            raise ValueError('service_rate must be greater than 0')
-        if num_servers < 1:
-            raise ValueError('num_servers must be at least 1')
-
-        capacity = num_servers * service_rate
-        if arrival_rate >= capacity:
-            raise ValueError('System is unstable: arrival_rate must be less than num_servers * service_rate')
-
-        a = arrival_rate / service_rate
-        rho = arrival_rate / capacity
-
-        # Compute P0 for M/M/c
-        sum_terms = 0.0
-        for k in range(num_servers):
-            sum_terms += (a ** k) / self._factorial(k)
-        last_term = (a ** num_servers) / (self._factorial(num_servers) * (1 - rho))
-        p0 = 1.0 / (sum_terms + last_term)
-
-        # Erlang C formula for Lq
-        lq = (p0 * (a ** num_servers) * rho) / (self._factorial(num_servers) * (1 - rho) ** 2)
-        wq = lq / arrival_rate
-        w = wq + 1.0 / service_rate
-        l = arrival_rate * w
-
-        served_count = arrival_rate * simulation_hours
-
-        return {
-            'avg_queue_length': lq,
-            'avg_waiting_time': wq,
-            'avg_system_time': w,
-            'server_utilization': rho,
-            'max_queue_length': 0,
-            'served_count': served_count
-        }
-
-    @staticmethod
-    def _factorial(n):
-        result = 1
-        for i in range(2, n + 1):
-            result *= i
-        return result
-
-    def _category_filter(self, simulation_type, include_legacy=False):
-        if not simulation_type:
-            return Q()
-
-        typed_filter = Q(scenario__parameters__simulation_type=simulation_type)
-        if not include_legacy:
-            return typed_filter
-
-        keywords = self.HISTORY_TYPE_KEYWORDS.get(simulation_type, [])
-        if not keywords:
-            return typed_filter
-
-        keyword_filter = Q()
-        for keyword in keywords:
-            keyword_filter |= Q(scenario__name__icontains=keyword)
-            keyword_filter |= Q(scenario__description__icontains=keyword)
-
-        legacy_filter = (
-            Q(scenario__parameters__simulation_type__isnull=True)
-            | Q(scenario__parameters__simulation_type='')
+    def _prune_audit_logs(self):
+        """Keep only the most recent N audit log rows globally."""
+        stale_ids = list(
+            SimulationAuditLog.objects.order_by('-created_at', '-id')
+            .values_list('id', flat=True)[self.AUDIT_LOG_RETENTION_COUNT:]
         )
-
-        return typed_filter | (legacy_filter & keyword_filter)
+        if stale_ids:
+            SimulationAuditLog.objects.filter(id__in=stale_ids).delete()
 
     def _prune_history_for_category(self, simulation_type):
         """Keep only the most recent N runs per simulation category."""
@@ -290,7 +86,7 @@ class SimulationViewSet(viewsets.ModelViewSet):
             return
 
         category_runs = SimulationResult.objects.filter(
-            self._category_filter(simulation_type, include_legacy=True)
+            build_result_category_filter(simulation_type, include_legacy=True)
         ).order_by('-run_date', '-id')
 
         stale_run_ids = list(
@@ -311,21 +107,53 @@ class SimulationViewSet(viewsets.ModelViewSet):
         try:
             num_replications = int(num_replications)
         except (ValueError, TypeError):
+            self._log_audit(
+                request,
+                action='run_failed',
+                level='error',
+                scenario=scenario,
+                message='Simulation run rejected due to invalid num_replications',
+                metadata={'num_replications': request.data.get('num_replications')},
+            )
             return Response({'error': 'num_replications must be an integer'}, status=status.HTTP_400_BAD_REQUEST)
 
         if num_replications < 100:
             num_replications = 100
 
+        self._log_audit(
+            request,
+            action='run_started',
+            scenario=scenario,
+            message='Simulation run started',
+            metadata={'mode': run_mode, 'num_replications': num_replications},
+        )
+
         if run_mode == 'estimate':
             try:
-                aggregated = self._estimate_mm_c(params)
+                aggregated = estimate_mm_c(params)
             except ValueError as exc:
+                self._log_audit(
+                    request,
+                    action='run_failed',
+                    level='error',
+                    scenario=scenario,
+                    message='Simulation estimate failed',
+                    metadata={'error': str(exc), 'mode': run_mode},
+                )
                 return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
             aggregated['num_replications'] = 0
             result = SimulationResult.objects.create(
                 scenario=scenario,
                 metrics=aggregated,
                 raw_data={'mode': 'estimate'}
+            )
+            self._log_audit(
+                request,
+                action='run_succeeded',
+                scenario=scenario,
+                result=result,
+                message='Simulation estimate completed successfully',
+                metadata={'mode': run_mode},
             )
             self._prune_history_for_category(params.get('simulation_type'))
             return Response(
@@ -343,8 +171,16 @@ class SimulationViewSet(viewsets.ModelViewSet):
                 except (ValueError, TypeError):
                     rep_params['seed'] = None
             try:
-                metrics_list.append(self._simulate_replication(rep_params))
+                metrics_list.append(simulate_replication(rep_params))
             except ValueError as exc:
+                self._log_audit(
+                    request,
+                    action='run_failed',
+                    level='error',
+                    scenario=scenario,
+                    message='Simulation run failed while computing replications',
+                    metadata={'error': str(exc), 'mode': run_mode},
+                )
                 return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         # Aggregate metrics
@@ -366,6 +202,14 @@ class SimulationViewSet(viewsets.ModelViewSet):
             metrics=aggregated,
             raw_data={'replications': metrics_list[:100]}
         )
+        self._log_audit(
+            request,
+            action='run_succeeded',
+            scenario=scenario,
+            result=result,
+            message='Simulation run completed successfully',
+            metadata={'mode': run_mode, 'num_replications': num_replications},
+        )
         self._prune_history_for_category(params.get('simulation_type'))
         
         return Response(
@@ -384,36 +228,93 @@ class SimulationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def history(self, request):
         """Get recent simulation runs across scenarios."""
-        limit = request.query_params.get('limit', 50)
-        simulation_type = request.query_params.get('simulation_type')
-        try:
-            limit = int(limit)
-        except (TypeError, ValueError):
-            return Response({'error': 'limit must be an integer'}, status=status.HTTP_400_BAD_REQUEST)
+        limit, error = self._parse_int_query_param(request, 'limit', 50, min_value=1, max_value=200)
+        if error:
+            return error
 
-        limit = max(1, min(limit, 200))
+        simulation_type = request.query_params.get('simulation_type')
         if simulation_type:
             self._prune_history_for_category(simulation_type)
 
         runs = SimulationResult.objects.select_related('scenario')
         if simulation_type:
-            runs = runs.filter(self._category_filter(simulation_type, include_legacy=True))
+            runs = runs.filter(build_result_category_filter(simulation_type, include_legacy=True))
         runs = runs.order_by('-run_date', '-id')[:limit]
 
-        payload = []
-        for run in runs:
-            scenario = run.scenario
-            payload.append({
-                'id': run.id,
-                'scenario': scenario.id,
-                'scenario_name': scenario.name,
-                'scenario_description': scenario.description,
-                'scenario_created_at': scenario.created_at,
-                'run_date': run.run_date,
-                'metrics': run.metrics,
-                'raw_data': run.raw_data,
-                'parameters': scenario.parameters,
-                'num_replications': scenario.num_replications,
-            })
-
+        payload = [serialize_history_run(run) for run in runs]
         return Response(payload)
+
+    @action(detail=False, methods=['get'])
+    def audit_logs(self, request):
+        """List recent simulation audit logs."""
+        limit, error = self._parse_int_query_param(request, 'limit', 100, min_value=1, max_value=500)
+        if error:
+            return error
+
+        simulation_type = request.query_params.get('simulation_type')
+
+        queryset = SimulationAuditLog.objects.select_related('scenario', 'result').all()
+        if simulation_type:
+            queryset = queryset.filter(
+                build_result_category_filter(simulation_type, include_legacy=True)
+                | Q(metadata__simulation_type=simulation_type)
+            )
+        queryset = queryset[:limit]
+        serializer = SimulationAuditLogSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def backup(self, request):
+        """Export simulation scenarios/results as a JSON backup payload."""
+        include_raw = str(request.query_params.get('include_raw', '0')).lower() in {'1', 'true', 'yes'}
+        simulation_type = request.query_params.get('simulation_type')
+        audit_limit, error = self._parse_int_query_param(
+            request,
+            'audit_limit',
+            5,
+            min_value=1,
+            max_value=500,
+        )
+        if error:
+            return error
+
+        scenario_qs = SimulationScenario.objects.order_by('-created_at')
+        if simulation_type:
+            scenario_qs = scenario_qs.filter(build_scenario_filter(simulation_type, include_legacy=True))
+        scenarios = [serialize_backup_scenario(scenario) for scenario in scenario_qs]
+
+        result_qs = SimulationResult.objects.select_related('scenario').order_by('-run_date')
+        if simulation_type:
+            result_qs = result_qs.filter(build_result_category_filter(simulation_type, include_legacy=True))
+        results = [serialize_backup_result(result, include_raw) for result in result_qs]
+
+        logs = SimulationAuditLog.objects.order_by('-created_at')
+        if simulation_type:
+            logs = logs.filter(
+                build_result_category_filter(simulation_type, include_legacy=True)
+                | Q(metadata__simulation_type=simulation_type)
+            )
+        logs = logs[:audit_limit]
+        audit_logs = SimulationAuditLogSerializer(logs, many=True).data
+
+        self._log_audit(
+            request,
+            action='backup_exported',
+            message='Simulation backup exported',
+            metadata={
+                'include_raw': include_raw,
+                'simulation_type': simulation_type,
+                'scenario_count': len(scenarios),
+                'result_count': len(results),
+                'audit_limit': audit_limit,
+            },
+        )
+
+        return Response({
+            'exported_at': datetime.utcnow().isoformat() + 'Z',
+            'include_raw': include_raw,
+            'simulation_type': simulation_type,
+            'scenarios': scenarios,
+            'results': results,
+            'audit_logs': audit_logs,
+        })

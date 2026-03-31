@@ -1,6 +1,6 @@
 """Serializers for simulation app."""
 from rest_framework import serializers
-from ..models import SimulationScenario, SimulationResult
+from ..models import SimulationScenario, SimulationResult, SimulationAuditLog
 from apps.scheduling.models import Room, Equipment
 
 
@@ -133,3 +133,15 @@ class SimulationResultSerializer(serializers.ModelSerializer):
             'id', 'scenario', 'run_date', 'metrics', 'raw_data'
         ]
         read_only_fields = ['id', 'run_date']
+
+
+class SimulationAuditLogSerializer(serializers.ModelSerializer):
+    scenario_name = serializers.CharField(source='scenario.name', read_only=True)
+
+    class Meta:
+        model = SimulationAuditLog
+        fields = [
+            'id', 'action', 'level', 'message', 'metadata',
+            'scenario', 'scenario_name', 'result', 'created_at'
+        ]
+        read_only_fields = fields
