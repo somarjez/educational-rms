@@ -178,12 +178,12 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
       description: 'View room, equipment, and activity insights',
     },
     {
-      id: 'admin-users',
-      label: 'Users',
+      id: 'user-management',
+      label: 'User Management',
       icon: <FiUsers />,
       available: isAdminUser,
       path: '/admin/users',
-      description: 'Activate or deactivate user accounts',
+      description: 'View users and send password reset emails',
     },
     {
       id: 'modeling-simulation',

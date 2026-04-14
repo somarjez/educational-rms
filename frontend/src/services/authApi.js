@@ -68,14 +68,14 @@ export const authApi = {
     }
   },
 
-  // Request password reset link
-  forgotPassword: async (email) => {
+  // Public: request a password reset email
+  requestPasswordReset: async (email) => {
     const response = await api.post('/auth/users/forgot_password/', { email });
     return response.data;
   },
 
-  // Confirm password reset
-  resetPassword: async (uid, token, newPassword, newPasswordConfirm) => {
+  // Public: confirm password reset using uid + one-time token
+  confirmPasswordReset: async (uid, token, newPassword, newPasswordConfirm) => {
     const response = await api.post('/auth/users/reset_password/', {
       uid,
       token,
@@ -85,17 +85,15 @@ export const authApi = {
     return response.data;
   },
 
-  // Admin: fetch users
-  getUsers: async (params = {}) => {
+  // Admin: list users
+  adminListUsers: async (params = {}) => {
     const response = await api.get('/auth/users/', { params });
     return response.data;
   },
 
-  // Admin: toggle user active state
-  toggleUserActive: async (id, isActive) => {
-    const response = await api.patch(`/auth/users/${id}/toggle_active/`, {
-      is_active: isActive,
-    });
+  // Admin: trigger reset email for user
+  adminSendPasswordReset: async (userId) => {
+    const response = await api.post(`/auth/users/${userId}/send_password_reset/`);
     return response.data;
   },
 

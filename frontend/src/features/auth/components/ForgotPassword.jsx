@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { BsEnvelope } from 'react-icons/bs';
 import { motion } from 'framer-motion';
-import { FiMail, FiArrowLeft } from 'react-icons/fi';
-import { authApi } from '../../services/authApi';
-import ccsLogo from '../../assets/images/ccs-logo.png';
-import lspuLogo from '../../assets/images/lspu-logo.png';
-import bgImage from '../../assets/images/login-bg.png';
-import '../../features/auth/styles/Login.css';
+import lspuBg from '../../../assets/lspu-bg.png';
+import ccsLogo from '../../../assets/ccs-logo.png';
+import lspuLogo from '../../../assets/lspu-logo.png';
+import authApi from '../../../services/authApi';
+import '../styles/Login.css';
 
-const ForgotPasswordPage = () => {
+const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -18,13 +18,19 @@ const ForgotPasswordPage = () => {
     e.preventDefault();
     setError('');
     setMessage('');
-    setIsLoading(true);
 
+    if (!email.trim()) {
+      setError('Email is required.');
+      return;
+    }
+
+    setIsLoading(true);
     try {
-      const response = await authApi.forgotPassword(email);
-      setMessage(response.message || 'Reset instructions were sent if the account exists.');
+      const data = await authApi.requestPasswordReset(email.trim());
+      setMessage(data?.message || 'Check your email for instructions.');
     } catch (err) {
-      setError(err?.response?.data?.error || 'Unable to process password reset request.');
+      // Keep messaging generic to match backend anti-enumeration behavior.
+      setMessage('Check your email for instructions.');
     } finally {
       setIsLoading(false);
     }
@@ -35,15 +41,24 @@ const ForgotPasswordPage = () => {
       className="login-layout"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.35 }}
-      style={{ '--login-bg-image': `url(${bgImage})` }}
+      transition={{ duration: 0.4 }}
+      style={{ '--login-bg-image': `url(${lspuBg})` }}
     >
-      <section className="login-visual-side" style={{ backgroundImage: `url(${bgImage})` }} aria-hidden="true">
+      <section
+        className="login-visual-side"
+        style={{ backgroundImage: `url(${lspuBg})` }}
+        aria-hidden="true"
+      >
         <div className="visual-overlay" />
       </section>
 
       <section className="login-form-side">
-        <motion.div className="login-card" initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.35, delay: 0.05 }}>
+        <motion.div
+          className="login-card"
+          initial={{ y: 16, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
           <div className="logo-row">
             <img src={lspuLogo} alt="LSPU logo" className="institution-logo" />
             <img src={ccsLogo} alt="CCS logo" className="institution-logo" />
@@ -51,32 +66,44 @@ const ForgotPasswordPage = () => {
 
           <header className="login-header">
             <h1 className="login-title">Forgot Password</h1>
-            <p className="login-subtitle">Enter your email address and we will send a reset link.</p>
+            <p className="login-subtitle">Enter your email to receive reset instructions.</p>
           </header>
 
-          {message && <div className="alert alert-success" role="status">{message}</div>}
-          {error && <div className="alert alert-error" role="alert">{error}</div>}
+          {error && (
+            <div className="alert alert-error" role="alert">{error}</div>
+          )}
+
+          {message && (
+            <div className="alert" role="status">{message}</div>
+          )}
 
           <form onSubmit={handleSubmit} className="login-form" noValidate>
             <div className="form-group">
               <label htmlFor="email" className="form-label">Email Address</label>
               <div className="input-with-icon">
-                <FiMail className="input-icon" aria-hidden="true" />
+                <BsEnvelope className="input-icon" aria-hidden="true" />
                 <input
                   type="email"
                   id="email"
+                  name="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email address"
                   className="form-input"
                   disabled={isLoading}
-                  autoComplete="email"
+                  autoComplete="username"
                 />
               </div>
             </div>
 
             <div className="btn-wrapper">
-              <motion.button type="submit" className="submit-btn" disabled={isLoading} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
+              <motion.button
+                type="submit"
+                className="submit-btn"
+                disabled={isLoading}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+              >
                 {isLoading ? 'Sending...' : 'Send Reset Link'}
               </motion.button>
             </div>
@@ -84,9 +111,8 @@ const ForgotPasswordPage = () => {
 
           <footer className="auth-footer">
             <p>
-              <Link to="/login" className="auth-link">
-                <FiArrowLeft style={{ verticalAlign: 'middle' }} /> Back to login
-              </Link>
+              Remembered your password?{' '}
+              <Link to="/login" className="auth-link">Back to login</Link>
             </p>
           </footer>
         </motion.div>
@@ -95,4 +121,4 @@ const ForgotPasswordPage = () => {
   );
 };
 
-export default ForgotPasswordPage;
+export default ForgotPassword;
