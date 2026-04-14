@@ -470,6 +470,37 @@ class BookingViewSet(viewsets.ModelViewSet):
         self._check_waitlist(booking.room, booking.date, booking.time_slot)
         
         return Response(BookingSerializer(booking).data)
+
+    @action(detail=True, methods=['post'])
+    def modify(self, request, pk=None):
+        """Modify an existing booking (owner or admin)."""
+        booking = self.get_object()
+        user = request.user
+
+        if booking.user != user and user.role.upper() != 'ADMIN':
+            return Response(
+                {'error': 'You do not have permission to modify this booking'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if booking.status in ['CANCELLED', 'COMPLETED']:
+            return Response(
+                {'error': f'Cannot modify a {booking.status.lower()} booking'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = BookingUpdateSerializer(booking, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        change_reason = request.data.get('change_reason', '').strip()
+        if change_reason:
+            base_notes = booking.notes or ''
+            audit_note = f"[Modified] {change_reason}"
+            booking.notes = f"{base_notes}\n{audit_note}".strip()
+            booking.save(update_fields=['notes', 'updated_at'])
+
+        return Response(BookingSerializer(booking).data)
     
     @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
     def override_conflict(self, request, pk=None):
@@ -597,6 +628,26 @@ class BookingViewSet(viewsets.ModelViewSet):
             })
         
         return Response(events)
+
+    @action(detail=False, methods=['get'])
+    def history(self, request):
+        """Get booking history (past or finalized bookings)."""
+        queryset = self.get_queryset()
+        today = timezone.now().date()
+
+        include_future = request.query_params.get('include_future', 'false').lower() == 'true'
+        if not include_future:
+            queryset = queryset.filter(
+                Q(date__lt=today) | Q(status__in=['CANCELLED', 'COMPLETED', 'REJECTED'])
+            )
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = BookingSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = BookingSerializer(queryset, many=True)
+        return Response(serializer.data)
     
     @action(detail=True, methods=['patch'])
     def drag_update(self, request, pk=None):
