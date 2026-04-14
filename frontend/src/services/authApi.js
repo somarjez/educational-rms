@@ -68,6 +68,37 @@ export const authApi = {
     }
   },
 
+  // Request password reset link
+  forgotPassword: async (email) => {
+    const response = await api.post('/auth/users/forgot_password/', { email });
+    return response.data;
+  },
+
+  // Confirm password reset
+  resetPassword: async (uid, token, newPassword, newPasswordConfirm) => {
+    const response = await api.post('/auth/users/reset_password/', {
+      uid,
+      token,
+      new_password: newPassword,
+      new_password_confirm: newPasswordConfirm,
+    });
+    return response.data;
+  },
+
+  // Admin: fetch users
+  getUsers: async (params = {}) => {
+    const response = await api.get('/auth/users/', { params });
+    return response.data;
+  },
+
+  // Admin: toggle user active state
+  toggleUserActive: async (id, isActive) => {
+    const response = await api.patch(`/auth/users/${id}/toggle_active/`, {
+      is_active: isActive,
+    });
+    return response.data;
+  },
+
   // Get available roles
   getRoles: async () => {
     const response = await api.get('/auth/users/roles/');

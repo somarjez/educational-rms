@@ -180,3 +180,25 @@ class UserChangePasswordSerializer(serializers.Serializer):
                 {'new_password': 'Password confirmation does not match.'}
             )
         return attrs
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    """Serializer for requesting a password reset."""
+
+    email = serializers.EmailField()
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    """Serializer for confirming a password reset."""
+
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True, min_length=8)
+    new_password_confirm = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        if attrs.get('new_password') != attrs.pop('new_password_confirm'):
+            raise serializers.ValidationError(
+                {'new_password': 'Password confirmation does not match.'}
+            )
+        return attrs

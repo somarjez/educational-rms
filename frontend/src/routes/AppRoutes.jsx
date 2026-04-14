@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from '../features/auth/components/Login';
 import Register from '../features/auth/components/Register';
+import ForgotPasswordPage from '../pages/Auth/ForgotPasswordPage';
+import ResetPasswordPage from '../pages/Auth/ResetPasswordPage';
 import Dashboard from '../features/dashboard/Dashboard';
 import AdminScheduling from '../components/Admin/AdminScheduling/AdminScheduling';
 import BookingsVisualization from '../components/Bookings/BookingsVisualization';
@@ -16,6 +18,7 @@ import NotificationsPage from '../pages/Dashboard/NotificationsPage';
 import SettingsPage from '../pages/Dashboard/SettingsPage';
 import ProfilePage from '../pages/Dashboard/ProfilePage';
 import ReportsPage from '../pages/Dashboard/ReportsPage';
+import AdminUsersPage from '../pages/Dashboard/AdminUsersPage';
 import EquipmentRequestPage from '../pages/Dashboard/EquipmentRequestPage';
 import AdminEquipmentRequestsPage from '../pages/Dashboard/AdminEquipmentRequestsPage';
 
@@ -44,6 +47,8 @@ const AppRoutes = () => {
     <Router future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/register" element={<Register />} />
         
         {/* Protected Routes with Sidebar */}
@@ -141,6 +146,17 @@ const AppRoutes = () => {
             <ProtectedRoute requiredRole={["ADMIN"]}>
               <MainLayout userRole={user?.role}>
                 <AdminEquipmentRequestsPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute requiredRole={["ADMIN"]}>
+              <MainLayout userRole={user?.role}>
+                <AdminUsersPage />
               </MainLayout>
             </ProtectedRoute>
           }

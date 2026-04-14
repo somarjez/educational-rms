@@ -150,6 +150,9 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
 }
 
+FRONTEND_BASE_URL = _get_str('FRONTEND_BASE_URL', 'http://localhost:5173')
+DEFAULT_FROM_EMAIL = _get_str('DEFAULT_FROM_EMAIL', 'no-reply@educational-rms.local')
+
 # Simple JWT Configuration
 from datetime import timedelta
 

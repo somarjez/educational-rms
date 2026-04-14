@@ -19,6 +19,7 @@ import {
   FiSettings,
   FiBell,
   FiUser,
+  FiUsers,
 } from 'react-icons/fi';
 import api from '../../services/api';
 import './styles/Sidebar.css';
@@ -175,6 +176,14 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
       available: isAdmin,
       path: '/dashboard/reports',
       description: 'View room, equipment, and activity insights',
+    },
+    {
+      id: 'admin-users',
+      label: 'Users',
+      icon: <FiUsers />,
+      available: isAdminUser,
+      path: '/admin/users',
+      description: 'Activate or deactivate user accounts',
     },
     {
       id: 'modeling-simulation',
