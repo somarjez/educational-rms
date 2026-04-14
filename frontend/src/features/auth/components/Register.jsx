@@ -1,9 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuth from '../../../hooks/useAuth';
-import { FaUser, FaIdBadge, FaEnvelope, FaLock, FaBuilding, FaCalendarAlt, FaShieldAlt, FaMobileAlt } from 'react-icons/fa';
+import {
+  FiUser,
+  FiMail,
+  FiLock,
+  FiBriefcase,
+  FiCreditCard,
+} from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import '../styles/Register.css';
+import lspuLogo from '../../../assets/images/lspu-logo.png';
+import ccsLogo from '../../../assets/images/ccs-logo.png';
+import bgImage from '../../../assets/images/login-bg.png';  
 
 const Register = () => {
   const navigate = useNavigate();
@@ -91,183 +100,165 @@ const Register = () => {
     }
   };
 
-  return (
-    <motion.div className="auth-container" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }}>
-      {/* Brand Side */}
-      <div className="auth-brand-side">
-        <div className="brand-content">
-          <div className="brand-logo">
-            <div className="brand-logo-text">ER</div>
-          </div>
-          <h1 className="brand-title">Join Our Platform</h1>
-          <p className="brand-description">
-            Start managing your educational resources efficiently with our comprehensive platform.
-          </p>
-          <div className="brand-features">
-            <div className="brand-feature">
-              <FaCalendarAlt className="feature-icon" />
-              <div className="feature-text">Easy account setup in minutes</div>
-            </div>
-            <div className="brand-feature">
-              <FaShieldAlt className="feature-icon" />
-              <div className="feature-text">Secure and encrypted data</div>
-            </div>
-            <div className="brand-feature">
-              <FaMobileAlt className="feature-icon" />
-              <div className="feature-text">Access from any device</div>
-            </div>
-          </div>
-        </div>
+return (
+    <motion.div
+      className="create-account-container"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.45 }}
+    >
+      <div
+        className="left-side-background"
+        style={{ backgroundImage: `url(${bgImage})` }}
+      >
+        <div className="background-overlay" />
       </div>
 
-      {/* Form Side */}
-      <div className="auth-form-side">
-        <motion.div className="auth-card" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6 }}>
-          <div className="auth-header">
-            <h2 className="auth-title">Create Account</h2>
-            <p className="auth-subtitle">Fill in the details to get started</p>
+      <div className="right-side-form">
+        <div className="register-panel">
+          <div className="logo-row">
+            <img src={lspuLogo} alt="LSPU Logo" className="school-logo" />
+            <img src={ccsLogo} alt="CCS Logo" className="school-logo" />
           </div>
 
-          {error && (
-            <div className="alert alert-error" role="alert">
-              {error}
-            </div>
-          )}
+          <h2 className="form-title">CREATE ACCOUNT</h2>
+          <p className="form-subtitle">Fill in the details to get started.</p>
 
-          <form onSubmit={handleSubmit} className="auth-form">
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="first_name" className="form-label form-label-required">First Name</label>
-                <div className="input-with-icon">
-                  <FaUser className="input-icon" />
+          {error && <div className="alert-error-ui">{error}</div>}
+
+          <form onSubmit={handleSubmit} className="form-ui">
+            <div className="row-ui">
+              <div className="input-group-ui">
+                <label htmlFor="first_name">First Name</label>
+                <div className="input-icon-ui">
+                  <FiUser />
                   <input
-                    type="text"
                     id="first_name"
+                    type="text"
                     name="first_name"
                     value={formData.first_name}
                     onChange={handleChange}
-                    placeholder="John"
-                    className={`form-input ${validationErrors.first_name ? 'error' : ''}`}
+                    placeholder=""
                     disabled={isLoading}
                   />
                 </div>
                 {validationErrors.first_name && (
-                  <span className="error-message">{validationErrors.first_name}</span>
+                  <span className="error-text-ui">
+                    {validationErrors.first_name}
+                  </span>
                 )}
               </div>
 
-              <div className="form-group">
-                <label htmlFor="last_name" className="form-label form-label-required">Last Name</label>
-                <div className="input-with-icon">
-                  <FaUser className="input-icon" />
+              <div className="input-group-ui">
+                <label htmlFor="last_name">Last Name</label>
+                <div className="input-icon-ui">
+                  <FiUser />
                   <input
-                    type="text"
                     id="last_name"
+                    type="text"
                     name="last_name"
                     value={formData.last_name}
                     onChange={handleChange}
-                    placeholder="Doe"
-                    className={`form-input ${validationErrors.last_name ? 'error' : ''}`}
+                    placeholder=""
                     disabled={isLoading}
                   />
                 </div>
                 {validationErrors.last_name && (
-                  <span className="error-message">{validationErrors.last_name}</span>
+                  <span className="error-text-ui">
+                    {validationErrors.last_name}
+                  </span>
                 )}
               </div>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="username" className="form-label form-label-required">Username</label>
-              <div className="input-with-icon">
-                <FaIdBadge className="input-icon" />
+            <div className="input-group-ui">
+              <label htmlFor="username">Username</label>
+              <div className="input-icon-ui">
+                <FiCreditCard />
                 <input
-                  type="text"
                   id="username"
+                  type="text"
                   name="username"
                   value={formData.username}
                   onChange={handleChange}
-                  placeholder="johndoe"
-                  className={`form-input ${validationErrors.username ? 'error' : ''}`}
+                  placeholder=""
                   disabled={isLoading}
                 />
               </div>
               {validationErrors.username && (
-                <span className="error-message">{validationErrors.username}</span>
+                <span className="error-text-ui">{validationErrors.username}</span>
               )}
             </div>
 
-            <div className="form-group">
-              <label htmlFor="email" className="form-label form-label-required">Email Address</label>
-              <div className="input-with-icon">
-                <FaEnvelope className="input-icon" />
+            <div className="input-group-ui">
+              <label htmlFor="email">Email Address</label>
+              <div className="input-icon-ui">
+                <FiMail />
                 <input
-                  type="email"
                   id="email"
+                  type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="john.doe@university.edu"
-                  className={`form-input ${validationErrors.email ? 'error' : ''}`}
+                  placeholder=""
                   disabled={isLoading}
                 />
               </div>
               {validationErrors.email && (
-                <span className="error-message">{validationErrors.email}</span>
+                <span className="error-text-ui">{validationErrors.email}</span>
               )}
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="password" className="form-label form-label-required">Password</label>
-                <div className="input-with-icon">
-                  <FaLock className="input-icon" />
+            <div className="row-ui">
+              <div className="input-group-ui">
+                <label htmlFor="password">Password</label>
+                <div className="input-icon-ui">
+                  <FiLock />
                   <input
-                    type="password"
                     id="password"
+                    type="password"
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    placeholder="Min. 8 characters"
-                    className={`form-input ${validationErrors.password ? 'error' : ''}`}
+                    placeholder=""
                     disabled={isLoading}
                   />
                 </div>
                 {validationErrors.password && (
-                  <span className="error-message">{validationErrors.password}</span>
+                  <span className="error-text-ui">{validationErrors.password}</span>
                 )}
               </div>
 
-              <div className="form-group">
-                <label htmlFor="password_confirm" className="form-label form-label-required">Confirm Password</label>
-                <div className="input-with-icon">
-                  <FaLock className="input-icon" />
+              <div className="input-group-ui">
+                <label htmlFor="password_confirm">Confirm Password</label>
+                <div className="input-icon-ui">
+                  <FiLock />
                   <input
-                    type="password"
                     id="password_confirm"
+                    type="password"
                     name="password_confirm"
                     value={formData.password_confirm}
                     onChange={handleChange}
-                    placeholder="Re-enter password"
-                    className={`form-input ${validationErrors.password_confirm ? 'error' : ''}`}
+                    placeholder=""
                     disabled={isLoading}
                   />
                 </div>
                 {validationErrors.password_confirm && (
-                  <span className="error-message">{validationErrors.password_confirm}</span>
+                  <span className="error-text-ui">
+                    {validationErrors.password_confirm}
+                  </span>
                 )}
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="role" className="form-label form-label-required">Role</label>
+            <div className="row-ui">
+              <div className="input-group-ui">
+                <label htmlFor="role">Role</label>
                 <select
                   id="role"
                   name="role"
                   value={formData.role}
                   onChange={handleChange}
-                  className="form-select"
                   disabled={isLoading}
                 >
                   <option value="student">Student</option>
@@ -276,48 +267,35 @@ const Register = () => {
                 </select>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="department" className="form-label">Department</label>
-                <div className="input-with-icon">
-                  <FaBuilding className="input-icon" />
+              <div className="input-group-ui">
+                <label htmlFor="department">Department</label>
+                <div className="input-icon-ui">
+                  <FiBriefcase />
                   <input
-                    type="text"
                     id="department"
+                    type="text"
                     name="department"
                     value={formData.department}
                     onChange={handleChange}
-                    placeholder="Computer Science"
-                    className="form-input"
+                    placeholder=""
                     disabled={isLoading}
                   />
                 </div>
               </div>
             </div>
 
-            <motion.button
-              type="submit"
-              className="submit-btn"
-              disabled={isLoading}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.98 }}
-            >
+            <button type="submit" className="btn-ui" disabled={isLoading}>
               {isLoading ? 'Creating Account...' : 'Create Account'}
-            </motion.button>
+            </button>
           </form>
 
-          <div className="auth-footer">
-            <p>
-              Already have an account?{' '}
-              <a href="/login" className="auth-link">
-                Sign in here
-              </a>
-            </p>
-          </div>
-        </motion.div>
+          <p className="bottom-text-ui">
+            Already have an account? <a href="/login">Sign in here.</a>
+          </p>
+        </div>
       </div>
     </motion.div>
   );
 };
-
 export default Register;
 
