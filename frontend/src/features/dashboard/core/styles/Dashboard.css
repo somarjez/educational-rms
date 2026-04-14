@@ -94,6 +94,10 @@
   backdrop-filter: blur(10px);
   width: 45px;
   height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18) inset;
 }
 
