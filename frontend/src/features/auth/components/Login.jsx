@@ -68,8 +68,8 @@ const Login = () => {
           transition={{ duration: 0.4, delay: 0.1 }}
         >
           <div className="logo-row">
-            <img src={ccsLogo} alt="CCS logo" className="institution-logo" />
             <img src={lspuLogo} alt="LSPU logo" className="institution-logo" />
+            <img src={ccsLogo} alt="CCS logo" className="institution-logo" />
           </div>
 
           <header className="login-header">
@@ -132,25 +132,21 @@ const Login = () => {
                   autoComplete="current-password"
                 />
               </div>
+              <div className="assist-row">
+                <label className="remember-label" htmlFor="remember-me">
+                  <input
+                    id="remember-me"
+                    type="checkbox"
+                    className="remember-checkbox"
+                  />
+                  <span>Remember Me.</span>
+                </label>
+              </div>
               {validationErrors.password && (
                 <span className="error-message" role="alert">
                   {validationErrors.password}
                 </span>
               )}
-            </div>
-
-            <div className="assist-row">
-              <label className="remember-label" htmlFor="remember-me">
-                <input
-                  id="remember-me"
-                  type="checkbox"
-                  className="remember-checkbox"
-                />
-                <span>Remember Me.</span>
-              </label>
-              <a href="/forgot-password" className="forgot-link">
-                Forgot Password?
-              </a>
             </div>
 
             <div className="btn-wrapper">
