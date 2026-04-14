@@ -153,17 +153,12 @@ Use this when the frontend runs on a different device than the backend.
 Use this when you want to generate a one-time reset link directly in terminal (local dev):
 
 ```powershell
-&"c:\Users\User\OneDrive\Desktop\educational-rms-main\print_reset_link.bat" "user_email@gmail.com"
+.\print_reset_link.bat "user_email@gmail.com"
 ```
 
 Notes:
 - The email must exist in your local database and be active.
 - The printed token is one-time use and expires based on `PASSWORD_RESET_TOKEN_TTL_SECONDS`.
-- If you are already in repo root, this also works:
-
-```powershell
-.\print_reset_link.bat "user_email@gmail.com"
-```
 
 ## Manual Smoke Tests
 

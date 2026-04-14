@@ -1,5 +1,5 @@
 """Views for scheduling app."""
-from rest_framework import viewsets, status, filters
+from rest_framework import mixins, viewsets, status, filters
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -14,7 +14,7 @@ from rest_framework.exceptions import ValidationError
 
 from ..models import Booking, Room, TimeSlot, Equipment, Waitlist, RoomEquipment, Notification
 from .serializers import (
-    BookingSerializer, BookingCreateSerializer, BookingUpdateSerializer,
+    BookingSerializer, BookingCreateSerializer, BookingModifySerializer,
     BookingApprovalSerializer, RoomSerializer, RoomListSerializer,
     TimeSlotSerializer, EquipmentSerializer, WaitlistSerializer,
     CalendarEventSerializer, NotificationSerializer
@@ -270,14 +270,14 @@ class BookingViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return BookingCreateSerializer
         elif self.action in ['update', 'partial_update']:
-            return BookingUpdateSerializer
+            return BookingModifySerializer
         elif self.action in ['approve', 'reject']:
             return BookingApprovalSerializer
         return BookingSerializer
     
     def get_permissions(self):
         """Permission based on action."""
-        if self.action in ['approve', 'reject', 'override_conflict', 'bulk_cancel', 'bulk_delete']:
+        if self.action in ['update', 'partial_update', 'destroy', 'approve', 'reject', 'override_conflict', 'bulk_cancel', 'bulk_delete']:
             return [IsAdminUser()]
         return [IsAuthenticated()]
     
@@ -544,7 +544,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        serializer = BookingUpdateSerializer(booking, data=request.data, partial=True)
+        serializer = BookingModifySerializer(booking, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -883,7 +883,7 @@ class WaitlistViewSet(viewsets.ModelViewSet):
         })
 
 
-class NotificationViewSet(viewsets.ModelViewSet):
+class NotificationViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
     """ViewSet for managing notifications."""
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated]
@@ -915,9 +915,3 @@ class NotificationViewSet(viewsets.ModelViewSet):
         notification.is_read = True
         notification.save()
         return Response(NotificationSerializer(notification).data)
-    
-    def destroy(self, request, *args, **kwargs):
-        """Delete a notification."""
-        notification = self.get_object()
-        notification.delete()
-        return Response({'status': 'Notification deleted'}, status=status.HTTP_204_NO_CONTENT)

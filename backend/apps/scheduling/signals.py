@@ -8,21 +8,17 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-# Store original status before save
-_booking_original_status = {}
-
-
 @receiver(pre_save, sender=Booking)
 def track_booking_status_change(sender, instance, **kwargs):
     """Track the original status before it changes."""
     if instance.pk:
         try:
             original = Booking.objects.get(pk=instance.pk)
-            _booking_original_status[instance.pk] = original.status
+            instance._old_status = original.status
         except Booking.DoesNotExist:
-            _booking_original_status[instance.pk] = None
+            instance._old_status = None
     else:
-        _booking_original_status[instance.pk] = None
+        instance._old_status = None
 
 
 @receiver(post_save, sender=Booking)
@@ -31,7 +27,7 @@ def create_booking_notification(sender, instance, created, **kwargs):
     from django.contrib.auth import get_user_model
     
     User = get_user_model()
-    old_status = _booking_original_status.get(instance.pk)
+    old_status = getattr(instance, '_old_status', None)
     
     # For new bookings set to PENDING - notify all admins and faculty
     if created and instance.status == 'PENDING':
@@ -67,10 +63,6 @@ def create_booking_notification(sender, instance, created, **kwargs):
                 
         except Exception as e:
             logger.error(f"Error creating notification for booking {instance.id}: {str(e)}")
-    
-    # Clean up the tracking dict
-    if instance.pk in _booking_original_status:
-        del _booking_original_status[instance.pk]
 
 
 def check_and_create_reminders():
