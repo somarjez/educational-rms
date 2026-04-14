@@ -165,6 +165,11 @@ Notes:
 .\print_reset_link.bat "user_email@gmail.com"
 ```
 
+## Manual Smoke Tests
+
+The files under `backend/scripts/` are manual smoke tests only.
+They are kept out of Django test discovery so `manage.py test` stays clean in CI.
+
 ## Useful Commands
 
 ### Backend
