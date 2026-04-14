@@ -3,6 +3,7 @@
 Educational RMS is a Django + React system for room scheduling, equipment management, and capacity/simulation analysis in academic environments.
 
 ## Documentation
+
 - [QUICKSTART_GUIDE.md](QUICKSTART_GUIDE.md)
 - [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)
 - [WORKFLOW.md](WORKFLOW.md)
@@ -10,6 +11,7 @@ Educational RMS is a Django + React system for room scheduling, equipment manage
 ## Quick Start (Local)
 
 ### Backend
+
 ```bash
 cd backend
 python manage.py migrate
@@ -17,6 +19,7 @@ python manage.py runserver
 ```
 
 ### Frontend
+
 ```bash
 cd frontend
 npm install
@@ -26,6 +29,7 @@ npm run dev
 Access the UI at http://localhost:5173
 
 ## Current Functionality
+
 - Authentication and profiles: registration, login, JWT refresh, change password, roles, profile updates
 - Dashboard stats: user summary, booking stats, recent bookings, simulation snapshot
 - Scheduling: rooms, equipment, time slots, availability checks, search and filters
@@ -40,6 +44,7 @@ Access the UI at http://localhost:5173
 Base path: `/api/v1`
 
 ### Auth and profiles
+
 ```
 POST   /auth/users/register/
 POST   /auth/users/login/
@@ -57,6 +62,7 @@ GET    /auth/dashboard/stats/
 ```
 
 ### Scheduling
+
 ```
 GET    /scheduling/rooms/
 POST   /scheduling/rooms/
@@ -93,6 +99,7 @@ POST   /scheduling/waitlist/{id}/fulfill/
 ```
 
 ### Equipment configuration
+
 ```
 POST   /equipment-config/configure_room_equipment/
 POST   /equipment-config/add_equipment/
@@ -108,6 +115,7 @@ POST   /equipment-config/auto-distribute/
 ```
 
 ### Simulation
+
 ```
 GET    /simulation/
 POST   /simulation/
@@ -117,6 +125,7 @@ GET    /simulation/system_snapshot/
 ```
 
 ### Capacity analysis
+
 ```
 GET    /capacity/current_utilization/
 POST   /capacity/scenario_analysis/
@@ -132,6 +141,7 @@ GET    /capacity/export_csv/
 ## Configuration
 
 ### Backend ([backend/.env](backend/.env))
+
 ```
 DATABASE_URL=postgresql://user:pass@host/db
 SECRET_KEY=your-secret-key
@@ -141,11 +151,13 @@ CORS_ALLOWED_ORIGINS=http://localhost:5173
 ```
 
 ### Frontend ([frontend/.env.local](frontend/.env.local))
+
 ```
 VITE_API_URL=http://localhost:8000/api/v1
 ```
 
 ## Testing
+
 - [test_auth_flow.py](test_auth_flow.py)
 - [test_frontend_api.py](test_frontend_api.py)
 - [backend/test_api.py](backend/test_api.py)
@@ -153,12 +165,14 @@ VITE_API_URL=http://localhost:8000/api/v1
 ## Tech Stack
 
 ### Backend
+
 - Django 6.0.1
 - Django REST Framework 3.16.1
 - Simple JWT
 - PostgreSQL or SQLite
 
 ### Frontend
+
 - React 19.2.0
 - Vite
 - React Router 6.20.0
@@ -166,6 +180,7 @@ VITE_API_URL=http://localhost:8000/api/v1
 - Axios
 
 ## Deployment and Helpers
+
 - [render.yaml](render.yaml) for backend deployment
 - [vercel.json](vercel.json) for frontend deployment
 - [start_backend.bat](start_backend.bat) for local Windows startup

@@ -18,6 +18,131 @@ class CapacityAnalysisViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
     CACHE_TTL_SECONDS = 60
 
+    def _format_percent(self, value):
+        """Format numeric values as percentage strings with one decimal place."""
+        try:
+            numeric_value = float(value or 0)
+        except (TypeError, ValueError):
+            numeric_value = 0.0
+        return f"{numeric_value:.1f}%"
+
+    def _parse_percent(self, value):
+        """Parse percent-like strings such as '12.3%' into float values."""
+        try:
+            return float(str(value or '').replace('%', ''))
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _build_decision_support_recommendations(self, current_utilization, peak_hours, conflict_summary):
+        """Assemble dashboard decision support cards from existing capacity metrics."""
+        room_utilization = list(current_utilization.get('room_utilization') or [])
+        equipment_usage = list(current_utilization.get('equipment_usage') or [])
+
+        room_utilization.sort(key=lambda item: float(item.get('utilization_pct') or 0))
+        equipment_usage.sort(key=lambda item: float(item.get('assignment_pct') or 0), reverse=True)
+
+        best_room = room_utilization[0] if room_utilization else None
+        peak_slots = peak_hours.get('peak_slots') if isinstance(peak_hours, dict) else []
+        underutilized_slots = peak_hours.get('underutilized_slots') if isinstance(peak_hours, dict) else []
+        peak_slot = peak_slots[0] if isinstance(peak_slots, list) and peak_slots else None
+        low_slot = underutilized_slots[0] if isinstance(underutilized_slots, list) and underutilized_slots else None
+
+        summary = conflict_summary.get('summary') if isinstance(conflict_summary, dict) else {}
+        conflict_rate = self._parse_percent(summary.get('conflict_rate'))
+        most_conflicted_resource = summary.get('most_conflicted_resource') or 'N/A'
+
+        overloaded_equipment = None
+        for item in equipment_usage:
+            assignment_pct = float(item.get('assignment_pct') or 0)
+            available_quantity = int(item.get('available_quantity') or 0)
+            if assignment_pct >= 80 and available_quantity <= 1:
+                overloaded_equipment = item
+                break
+
+        recommendations = [
+            {
+                'id': 'room-allocation',
+                'title': 'Recommend optimal room allocation',
+                'tone': 'good' if best_room else 'neutral',
+                'headline': (
+                    f"Use {best_room['room_name']} for flexible bookings."
+                    if best_room and float(best_room.get('utilization_pct') or 0) <= 35
+                    else f"Prefer {best_room['room_name']} for lower-priority sessions."
+                    if best_room
+                    else 'No room utilization data available yet.'
+                ),
+                'details': (
+                    f"{best_room['room_name']} is currently the least utilized room at "
+                    f"{self._format_percent(best_room.get('utilization_pct'))} with "
+                    f"{best_room.get('booked_slots', 0)}/{best_room.get('total_slots', 0)} booked slots."
+                    if best_room
+                    else 'The current utilization endpoint did not return room-level data.'
+                ),
+            },
+            {
+                'id': 'schedule-improvements',
+                'title': 'Suggest scheduling improvements',
+                'tone': 'watch' if peak_slot else 'neutral',
+                'headline': (
+                    f"Move non-urgent bookings away from {peak_slot.get('time_slot', 'peak slots')}."
+                    if peak_slot
+                    else 'No peak slot concentration detected.'
+                ),
+                'details': (
+                    (
+                        f"Peak demand is concentrated in {peak_slot.get('time_slot')}, while "
+                        f"{low_slot.get('time_slot')} remains underused. "
+                        "Stagger approvals toward quieter slots."
+                    )
+                    if peak_slot and low_slot
+                    else (
+                        f"Peak demand is concentrated in {peak_slot.get('time_slot')}."
+                        if peak_slot
+                        else 'Peak-hour data is not available right now.'
+                    )
+                ),
+            },
+            {
+                'id': 'bottlenecks',
+                'title': 'Identify resource bottlenecks',
+                'tone': 'alert' if conflict_rate >= 10 else 'watch',
+                'headline': (
+                    f"Resource bottlenecks are elevated at {summary.get('conflict_rate') or '0%'} conflict rate."
+                    if conflict_rate >= 10
+                    else 'No major bottleneck is currently visible.'
+                ),
+                'details': (
+                    f"{most_conflicted_resource} is the most conflicted resource. "
+                    f"{int(summary.get('high_risk_slots') or 0)} high-risk slots are flagged."
+                    if summary
+                    else 'Conflict summary data is not available right now.'
+                ),
+            },
+            {
+                'id': 'equipment',
+                'title': 'Recommend additional equipment',
+                'tone': 'alert' if overloaded_equipment else 'good',
+                'headline': (
+                    f"Add more {overloaded_equipment.get('equipment_name')} units."
+                    if overloaded_equipment
+                    else 'No immediate equipment additions are needed.'
+                ),
+                'details': (
+                    f"{overloaded_equipment.get('equipment_name')} is at "
+                    f"{self._format_percent(overloaded_equipment.get('assignment_pct'))} assignment with only "
+                    f"{int(overloaded_equipment.get('available_quantity') or 0)} spare unit(s) left."
+                    if overloaded_equipment
+                    else (
+                        'Current equipment allocation leaves enough spare capacity across the active inventory.'
+                        if equipment_usage
+                        else 'Equipment utilization data is not available right now.'
+                    )
+                ),
+            },
+        ]
+
+        return recommendations
+
     @action(detail=False, methods=['get'])
     def current_utilization(self, request):
         """Get current utilization across all rooms and equipment."""
@@ -97,6 +222,136 @@ class CapacityAnalysisViewSet(viewsets.ViewSet):
             'room_utilization': room_utilization,
             'equipment_usage': equipment_usage,
         }
+        cache.set(cache_key, payload, self.CACHE_TTL_SECONDS)
+        return Response(payload)
+
+    @action(detail=False, methods=['get'])
+    def decision_support(self, request):
+        """Return backend-computed recommendation cards for Decision Support UI."""
+        date_str = request.query_params.get('date')
+        peak_days = int(request.query_params.get('peak_days', 14))
+        conflict_days = int(request.query_params.get('conflict_days', 120))
+
+        if not date_str:
+            date = datetime.today().date()
+        else:
+            date = datetime.strptime(date_str, '%Y-%m-%d').date()
+
+        cache_key = f"capacity:decision_support:{date.isoformat()}:{peak_days}:{conflict_days}"
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached)
+
+        current_utilization_payload = self.current_utilization(request).data
+
+        start_peak_date = datetime.today().date() - timedelta(days=peak_days)
+        end_peak_date = datetime.today().date()
+        peak_counts = Booking.objects.filter(
+            date__gte=start_peak_date,
+            date__lte=end_peak_date,
+            status__in=['CONFIRMED', 'APPROVED']
+        ).values(
+            'time_slot_id',
+            'time_slot__name',
+            'time_slot__start_time',
+            'time_slot__end_time',
+        ).annotate(count=Count('id'))
+
+        peak_slot_usage = {
+            f"{item['time_slot__name']}: {item['time_slot__start_time'].strftime('%H:%M')} - {item['time_slot__end_time'].strftime('%H:%M')}": item['count']
+            for item in peak_counts
+        }
+        for ts in TimeSlot.objects.all().only('id', 'name', 'start_time', 'end_time'):
+            label = f"{ts.name}: {ts.start_time.strftime('%H:%M')} - {ts.end_time.strftime('%H:%M')}"
+            peak_slot_usage.setdefault(label, 0)
+
+        sorted_slots = sorted(peak_slot_usage.items(), key=lambda x: x[1], reverse=True)
+        peak_payload = {
+            'peak_slots': [{'time_slot': k, 'booking_count': v} for k, v in sorted_slots[:5]],
+            'underutilized_slots': [{'time_slot': k, 'booking_count': v} for k, v in sorted_slots[-5:]],
+        }
+
+        conflict_start_date = datetime.today().date() - timedelta(days=conflict_days)
+        conflict_end_date = datetime.today().date()
+        active_statuses = ['PENDING', 'APPROVED', 'CONFIRMED']
+        conflict_base = Booking.objects.filter(
+            date__gte=conflict_start_date,
+            date__lte=conflict_end_date,
+            status__in=active_statuses,
+        )
+
+        grouped_slots = list(
+            conflict_base.values(
+                'date',
+                'room_id',
+                'room__name',
+                'time_slot_id',
+                'time_slot__name',
+                'time_slot__start_time',
+                'time_slot__end_time',
+            ).annotate(count=Count('id'))
+        )
+
+        room_conflicts = {}
+        slot_conflicts = {}
+        for item in grouped_slots:
+            if item['count'] > 1:
+                room_name = item['room__name'] or f"Room {item['room_id']}"
+                room_conflicts[room_name] = room_conflicts.get(room_name, 0) + 1
+
+                slot_label = (
+                    f"{item['time_slot__name']}: "
+                    f"{item['time_slot__start_time'].strftime('%H:%M')} - "
+                    f"{item['time_slot__end_time'].strftime('%H:%M')}"
+                )
+                slot_conflicts[slot_label] = slot_conflicts.get(slot_label, 0) + 1
+
+        high_risk_slots = [
+            {
+                'slot': label,
+                'conflicts': count,
+                'probability': 'High' if count >= 8 else 'Medium' if count >= 4 else 'Low',
+            }
+            for label, count in sorted(slot_conflicts.items(), key=lambda x: x[1], reverse=True)[:8]
+        ]
+
+        total_active_bookings = conflict_base.count()
+        total_conflicts = sum(1 for item in grouped_slots if item['count'] > 1)
+        conflict_rate = round((total_conflicts / total_active_bookings * 100), 1) if total_active_bookings else 0.0
+        most_conflicted_resource = (
+            sorted(room_conflicts.items(), key=lambda x: x[1], reverse=True)[0][0]
+            if room_conflicts else 'N/A'
+        )
+        conflict_payload = {
+            'summary': {
+                'total_conflicts': total_conflicts,
+                'high_risk_slots': len([s for s in high_risk_slots if s['probability'] == 'High']),
+                'conflict_rate': f"{conflict_rate:.1f}%",
+                'most_conflicted_resource': most_conflicted_resource,
+            }
+        }
+
+        recommendations = self._build_decision_support_recommendations(
+            current_utilization_payload,
+            peak_payload,
+            conflict_payload,
+        )
+
+        payload = {
+            'date': date,
+            'peak_days': peak_days,
+            'conflict_days': conflict_days,
+            'recommendations': recommendations,
+            'sources': {
+                'current_utilization': {
+                    'overall_utilization_pct': current_utilization_payload.get('overall_utilization_pct', 0),
+                    'total_available_slots': current_utilization_payload.get('total_available_slots', 0),
+                    'total_booked_slots': current_utilization_payload.get('total_booked_slots', 0),
+                },
+                'conflict_summary': conflict_payload.get('summary', {}),
+            },
+        }
+
         cache.set(cache_key, payload, self.CACHE_TTL_SECONDS)
         return Response(payload)
 

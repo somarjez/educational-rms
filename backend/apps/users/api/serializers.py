@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.db.models import Q
 from ..models import User, UserProfile
 
 
@@ -116,19 +117,26 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 class UserLoginSerializer(serializers.Serializer):
     """Serializer for user login."""
     
-    email = serializers.EmailField()
+    email = serializers.CharField()
     password = serializers.CharField(
         write_only=True,
         style={'input_type': 'password'}
     )
     
     def validate(self, attrs):
-        email = attrs.get('email')
+        identifier = (attrs.get('email') or '').strip()
         password = attrs.get('password')
+
+        if not identifier:
+            raise serializers.ValidationError(
+                {'email': ['Email or username is required.']}
+            )
 
         user = User.objects.only(
             'id', 'username', 'email', 'password', 'is_active'
-        ).filter(email=email).first()
+        ).filter(
+            Q(email__iexact=identifier) | Q(username__iexact=identifier)
+        ).first()
 
         if not user:
             raise serializers.ValidationError(

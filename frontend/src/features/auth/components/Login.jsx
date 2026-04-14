@@ -1,137 +1,125 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuth from '../../../hooks/useAuth';
-import { FaEnvelope, FaLock, FaCalendarAlt, FaBullseye, FaChartBar } from 'react-icons/fa';
+import { BsEnvelope, BsLock } from 'react-icons/bs';
 import { motion } from 'framer-motion';
+import ccsLogo from '../../../assets/ccs-logo.png';
+import lspuLogo from '../../../assets/lspu-logo.png';
+import lspuBg from '../../../assets/lspu-bg.png';
 import '../styles/Login.css';
 
 const Login = () => {
   const navigate = useNavigate();
   const { login, isLoading, error, clearError } = useAuth(false);
 
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
-
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [validationErrors, setValidationErrors] = useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (validationErrors[name]) {
-      setValidationErrors((prev) => ({
-        ...prev,
-        [name]: '',
-      }));
+      setValidationErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
 
   const validateForm = () => {
     const errors = {};
-
-    if (!formData.email.trim()) {
-      errors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'Please enter a valid email';
-    }
-
-    if (!formData.password) {
-      errors.password = 'Password is required';
-    } else if (formData.password.length < 1) {
-      errors.password = 'Password must be at least 1 character';
-    }
-
+    if (!formData.email.trim()) errors.email = 'Email is required';
+    if (!formData.password) errors.password = 'Password is required';
     return errors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     clearError();
-
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
       return;
     }
-
     try {
       await login(formData.email, formData.password);
       navigate('/dashboard');
-    } catch (err) {
-      // Error is handled by the auth store and displayed via the 'error' state
-    }
+    } catch (err) {}
   };
 
   return (
-    <motion.div className="auth-container" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }}>
-      <div className="auth-brand-side">
-        <div className="brand-content">
-          <div className="brand-logo">
-            <div className="brand-logo-text">ER</div>
-          </div>
-          <h1 className="brand-title">Educational Resource Management</h1>
-          <p className="brand-description">
-            Streamline your academic resource scheduling and management with our comprehensive platform.
-          </p>
-          <div className="brand-features">
-            <div className="brand-feature">
-              <FaCalendarAlt className="feature-icon" />
-              <div className="feature-text">Smart scheduling and booking system</div>
-            </div>
-            <div className="brand-feature">
-              <FaBullseye className="feature-icon" />
-              <div className="feature-text">Real-time availability tracking</div>
-            </div>
-            <div className="brand-feature">
-              <FaChartBar className="feature-icon" />
-              <div className="feature-text">Advanced analytics and reporting</div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <motion.div
+      className="login-layout"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+      style={{ '--login-bg-image': `url(${lspuBg})` }}
+    >
+      <section
+        className="login-visual-side"
+        style={{ backgroundImage: `url(${lspuBg})` }}
+        aria-hidden="true"
+      >
+        <div className="visual-overlay" />
+      </section>
 
-      <div className="auth-form-side">
-        <motion.div className="auth-card" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6 }}>
-          <div className="auth-header">
-            <h2 className="auth-title">Welcome Back</h2>
-            <p className="auth-subtitle">Sign in to your account to continue</p>
+      <section className="login-form-side">
+        <motion.div
+          className="login-card"
+          initial={{ y: 16, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <div className="logo-row">
+            <img src={lspuLogo} alt="LSPU logo" className="institution-logo" />
+            <img src={ccsLogo} alt="CCS logo" className="institution-logo" />
           </div>
+
+          <header className="login-header">
+            <h1 className="login-title">Welcome Back!</h1>
+            <p className="login-subtitle">Sign in to your account to continue.</p>
+          </header>
 
           {error && (
-            <div className="alert alert-error" role="alert">
-              {error}
-            </div>
+            <div className="alert alert-error" role="alert">{error}</div>
           )}
 
-          <form onSubmit={handleSubmit} className="auth-form">
+          <form onSubmit={handleSubmit} className="login-form" noValidate>
+
             <div className="form-group">
-              <label htmlFor="email" className="form-label">Email Address</label>
+              <label htmlFor="email" className="form-label">
+                Email Address
+              </label>
               <div className="input-with-icon">
-                <FaEnvelope className="input-icon" />
+                <BsEnvelope
+                  className="input-icon"
+                  aria-hidden="true"
+                />
                 <input
                   type="email"
                   id="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="you@university.edu"
-                  className={`form-input ${validationErrors.email ? 'error' : ''}`}
+                  placeholder="Enter your email address"
+                  className={`form-input${validationErrors.email ? ' error' : ''}`}
                   disabled={isLoading}
+                  autoComplete="username"
                 />
               </div>
               {validationErrors.email && (
-                <span className="error-message">{validationErrors.email}</span>
+                <span className="error-message" role="alert">
+                  {validationErrors.email}
+                </span>
               )}
             </div>
 
             <div className="form-group">
-              <label htmlFor="password" className="form-label">Password</label>
+              <label htmlFor="password" className="form-label">
+                Password
+              </label>
               <div className="input-with-icon">
-                <FaLock className="input-icon" />
+                <BsLock
+                  className="input-icon"
+                  aria-hidden="true"
+                />
                 <input
                   type="password"
                   id="password"
@@ -139,33 +127,55 @@ const Login = () => {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="Enter your password"
-                  className={`form-input ${validationErrors.password ? 'error' : ''}`}
+                  className={`form-input${validationErrors.password ? ' error' : ''}`}
                   disabled={isLoading}
+                  autoComplete="current-password"
                 />
               </div>
+              <div className="assist-row">
+                <label className="remember-label" htmlFor="remember-me">
+                  <input
+                    id="remember-me"
+                    type="checkbox"
+                    className="remember-checkbox"
+                  />
+                  <span>Remember Me.</span>
+                </label>
+              </div>
               {validationErrors.password && (
-                <span className="error-message">{validationErrors.password}</span>
+                <span className="error-message" role="alert">
+                  {validationErrors.password}
+                </span>
               )}
             </div>
 
-            <motion.button type="submit" className="submit-btn" disabled={isLoading} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-              {isLoading ? 'Signing in...' : 'Sign In'}
-            </motion.button>
+            <div className="btn-wrapper">
+              <motion.button
+                type="submit"
+                className="submit-btn"
+                disabled={isLoading}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                {isLoading ? 'Signing In...' : 'Sign In'}
+              </motion.button>
+            </div>
+
           </form>
 
-          <div className="auth-footer">
+          <footer className="auth-footer">
             <p>
               Don't have an account?{' '}
               <a href="/register" className="auth-link">
-                Create an account
+                Create an account here.
               </a>
             </p>
-          </div>
+          </footer>
+
         </motion.div>
-      </div>
+      </section>
     </motion.div>
   );
 };
 
 export default Login;
-

@@ -116,6 +116,21 @@ def dashboard_stats(request):
             'conflicts_today': int(scheduling_aggregate.get('conflicts_today') or 0),
         }
         
+        # Add booking stats for faculty resource overview dashboard
+        total_bookings = booking_aggregate.get('total_bookings', 0)
+        confirmed_bookings = booking_aggregate.get('confirmed_bookings', 0)
+        pending_bookings = booking_aggregate.get('pending_bookings', 0)
+        
+        scheduled_today = Booking.objects.filter(
+            date=today,
+            status__in=['APPROVED', 'CONFIRMED']
+        ).count()
+        
+        scheduling_stats['total_bookings'] = int(total_bookings or 0)
+        scheduling_stats['confirmed_bookings'] = int(confirmed_bookings or 0)
+        scheduling_stats['pending_bookings'] = int(pending_bookings or 0)
+        scheduling_stats['scheduled_for_today'] = scheduled_today
+        
         # Get pending booking requests for quick approval
         pending_requests = Booking.objects.filter(status='PENDING').select_related(
             'user', 'room', 'time_slot'

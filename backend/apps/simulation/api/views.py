@@ -1,20 +1,31 @@
 """Views for simulation app."""
-import math
-import random
 from datetime import datetime
-from collections import deque
 from django.db.models import Q
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from ..models import SimulationScenario, SimulationResult, SimulationAuditLog
+from ..simulation_engine import (
+    estimate_mm_c, 
+    simulate_replication,
+    run_shortage_analysis,
+    run_comparative_scenarios,
+)
+from ..simulation_categories import get_simulator
+from ..decision_support import build_decision_support_payload
+from .payload_mappers import (
+    serialize_backup_result,
+    serialize_backup_scenario,
+    serialize_history_run,
+)
 from .serializers import (
     SimulationScenarioSerializer,
     SimulationResultSerializer,
     SimulationAuditLogSerializer,
 )
-from apps.scheduling.models import Room, Equipment, RoomEquipment, Booking
+from .query_filters import build_result_category_filter, build_scenario_filter
+from .snapshot_service import build_system_snapshot_payload
 
 
 class SimulationViewSet(viewsets.ModelViewSet):
@@ -26,17 +37,31 @@ class SimulationViewSet(viewsets.ModelViewSet):
     ordering_fields = ['created_at', 'name']
 
     HISTORY_RETENTION_PER_CATEGORY = 10
-    HISTORY_TYPE_KEYWORDS = {
-        'room-usage': ['room usage simulation', 'room usage'],
-        'equipment-usage': ['equipment usage simulation', 'equipment usage'],
-        'peak-hour': ['peak-hour scenario simulation', 'peak-hour', 'peak hour'],
-        'what-if': ['what-if analysis', 'what-if', 'what if'],
-        'shortage': ['shortage scenario simulation', 'shortage scenario', 'shortage'],
-    }
+    AUDIT_LOG_RETENTION_COUNT = 500
     
     def get_queryset(self):
         """Get all simulations."""
         return SimulationScenario.objects.all()
+
+    def _parse_int_query_param(self, request, name, default, *, min_value=1, max_value=500):
+        """Parse and clamp integer query params, returning (value, error_response)."""
+        raw_value = request.query_params.get(name, default)
+        try:
+            value = int(raw_value)
+        except (TypeError, ValueError):
+            return None, Response({'error': f'{name} must be an integer'}, status=status.HTTP_400_BAD_REQUEST)
+
+        return max(min_value, min(value, max_value)), None
+    
+    def _avg_hour_metric(self, metrics_list, hour_idx, metric_key):
+        """Average a metric across all replications for a specific hour."""
+        values = []
+        for m in metrics_list:
+            if 'time_slot_breakdown' in m and hour_idx < len(m['time_slot_breakdown']):
+                hour_data = m['time_slot_breakdown'][hour_idx]
+                if metric_key in hour_data:
+                    values.append(hour_data[metric_key])
+        return sum(values) / len(values) if values else 0.0
 
     @action(detail=False, methods=['get'])
     def system_snapshot(self, request):
@@ -44,169 +69,8 @@ class SimulationViewSet(viewsets.ModelViewSet):
         start_date = request.query_params.get('start_date')
         end_date = request.query_params.get('end_date')
 
-        rooms = Room.objects.all().prefetch_related('room_equipment__equipment')
-        equipment = Equipment.objects.all()
-
-        room_payload = []
-        for room in rooms:
-            eq_list = []
-            for re in room.room_equipment.all():
-                eq_list.append({
-                    'id': re.equipment.id,
-                    'name': re.equipment.name,
-                    'quantity': re.quantity,
-                })
-            room_payload.append({
-                'id': room.id,
-                'name': room.name,
-                'capacity': room.capacity,
-                'equipment': eq_list,
-            })
-
-        equipment_payload = [
-            {
-                'id': eq.id,
-                'name': eq.name,
-                'quantity': eq.quantity,
-                'is_active': eq.is_active,
-            }
-            for eq in equipment
-        ]
-
-        booking_summary = {}
-        bookings = Booking.objects.select_related('room', 'time_slot')
-        if start_date:
-            bookings = bookings.filter(date__gte=start_date)
-        if end_date:
-            bookings = bookings.filter(date__lte=end_date)
-
-        for booking in bookings:
-            duration = (
-                (booking.time_slot.end_time.hour + booking.time_slot.end_time.minute / 60)
-                - (booking.time_slot.start_time.hour + booking.time_slot.start_time.minute / 60)
-            )
-            room_id = booking.room_id
-            if room_id not in booking_summary:
-                booking_summary[room_id] = {
-                    'room_id': room_id,
-                    'room_name': booking.room.name,
-                    'total_bookings': 0,
-                    'total_hours': 0.0,
-                }
-            booking_summary[room_id]['total_bookings'] += 1
-            booking_summary[room_id]['total_hours'] += max(duration, 0.0)
-
-        return Response({
-            'rooms': room_payload,
-            'equipment': equipment_payload,
-            'booking_summary': list(booking_summary.values())
-        })
-
-    def _get_rng(self, prng, seed):
-        if prng == 'system':
-            return random.SystemRandom()
-        rng = random.Random()
-        if seed is not None:
-            rng.seed(seed)
-        return rng
-
-    def _service_time(self, rng, service_distribution, service_rate, service_time):
-        if service_distribution == 'fixed':
-            return service_time
-        return rng.expovariate(service_rate)
-
-    def _simulate_replication(self, params):
-        arrival_rate = params.get('arrival_rate')
-        service_distribution = params.get('service_distribution', 'exponential')
-        service_rate = params.get('service_rate', 1.0)
-        service_time = params.get('service_time')
-        num_servers = int(params.get('num_servers') or 1)
-        simulation_hours = float(params.get('simulation_hours') or 8)
-        prng = params.get('prng', 'mt19937')
-        seed = params.get('seed')
-
-        rng = self._get_rng(prng, seed)
-
-        if arrival_rate is None or arrival_rate <= 0:
-            raise ValueError('arrival_rate must be greater than 0')
-
-        if service_distribution == 'exponential' and (service_rate is None or service_rate <= 0):
-            raise ValueError('service_rate must be greater than 0 for exponential distribution')
-
-        if service_distribution == 'fixed' and (service_time is None or service_time <= 0):
-            raise ValueError('service_time must be greater than 0 for fixed distribution')
-
-        # Simulation clock in hours
-        t = 0.0
-        max_time = simulation_hours
-
-        next_arrival = rng.expovariate(arrival_rate)
-        # Tracks only currently busy servers. Idle servers are implied by
-        # num_servers - len(busy_end_times) and prevent zero-time departure loops.
-        busy_end_times = []
-        queue = deque()
-
-        total_wait = 0.0
-        total_system = 0.0
-        total_service = 0.0
-        served_count = 0
-        max_queue_length = 0
-        last_event_time = 0.0
-        area_queue = 0.0
-
-        while t < max_time:
-            next_departure = min(busy_end_times) if busy_end_times else math.inf
-            next_event = min(next_arrival, next_departure)
-
-            # Advance time and accumulate queue length
-            if next_event > max_time:
-                area_queue += len(queue) * (max_time - last_event_time)
-                break
-
-            area_queue += len(queue) * (next_event - last_event_time)
-            t = next_event
-            last_event_time = t
-
-            if next_arrival <= next_departure:
-                # Arrival
-                if len(busy_end_times) < num_servers:
-                    service_duration = self._service_time(rng, service_distribution, service_rate, service_time)
-                    total_wait += 0.0
-                    total_system += service_duration
-                    total_service += service_duration
-                    served_count += 1
-                    busy_end_times.append(t + service_duration)
-                else:
-                    queue.append(t)
-                    max_queue_length = max(max_queue_length, len(queue))
-
-                next_arrival = t + rng.expovariate(arrival_rate)
-            else:
-                # Departure
-                busy_end_times.remove(next_departure)
-                if queue:
-                    arrival_time = queue.popleft()
-                    wait_time = t - arrival_time
-                    service_duration = self._service_time(rng, service_distribution, service_rate, service_time)
-                    total_wait += wait_time
-                    total_system += wait_time + service_duration
-                    total_service += service_duration
-                    served_count += 1
-                    busy_end_times.append(t + service_duration)
-
-        avg_queue_length = area_queue / max_time if max_time > 0 else 0.0
-        avg_waiting_time = total_wait / served_count if served_count > 0 else 0.0
-        avg_system_time = total_system / served_count if served_count > 0 else 0.0
-        server_utilization = total_service / (num_servers * max_time) if max_time > 0 else 0.0
-
-        return {
-            'avg_queue_length': avg_queue_length,
-            'avg_waiting_time': avg_waiting_time,
-            'avg_system_time': avg_system_time,
-            'server_utilization': server_utilization,
-            'max_queue_length': max_queue_length,
-            'served_count': served_count
-        }
+        payload = build_system_snapshot_payload(start_date=start_date, end_date=end_date)
+        return Response(payload)
 
     def _log_audit(self, request, action, message, *, level='info', scenario=None, result=None, metadata=None):
         try:
@@ -219,90 +83,19 @@ class SimulationViewSet(viewsets.ModelViewSet):
                 scenario=scenario,
                 result=result,
             )
+            self._prune_audit_logs()
         except Exception:
             # Audit logging failures must not break simulation flows.
             pass
 
-    def _estimate_mm_c(self, params):
-        arrival_rate = params.get('arrival_rate')
-        service_distribution = params.get('service_distribution', 'exponential')
-        service_rate = params.get('service_rate')
-        service_time = params.get('service_time')
-        num_servers = int(params.get('num_servers', 1))
-        simulation_hours = float(params.get('simulation_hours', 8))
-
-        if arrival_rate is None or arrival_rate <= 0:
-            raise ValueError('arrival_rate must be greater than 0')
-        if service_distribution == 'fixed':
-            if service_time is None or service_time <= 0:
-                raise ValueError('service_time must be greater than 0 for fixed distribution')
-            service_rate = 1.0 / service_time
-        if service_rate is None or service_rate <= 0:
-            raise ValueError('service_rate must be greater than 0')
-        if num_servers < 1:
-            raise ValueError('num_servers must be at least 1')
-
-        capacity = num_servers * service_rate
-        if arrival_rate >= capacity:
-            raise ValueError('System is unstable: arrival_rate must be less than num_servers * service_rate')
-
-        a = arrival_rate / service_rate
-        rho = arrival_rate / capacity
-
-        # Compute P0 for M/M/c
-        sum_terms = 0.0
-        for k in range(num_servers):
-            sum_terms += (a ** k) / self._factorial(k)
-        last_term = (a ** num_servers) / (self._factorial(num_servers) * (1 - rho))
-        p0 = 1.0 / (sum_terms + last_term)
-
-        # Erlang C formula for Lq
-        lq = (p0 * (a ** num_servers) * rho) / (self._factorial(num_servers) * (1 - rho) ** 2)
-        wq = lq / arrival_rate
-        w = wq + 1.0 / service_rate
-        l = arrival_rate * w
-
-        served_count = arrival_rate * simulation_hours
-
-        return {
-            'avg_queue_length': lq,
-            'avg_waiting_time': wq,
-            'avg_system_time': w,
-            'server_utilization': rho,
-            'max_queue_length': 0,
-            'served_count': served_count
-        }
-
-    @staticmethod
-    def _factorial(n):
-        result = 1
-        for i in range(2, n + 1):
-            result *= i
-        return result
-
-    def _category_filter(self, simulation_type, include_legacy=False):
-        if not simulation_type:
-            return Q()
-
-        typed_filter = Q(scenario__parameters__simulation_type=simulation_type)
-        if not include_legacy:
-            return typed_filter
-
-        keywords = self.HISTORY_TYPE_KEYWORDS.get(simulation_type, [])
-        if not keywords:
-            return typed_filter
-
-        keyword_filter = Q()
-        for keyword in keywords:
-            keyword_filter |= Q(scenario__name__icontains=keyword)
-            keyword_filter |= Q(scenario__description__icontains=keyword)
-
-        legacy_filter = (
-            Q(scenario__parameters__simulation_type__isnull=True)
-            | Q(scenario__parameters__simulation_type='')
+    def _prune_audit_logs(self):
+        """Keep only the most recent N audit log rows globally."""
+        stale_ids = list(
+            SimulationAuditLog.objects.order_by('-created_at', '-id')
+            .values_list('id', flat=True)[self.AUDIT_LOG_RETENTION_COUNT:]
         )
-
-        return typed_filter | (legacy_filter & keyword_filter)
+        if stale_ids:
+            SimulationAuditLog.objects.filter(id__in=stale_ids).delete()
 
     def _prune_history_for_category(self, simulation_type):
         """Keep only the most recent N runs per simulation category."""
@@ -310,7 +103,7 @@ class SimulationViewSet(viewsets.ModelViewSet):
             return
 
         category_runs = SimulationResult.objects.filter(
-            self._category_filter(simulation_type, include_legacy=True)
+            build_result_category_filter(simulation_type, include_legacy=True)
         ).order_by('-run_date', '-id')
 
         stale_run_ids = list(
@@ -318,6 +111,19 @@ class SimulationViewSet(viewsets.ModelViewSet):
         )
         if stale_run_ids:
             SimulationResult.objects.filter(id__in=stale_run_ids).delete()
+
+    def _resolve_result_for_detail_actions(self, request, scenario):
+        """Resolve target result by query param result_id or latest scenario result."""
+        result_id = request.query_params.get('result_id')
+        queryset = scenario.simulationresult_set.all().order_by('-run_date', '-id')
+
+        if result_id:
+            try:
+                return queryset.get(id=int(result_id))
+            except (TypeError, ValueError, SimulationResult.DoesNotExist):
+                return None
+
+        return queryset.first()
     
     @action(detail=True, methods=['post'])
     def run(self, request, pk=None):
@@ -354,7 +160,7 @@ class SimulationViewSet(viewsets.ModelViewSet):
 
         if run_mode == 'estimate':
             try:
-                aggregated = self._estimate_mm_c(params)
+                aggregated = estimate_mm_c(params)
             except ValueError as exc:
                 self._log_audit(
                     request,
@@ -385,47 +191,121 @@ class SimulationViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_201_CREATED
             )
 
-        metrics_list = []
-        for rep in range(num_replications):
-            rep_params = dict(params)
-            # Different seed per replication if provided
-            if rep_params.get('seed') is not None:
-                try:
-                    rep_params['seed'] = int(rep_params['seed']) + rep
-                except (ValueError, TypeError):
-                    rep_params['seed'] = None
+        # Check if we should use category-specific simulator
+        simulation_type = str(params.get('simulation_type', 'general')).replace('-', '_')
+        use_category_simulator = simulation_type in ['room_usage', 'equipment_usage', 'peak_hour', 'shortage', 'what_if']
+        
+        if use_category_simulator:
             try:
-                metrics_list.append(self._simulate_replication(rep_params))
-            except ValueError as exc:
+                # Use category-specific simulator
+                simulator_kwargs = {}
+                if simulation_type == 'what_if':
+                    multipliers = request.data.get('multipliers', [0.75, 1.0, 1.25])
+                    try:
+                        multipliers = [float(m) for m in multipliers if m]
+                    except (ValueError, TypeError):
+                        multipliers = [0.75, 1.0, 1.25]
+                    simulator_kwargs['multipliers'] = multipliers
+                
+                simulator = get_simulator(
+                    simulation_type, 
+                    params, 
+                    num_replications=num_replications,
+                    **simulator_kwargs
+                )
+                simulator_results = simulator.run()
+                
+                aggregated = simulator_results['standard_metrics']
+                category_metrics = simulator_results['category_metrics'] or {}
+                aggregated['num_replications'] = num_replications
+
+                decision_support = build_decision_support_payload(
+                    simulation_type,
+                    aggregated,
+                    category_metrics,
+                )
+                category_metrics['decision_support'] = decision_support
+                if not category_metrics.get('recommendations'):
+                    category_metrics['recommendations'] = decision_support.get('recommendations', [])
+                
+                result = SimulationResult.objects.create(
+                    scenario=scenario,
+                    metrics=aggregated,
+                    category_metrics=category_metrics if category_metrics else None,
+                    raw_data={'simulation_type': simulation_type, 'category_simulator': True}
+                )
+            except Exception as exc:
                 self._log_audit(
                     request,
                     action='run_failed',
                     level='error',
                     scenario=scenario,
-                    message='Simulation run failed while computing replications',
-                    metadata={'error': str(exc), 'mode': run_mode},
+                    message=f'Category-specific simulation failed: {simulation_type}',
+                    metadata={'error': str(exc), 'simulation_type': simulation_type},
                 )
-                return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': f'Simulation failed: {str(exc)}'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # Use standard simulation path
+            metrics_list = []
+            for rep in range(num_replications):
+                rep_params = dict(params)
+                # Different seed per replication if provided
+                if rep_params.get('seed') is not None:
+                    try:
+                        rep_params['seed'] = int(rep_params['seed']) + rep
+                    except (ValueError, TypeError):
+                        rep_params['seed'] = None
+                
+                # Enable time-slot tracking
+                rep_params['track_time_slots'] = True
+                
+                try:
+                    metrics_list.append(simulate_replication(rep_params))
+                except ValueError as exc:
+                    self._log_audit(
+                        request,
+                        action='run_failed',
+                        level='error',
+                        scenario=scenario,
+                        message='Simulation run failed while computing replications',
+                        metadata={'error': str(exc), 'mode': run_mode},
+                    )
+                    return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Aggregate metrics
-        def avg(key):
-            return sum(m[key] for m in metrics_list) / len(metrics_list)
+            # Aggregate metrics
+            def avg(key):
+                values = [m[key] for m in metrics_list if key in m]
+                return sum(values) / len(values) if values else 0.0
 
-        aggregated = {
-            'avg_queue_length': avg('avg_queue_length'),
-            'avg_waiting_time': avg('avg_waiting_time'),
-            'avg_system_time': avg('avg_system_time'),
-            'server_utilization': avg('server_utilization'),
-            'max_queue_length': max(m['max_queue_length'] for m in metrics_list),
-            'served_count_avg': avg('served_count'),
-            'num_replications': num_replications
-        }
-
-        result = SimulationResult.objects.create(
-            scenario=scenario,
-            metrics=aggregated,
-            raw_data={'replications': metrics_list[:100]}
-        )
+            aggregated = {
+                'avg_queue_length': avg('avg_queue_length'),
+                'avg_waiting_time': avg('avg_waiting_time'),
+                'avg_system_time': avg('avg_system_time'),
+                'server_utilization': avg('server_utilization'),
+                'max_queue_length': max((m.get('max_queue_length', 0) for m in metrics_list), default=0),
+                'served_count_avg': avg('served_count'),
+                'num_replications': num_replications
+            }
+            
+            # Add shortage metrics if any replication tracked them
+            if any('rejected_count' in m for m in metrics_list):
+                aggregated['rejected_count'] = sum(m.get('rejected_count', 0) for m in metrics_list)
+                aggregated['unmet_demand_percentage'] = avg('unmet_demand_percentage')
+            
+            category_metrics = {}
+            decision_support = build_decision_support_payload(
+                simulation_type,
+                aggregated,
+                category_metrics,
+            )
+            category_metrics['decision_support'] = decision_support
+            category_metrics['recommendations'] = decision_support.get('recommendations', [])
+            result = SimulationResult.objects.create(
+                scenario=scenario,
+                metrics=aggregated,
+                category_metrics=category_metrics if category_metrics else None,
+                raw_data={'replications': metrics_list[:100]}
+            )
         self._log_audit(
             request,
             action='run_succeeded',
@@ -449,54 +329,195 @@ class SimulationViewSet(viewsets.ModelViewSet):
         serializer = SimulationResultSerializer(results, many=True)
         return Response(serializer.data)
 
+    @action(detail=True, methods=['get'], url_path='time-slot-breakdown')
+    def time_slot_breakdown(self, request, pk=None):
+        """Return time-slot series for the selected or latest simulation result."""
+        scenario = self.get_object()
+        result = self._resolve_result_for_detail_actions(request, scenario)
+        if not result:
+            return Response({'error': 'No simulation result found for this scenario'}, status=status.HTTP_404_NOT_FOUND)
+
+        category_metrics = result.category_metrics or {}
+        metrics = result.metrics or {}
+
+        if category_metrics.get('room_utilization_by_hour'):
+            payload = category_metrics['room_utilization_by_hour']
+            source = 'room_utilization_by_hour'
+        elif category_metrics.get('peak_hours_analysis'):
+            payload = category_metrics['peak_hours_analysis']
+            source = 'peak_hours_analysis'
+        elif metrics.get('time_slot_breakdown'):
+            payload = metrics['time_slot_breakdown']
+            source = 'metrics.time_slot_breakdown'
+        else:
+            payload = []
+            source = 'none'
+
+        return Response({
+            'scenario_id': scenario.id,
+            'result_id': result.id,
+            'source': source,
+            'time_slots': payload,
+        })
+
+    @action(detail=True, methods=['get'], url_path='recommendations')
+    def recommendations(self, request, pk=None):
+        """Return decision-support recommendations for selected/latest simulation result."""
+        scenario = self.get_object()
+        result = self._resolve_result_for_detail_actions(request, scenario)
+        if not result:
+            return Response({'error': 'No simulation result found for this scenario'}, status=status.HTTP_404_NOT_FOUND)
+
+        category_metrics = result.category_metrics or {}
+        decision_support = category_metrics.get('decision_support') or {}
+        recommendations = category_metrics.get('recommendations') or decision_support.get('recommendations') or []
+
+        return Response({
+            'scenario_id': scenario.id,
+            'result_id': result.id,
+            'health_score': decision_support.get('health_score'),
+            'priority': decision_support.get('priority'),
+            'recommendations': recommendations,
+        })
+
+    @action(detail=True, methods=['get'], url_path='shortage-breakdown')
+    def shortage_breakdown(self, request, pk=None):
+        """Return shortage comparison payload for selected/latest simulation result."""
+        scenario = self.get_object()
+        result = self._resolve_result_for_detail_actions(request, scenario)
+        if not result:
+            return Response({'error': 'No simulation result found for this scenario'}, status=status.HTTP_404_NOT_FOUND)
+
+        category_metrics = result.category_metrics or {}
+        scenario_comparison = category_metrics.get('scenario_comparison') or {}
+        shortage_impact = category_metrics.get('shortage_impact') or {}
+        recommendations = category_metrics.get('recommendations') or []
+
+        return Response({
+            'scenario_id': scenario.id,
+            'result_id': result.id,
+            'scenario_comparison': scenario_comparison,
+            'shortage_impact': shortage_impact,
+            'recommendations': recommendations,
+        })
+    
+    @action(detail=False, methods=['post'])
+    def batch_compare(self, request):
+        """Run multiple what-if scenarios in a batch and return all results for comparison."""
+        scenario_id = request.data.get('scenario_id')
+        multipliers = request.data.get('multipliers', [0.5, 0.75, 1.0, 1.25, 1.5])
+        num_replications = request.data.get('num_replications', 100)
+        
+        if not scenario_id:
+            return Response({'error': 'scenario_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            scenario = SimulationScenario.objects.get(id=scenario_id)
+        except SimulationScenario.DoesNotExist:
+            return Response({'error': 'Scenario not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            multipliers = [float(m) for m in multipliers if m]
+            num_replications = int(num_replications)
+        except (ValueError, TypeError):
+            return Response({'error': 'Invalid multipliers or num_replications'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if num_replications < 50:
+            num_replications = 50
+        
+        self._log_audit(
+            request,
+            action='run_started',
+            scenario=scenario,
+            message='Batch comparison started',
+            metadata={'multipliers': multipliers, 'num_replications': num_replications},
+        )
+        
+        params = scenario.parameters or {}
+        batch_results = run_comparative_scenarios(params, multipliers, num_replications=num_replications)
+        
+        # Store batch results
+        batch_data = {
+            'batch_multipliers': multipliers,
+            'batch_scenario_id': scenario_id,
+            'results_per_multiplier': {},
+        }
+        
+        result_ids = []
+        for multiplier_key, scenario_result in batch_results.items():
+            multiplier_value = scenario_result.get('multiplier')
+            
+            # Create individual result for each scenario
+            result = SimulationResult.objects.create(
+                scenario=scenario,
+                metrics=scenario_result.get('metrics', {}),
+                raw_data={'batch_mode': True, 'multiplier': multiplier_value},
+            )
+            result_ids.append(result.id)
+            batch_data['results_per_multiplier'][multiplier_key] = result.id
+        
+        # Create summary result with batch metadata
+        summary_result = SimulationResult.objects.create(
+            scenario=scenario,
+            metrics={},
+            category_metrics={
+                'batch_comparison': batch_data,
+                'scenario_results': batch_results,
+            },
+            raw_data={'batch_mode': True, 'is_summary': True},
+        )
+        
+        self._log_audit(
+            request,
+            action='run_succeeded',
+            scenario=scenario,
+            result=summary_result,
+            message='Batch comparison completed successfully',
+            metadata={'multipliers': multipliers, 'num_results': len(result_ids)},
+        )
+        
+        return Response({
+            'summary_result_id': summary_result.id,
+            'individual_result_ids': result_ids,
+            'multipliers': multipliers,
+            'batch_data': batch_data,
+        }, status=status.HTTP_201_CREATED)
+
     @action(detail=False, methods=['get'])
     def history(self, request):
         """Get recent simulation runs across scenarios."""
-        limit = request.query_params.get('limit', 50)
-        simulation_type = request.query_params.get('simulation_type')
-        try:
-            limit = int(limit)
-        except (TypeError, ValueError):
-            return Response({'error': 'limit must be an integer'}, status=status.HTTP_400_BAD_REQUEST)
+        limit, error = self._parse_int_query_param(request, 'limit', 50, min_value=1, max_value=200)
+        if error:
+            return error
 
-        limit = max(1, min(limit, 200))
+        simulation_type = request.query_params.get('simulation_type')
         if simulation_type:
             self._prune_history_for_category(simulation_type)
 
         runs = SimulationResult.objects.select_related('scenario')
         if simulation_type:
-            runs = runs.filter(self._category_filter(simulation_type, include_legacy=True))
+            runs = runs.filter(build_result_category_filter(simulation_type, include_legacy=True))
         runs = runs.order_by('-run_date', '-id')[:limit]
 
-        payload = []
-        for run in runs:
-            scenario = run.scenario
-            payload.append({
-                'id': run.id,
-                'scenario': scenario.id,
-                'scenario_name': scenario.name,
-                'scenario_description': scenario.description,
-                'scenario_created_at': scenario.created_at,
-                'run_date': run.run_date,
-                'metrics': run.metrics,
-                'raw_data': run.raw_data,
-                'parameters': scenario.parameters,
-                'num_replications': scenario.num_replications,
-            })
-
+        payload = [serialize_history_run(run) for run in runs]
         return Response(payload)
 
     @action(detail=False, methods=['get'])
     def audit_logs(self, request):
         """List recent simulation audit logs."""
-        limit = request.query_params.get('limit', 100)
-        try:
-            limit = int(limit)
-        except (TypeError, ValueError):
-            return Response({'error': 'limit must be an integer'}, status=status.HTTP_400_BAD_REQUEST)
+        limit, error = self._parse_int_query_param(request, 'limit', 100, min_value=1, max_value=500)
+        if error:
+            return error
 
-        limit = max(1, min(limit, 500))
-        queryset = SimulationAuditLog.objects.select_related('scenario', 'result').all()[:limit]
+        simulation_type = request.query_params.get('simulation_type')
+
+        queryset = SimulationAuditLog.objects.select_related('scenario', 'result').all()
+        if simulation_type:
+            queryset = queryset.filter(
+                build_result_category_filter(simulation_type, include_legacy=True)
+                | Q(metadata__simulation_type=simulation_type)
+            )
+        queryset = queryset[:limit]
         serializer = SimulationAuditLogSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -504,34 +525,34 @@ class SimulationViewSet(viewsets.ModelViewSet):
     def backup(self, request):
         """Export simulation scenarios/results as a JSON backup payload."""
         include_raw = str(request.query_params.get('include_raw', '0')).lower() in {'1', 'true', 'yes'}
+        simulation_type = request.query_params.get('simulation_type')
+        audit_limit, error = self._parse_int_query_param(
+            request,
+            'audit_limit',
+            5,
+            min_value=1,
+            max_value=500,
+        )
+        if error:
+            return error
 
-        scenarios = []
         scenario_qs = SimulationScenario.objects.order_by('-created_at')
-        for scenario in scenario_qs:
-            scenarios.append({
-                'id': scenario.id,
-                'name': scenario.name,
-                'description': scenario.description,
-                'parameters': scenario.parameters,
-                'num_replications': scenario.num_replications,
-                'created_at': scenario.created_at,
-            })
+        if simulation_type:
+            scenario_qs = scenario_qs.filter(build_scenario_filter(simulation_type, include_legacy=True))
+        scenarios = [serialize_backup_scenario(scenario) for scenario in scenario_qs]
 
-        results = []
         result_qs = SimulationResult.objects.select_related('scenario').order_by('-run_date')
-        for result in result_qs:
-            payload = {
-                'id': result.id,
-                'scenario_id': result.scenario_id,
-                'scenario_name': result.scenario.name,
-                'run_date': result.run_date,
-                'metrics': result.metrics,
-            }
-            if include_raw:
-                payload['raw_data'] = result.raw_data
-            results.append(payload)
+        if simulation_type:
+            result_qs = result_qs.filter(build_result_category_filter(simulation_type, include_legacy=True))
+        results = [serialize_backup_result(result, include_raw) for result in result_qs]
 
-        logs = SimulationAuditLog.objects.order_by('-created_at')[:200]
+        logs = SimulationAuditLog.objects.order_by('-created_at')
+        if simulation_type:
+            logs = logs.filter(
+                build_result_category_filter(simulation_type, include_legacy=True)
+                | Q(metadata__simulation_type=simulation_type)
+            )
+        logs = logs[:audit_limit]
         audit_logs = SimulationAuditLogSerializer(logs, many=True).data
 
         self._log_audit(
@@ -540,14 +561,17 @@ class SimulationViewSet(viewsets.ModelViewSet):
             message='Simulation backup exported',
             metadata={
                 'include_raw': include_raw,
+                'simulation_type': simulation_type,
                 'scenario_count': len(scenarios),
                 'result_count': len(results),
+                'audit_limit': audit_limit,
             },
         )
 
         return Response({
             'exported_at': datetime.utcnow().isoformat() + 'Z',
             'include_raw': include_raw,
+            'simulation_type': simulation_type,
             'scenarios': scenarios,
             'results': results,
             'audit_logs': audit_logs,

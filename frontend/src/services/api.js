@@ -38,10 +38,18 @@ const processQueue = (error, token = null) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    const errorData = error.response?.data;
+    const errorDataText = typeof errorData === 'string'
+      ? errorData
+      : errorData
+        ? JSON.stringify(errorData)
+        : '';
+
     // Log error details for debugging
     console.error('API Error:', {
       status: error.response?.status,
       data: error.response?.data,
+      dataText: errorDataText,
       message: error.message,
     });
 

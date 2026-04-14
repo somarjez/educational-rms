@@ -18,12 +18,13 @@ class SimulationScenarioSerializer(serializers.ModelSerializer):
     seed = serializers.IntegerField(required=False, allow_null=True)
     room_id = serializers.IntegerField(required=False)
     equipment_id = serializers.IntegerField(required=False)
+    simulation_type = serializers.CharField(required=False)
 
     class Meta:
         model = SimulationScenario
         fields = [
             'id', 'name', 'description', 'parameters', 'num_replications',
-            'room_id', 'equipment_id',
+            'room_id', 'equipment_id', 'simulation_type',
             'arrival_model', 'arrival_rate', 'service_distribution',
             'service_rate', 'service_time', 'num_servers', 'simulation_hours',
             'prng', 'seed', 'created_at'
@@ -84,7 +85,7 @@ class SimulationScenarioSerializer(serializers.ModelSerializer):
         param_keys = [
             'arrival_model', 'arrival_rate', 'service_distribution', 'service_rate',
             'service_time', 'num_servers', 'simulation_hours', 'prng', 'seed',
-            'room_id', 'equipment_id',
+            'room_id', 'equipment_id', 'simulation_type',
         ]
         parameters = {}
         if instance and instance.parameters:
@@ -121,6 +122,7 @@ class SimulationScenarioSerializer(serializers.ModelSerializer):
         data['seed'] = params.get('seed')
         data['room_id'] = params.get('room_id')
         data['equipment_id'] = params.get('equipment_id')
+        data['simulation_type'] = params.get('simulation_type', instance.simulation_type)
         return data
 
 
@@ -130,7 +132,7 @@ class SimulationResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = SimulationResult
         fields = [
-            'id', 'scenario', 'run_date', 'metrics', 'raw_data'
+            'id', 'scenario', 'run_date', 'metrics', 'category_metrics', 'raw_data'
         ]
         read_only_fields = ['id', 'run_date']
 

@@ -8,6 +8,35 @@ import './styles/ResourceSettings.css';
 
 const API_BASE = 'http://localhost:8000/api/v1';
 
+const extractApiErrorMessage = (err, fallbackMessage) => {
+  const data = err?.response?.data;
+
+  if (!data) return fallbackMessage;
+  if (typeof data === 'string') return data;
+  if (data.error && typeof data.error === 'string') return data.error;
+  if (data.detail && typeof data.detail === 'string') return data.detail;
+
+  if (typeof data === 'object') {
+    const messages = Object.entries(data)
+      .flatMap(([field, value]) => {
+        if (Array.isArray(value)) {
+          return value.map((msg) => `${field}: ${msg}`);
+        }
+        if (typeof value === 'string') {
+          return [`${field}: ${value}`];
+        }
+        return [];
+      })
+      .filter(Boolean);
+
+    if (messages.length) {
+      return messages.join(' | ');
+    }
+  }
+
+  return fallbackMessage;
+};
+
 const ResourceSettings = () => {
   const [equipment, setEquipment] = useState([]);
   const [equipmentDistribution, setEquipmentDistribution] = useState({}); // Map of equipment_id -> room assignments
@@ -40,7 +69,7 @@ const ResourceSettings = () => {
     name: '',
     category: '',
     description: '',
-    quantity: 1,
+    quantity: '1',
     is_active: true
   });
 
@@ -139,7 +168,7 @@ const ResourceSettings = () => {
         name: item.name,
         category: item.category || '',
         description: item.description || '',
-        quantity: item.quantity,
+        quantity: String(item.quantity ?? 1),
         is_active: item.is_active
       });
     } else {
@@ -147,7 +176,7 @@ const ResourceSettings = () => {
         name: '',
         category: '',
         description: '',
-        quantity: 1,
+        quantity: '1',
         is_active: true
       });
     }
@@ -156,20 +185,36 @@ const ResourceSettings = () => {
 
   const handleEquipmentSubmit = async (e) => {
     e.preventDefault();
+
+    const quantity = Number(equipmentForm.quantity);
+    if (!Number.isFinite(quantity) || quantity < 1) {
+      setError('Quantity must be a valid number greater than 0');
+      return;
+    }
+
+    const payload = {
+      name: equipmentForm.name.trim(),
+      category: equipmentForm.category,
+      description: equipmentForm.description.trim(),
+      quantity,
+      is_active: Boolean(equipmentForm.is_active)
+    };
+
     try {
       setLoading(true);
       if (currentItem) {
-        await updateEquipment(currentItem.id, equipmentForm);
+        await updateEquipment(currentItem.id, payload);
         setSuccess('Equipment updated successfully');
       } else {
-        await createEquipment(equipmentForm);
+        await createEquipment(payload);
         setSuccess('Equipment created successfully');
       }
       setShowModal(false);
+      setCurrentItem(null);
       fetchData();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError('Failed to save equipment');
+      setError(extractApiErrorMessage(err, 'Failed to save equipment'));
       console.error('Error saving equipment:', err);
     } finally {
       setLoading(false);
@@ -620,7 +665,7 @@ const ResourceSettings = () => {
                     <input
                       type="number"
                       value={equipmentForm.quantity}
-                      onChange={(e) => setEquipmentForm({ ...equipmentForm, quantity: parseInt(e.target.value) })}
+                      onChange={(e) => setEquipmentForm({ ...equipmentForm, quantity: e.target.value })}
                       min="1"
                       required
                       className="form-input"

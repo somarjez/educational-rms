@@ -1,6 +1,40 @@
 import { create } from 'zustand';
 import { authApi } from '../services/authApi';
 
+const extractErrorMessage = (error, fallback) => {
+  const data = error?.response?.data || error;
+
+  if (typeof data === 'string' && data.trim()) {
+    return data;
+  }
+
+  if (data?.error) {
+    return data.error;
+  }
+
+  if (data?.detail) {
+    return data.detail;
+  }
+
+  if (Array.isArray(data?.non_field_errors) && data.non_field_errors[0]) {
+    return data.non_field_errors[0];
+  }
+
+  if (Array.isArray(data?.password) && data.password[0]) {
+    return data.password[0];
+  }
+
+  if (Array.isArray(data?.email) && data.email[0]) {
+    return data.email[0];
+  }
+
+  if (error?.message) {
+    return error.message;
+  }
+
+  return fallback;
+};
+
 export const useAuthStore = create((set, get) => ({
   user: null,
   tokens: {
@@ -71,31 +105,7 @@ export const useAuthStore = create((set, get) => ({
 
       return data;
     } catch (error) {
-      let errorMessage = 'Registration failed';
-      
-      // Try different error response formats
-      if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      } else if (error.response?.data?.detail) {
-        errorMessage = error.response.data.detail;
-      } else if (error.response?.data?.non_field_errors?.[0]) {
-        errorMessage = error.response.data.non_field_errors[0];
-      } else if (error.response?.data?.username) {
-        errorMessage = Array.isArray(error.response.data.username) 
-          ? error.response.data.username[0] 
-          : error.response.data.username;
-      } else if (error.response?.data?.email) {
-        errorMessage = Array.isArray(error.response.data.email) 
-          ? error.response.data.email[0] 
-          : error.response.data.email;
-      } else if (error.response?.data?.password) {
-        errorMessage = Array.isArray(error.response.data.password) 
-          ? error.response.data.password[0] 
-          : error.response.data.password;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
+      const errorMessage = extractErrorMessage(error, 'Registration failed');
       set({ error: errorMessage, isLoading: false });
       throw error;
     }
@@ -123,19 +133,7 @@ export const useAuthStore = create((set, get) => ({
 
       return data;
     } catch (error) {
-      let errorMessage = 'Login failed';
-      
-      // Try different error response formats
-      if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      } else if (error.response?.data?.detail) {
-        errorMessage = error.response.data.detail;
-      } else if (error.response?.data?.non_field_errors?.[0]) {
-        errorMessage = error.response.data.non_field_errors[0];
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
+      const errorMessage = extractErrorMessage(error, 'Login failed');
       set({ error: errorMessage, isLoading: false });
       throw error;
     }
@@ -171,7 +169,7 @@ export const useAuthStore = create((set, get) => ({
       set({ isLoading: false });
       return data;
     } catch (error) {
-      const errorMessage = error.response?.data?.error || 'Password change failed';
+      const errorMessage = extractErrorMessage(error, 'Password change failed');
       set({ error: errorMessage, isLoading: false });
       throw error;
     }

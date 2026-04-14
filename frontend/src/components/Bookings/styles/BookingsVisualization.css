@@ -228,6 +228,12 @@
   font-weight: 600;
 }
 
+.recurring-icon {
+  font-size: 0.9rem;
+  margin-right: 0.25rem;
+  vertical-align: text-bottom;
+}
+
 .status-badge {
   padding: 0.5rem 1rem;
   border-radius: 20px;
@@ -257,6 +263,24 @@
 .status-cancelled {
   background: #f3f4f6;
   color: #374151;
+  border: 1px solid #cbd5e1;
+}
+
+.status-confirmed {
+  background: #ecfeff;
+  color: #155e75;
+  border: 1px solid #06b6d4;
+}
+
+.status-completed {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #22c55e;
+}
+
+.status-default {
+  background: #f8fafc;
+  color: #334155;
   border: 1px solid #cbd5e1;
 }
 
@@ -312,6 +336,26 @@
   min-width: 80px;
 }
 
+.priority-low {
+  background: #10b981;
+}
+
+.priority-medium {
+  background: #f59e0b;
+}
+
+.priority-high {
+  background: #ef4444;
+}
+
+.priority-urgent {
+  background: #8b0000;
+}
+
+.priority-default {
+  background: #6b7280;
+}
+
 .btn-view {
   flex: 1;
   padding: 0.6rem 1.2rem;
@@ -354,6 +398,94 @@
 .btn-export:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
+}
+
+.btn-export:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.export-notice {
+  margin: 0 2rem 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  background: #ecfeff;
+  color: #155e75;
+  font-weight: 600;
+  border: 1px solid #bae6fd;
+}
+
+.booking-details-modal {
+  max-width: 760px;
+}
+
+.modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close svg {
+  font-size: 1rem;
+}
+
+.booking-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.booking-detail-item {
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.booking-detail-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.booking-detail-value {
+  display: block;
+  color: #0f172a;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.booking-detail-footer {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.25rem;
+}
+
+.detail-warning {
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .export-notice {
+    margin: 0 1rem 1rem;
+  }
+
+  .booking-detail-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Responsive */

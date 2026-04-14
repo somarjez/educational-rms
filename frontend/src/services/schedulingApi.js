@@ -145,12 +145,20 @@ export const deleteBooking = async (id) => {
 };
 
 export const approveBooking = async (id, notes = '') => {
-  const response = await api.post(`/scheduling/bookings/${id}/approve/`, { notes });
+  const payload = {};
+  if (String(notes || '').trim()) {
+    payload.notes = notes;
+  }
+  const response = await api.post(`/scheduling/bookings/${id}/approve/`, payload);
   return response.data;
 };
 
 export const rejectBooking = async (id, notes = '') => {
-  const response = await api.post(`/scheduling/bookings/${id}/reject/`, { notes });
+  const payload = {};
+  if (String(notes || '').trim()) {
+    payload.notes = notes;
+  }
+  const response = await api.post(`/scheduling/bookings/${id}/reject/`, payload);
   return response.data;
 };
 

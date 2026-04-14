@@ -9,6 +9,12 @@ const QuickBookingApproval = ({ booking, onApproved, onRejected }) => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [alertModal, setAlertModal] = useState({ isOpen: false, title: '', message: '', type: 'info' });
 
+  const timeLabel = booking?.time || (
+    booking?.time_slot_details?.start_time && booking?.time_slot_details?.end_time
+      ? `${booking.time_slot_details.start_time} - ${booking.time_slot_details.end_time}`
+      : 'N/A'
+  );
+
   const handleApprove = async () => {
     setLoading(true);
     try {
@@ -40,9 +46,10 @@ const QuickBookingApproval = ({ booking, onApproved, onRejected }) => {
 
     setLoading(true);
     try {
-      await rejectBooking(booking.id, { rejection_reason: rejectionReason });
+      await rejectBooking(booking.id, rejectionReason);
       onRejected(booking.id);
       setShowRejectModal(false);
+      setRejectionReason('');
     } catch (error) {
       console.error('Failed to reject booking:', error);
       setAlertModal({
@@ -79,7 +86,7 @@ const QuickBookingApproval = ({ booking, onApproved, onRejected }) => {
               year: 'numeric' 
             })}
           </p>
-          <p className="request-time">⏰ {booking.time}</p>
+          <p className="request-time">⏰ {timeLabel}</p>
         </div>
         <p className="request-purpose">{booking.purpose}</p>
         <div className="request-actions">

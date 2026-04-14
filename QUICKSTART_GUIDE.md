@@ -18,24 +18,71 @@ cd educational-rms
 ```bash
 cd backend
 
-# Optional: create a virtual environment
+# Create backend-local virtual environment (one time)
 python -m venv .venv
 
 # Activate (Windows PowerShell)
 .\.venv\Scripts\Activate.ps1
 
 # Install dependencies
-pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 
 # Apply migrations
-python manage.py migrate
+.\.venv\Scripts\python.exe manage.py migrate
 
 # Create admin user (first time only)
-python manage.py createsuperuser
+.\.venv\Scripts\python.exe manage.py createsuperuser
 
 # Run server
-python manage.py runserver
+.\.venv\Scripts\python.exe manage.py runserver
 ```
+
+### Use Neon Database Locally (Optional)
+
+By default, local backend uses SQLite if `DATABASE_URL` is not set.
+
+1. Create environment file from template:
+
+  ```bash
+  cd backend
+  copy .env.example .env
+  ```
+
+2. Edit `backend/.env` and set your Neon connection string:
+
+  ```env
+  DATABASE_URL=postgresql://USER:PASSWORD@HOST.neon.tech/DBNAME?sslmode=require
+  DEBUG=True
+  ALLOWED_HOSTS=localhost,127.0.0.1
+  CORS_ALLOWED_ORIGINS=http://localhost:5173
+  ```
+
+  If your deployed app uses Render Postgres, use the **External Database URL** from the Render dashboard for local development. The internal Render database URL works only inside Render services.
+
+3. Restart backend from the same folder:
+
+  ```bash
+  .\.venv\Scripts\python.exe manage.py migrate
+  .\.venv\Scripts\python.exe manage.py runserver
+  ```
+
+4. Verify active database:
+
+  ```bash
+  .\.venv\Scripts\python.exe manage.py shell -c "from django.conf import settings; print(settings.DATABASES['default']['ENGINE']); print(settings.DATABASES['default']['NAME'])"
+  ```
+
+  - Neon/Postgres should show: `django.db.backends.postgresql`
+  - SQLite fallback shows: `django.db.backends.sqlite3`
+
+### Environment Rule (Important)
+
+Use only `backend/.venv` for Django commands in this repo.
+
+- Good: `backend/.venv/Scripts/python.exe manage.py runserver`
+- Avoid: running `python manage.py ...` from a different activated venv
+
+If you accidentally activate another venv, run with the explicit backend interpreter path instead.
 
 **Backend URL**: http://localhost:8000
 **Admin panel**: http://localhost:8000/admin
@@ -59,12 +106,14 @@ npm run dev
 Use this when the frontend runs on a different device than the backend.
 
 1. Start the backend on all interfaces:
+
    ```bash
    cd backend
-   python manage.py runserver 0.0.0.0:8000
+  .\.venv\Scripts\python.exe manage.py runserver 0.0.0.0:8000
    ```
 
 2. Update backend settings (in `.env` if used):
+
    ```
    ALLOWED_HOSTS=localhost,127.0.0.1,<YOUR_PC_IP>
    CORS_ALLOWED_ORIGINS=http://localhost:5173,http://<YOUR_PC_IP>:5173
@@ -77,6 +126,7 @@ Use this when the frontend runs on a different device than the backend.
      ```
 
 4. Start the frontend on all interfaces:
+
    ```bash
    cd frontend
    npm run dev -- --host 0.0.0.0
@@ -104,26 +154,26 @@ Use this when the frontend runs on a different device than the backend.
 
 ```bash
 # Create migrations
-python manage.py makemigrations
+.\.venv\Scripts\python.exe manage.py makemigrations
 
 # Apply migrations
-python manage.py migrate
+.\.venv\Scripts\python.exe manage.py migrate
 
 # Create superuser
-python manage.py createsuperuser
+.\.venv\Scripts\python.exe manage.py createsuperuser
 
 # Run Django shell
-python manage.py shell
+.\.venv\Scripts\python.exe manage.py shell
 
 # Collect static files
-python manage.py collectstatic
+.\.venv\Scripts\python.exe manage.py collectstatic
 
 # Run tests
-python manage.py test
+.\.venv\Scripts\python.exe manage.py test
 
 # Reset database (SQLite only)
 del db.sqlite3
-python manage.py migrate
+.\.venv\Scripts\python.exe manage.py migrate
 ```
 
 ### Frontend
@@ -145,6 +195,7 @@ npm run lint
 ## API Testing with cURL
 
 ### Register User
+
 ```bash
 curl -X POST http://localhost:8000/api/v1/auth/users/register/ \
   -H "Content-Type: application/json" \
@@ -160,6 +211,7 @@ curl -X POST http://localhost:8000/api/v1/auth/users/register/ \
 ```
 
 ### Login
+
 ```bash
 curl -X POST http://localhost:8000/api/v1/auth/users/login/ \
   -H "Content-Type: application/json" \
@@ -170,6 +222,7 @@ curl -X POST http://localhost:8000/api/v1/auth/users/login/ \
 ```
 
 ### Get Current User
+
 ```bash
 curl -X GET http://localhost:8000/api/v1/auth/users/me/ \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"

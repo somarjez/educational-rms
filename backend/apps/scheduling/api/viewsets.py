@@ -6,12 +6,13 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q, Count, Sum, F, IntegerField, ExpressionWrapper
 from django.db.models.functions import Coalesce
+from django.db import transaction
 from django.utils import timezone
 from datetime import datetime, timedelta, time
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework.exceptions import ValidationError
 
-from ..models import Booking, Room, TimeSlot, Equipment, Waitlist, Notification
+from ..models import Booking, Room, TimeSlot, Equipment, Waitlist, RoomEquipment, Notification
 from .serializers import (
     BookingSerializer, BookingCreateSerializer, BookingUpdateSerializer,
     BookingApprovalSerializer, RoomSerializer, RoomListSerializer,
@@ -254,6 +255,8 @@ class TimeSlotViewSet(viewsets.ModelViewSet):
 
 class BookingViewSet(viewsets.ModelViewSet):
     """ViewSet for managing bookings."""
+    EQUIPMENT_REQUEST_PREFIX = '[EQUIPMENT_REQUEST]'
+
     queryset = Booking.objects.all()
     permission_classes = [IsAuthenticated]
     pagination_class = BookingPagination
@@ -337,6 +340,55 @@ class BookingViewSet(viewsets.ModelViewSet):
             
         except DjangoValidationError as e:
             raise ValidationError(str(e))
+
+    def _parse_request_notes(self, notes):
+        metadata = {}
+        for part in str(notes or '').split('|'):
+            key, _, value = part.strip().partition('=')
+            if key and value:
+                metadata[key.strip()] = value.strip()
+        return metadata
+
+    def _is_equipment_request(self, booking):
+        return str(booking.purpose or '').startswith(self.EQUIPMENT_REQUEST_PREFIX)
+
+    def _reserve_equipment_for_booking(self, booking):
+        if not self._is_equipment_request(booking):
+            return
+
+        metadata = self._parse_request_notes(booking.notes)
+        equipment_id = metadata.get('equipment_id')
+        quantity = metadata.get('quantity')
+
+        if not equipment_id or not quantity:
+            raise ValidationError('Equipment request metadata is incomplete.')
+
+        try:
+            equipment = Equipment.objects.get(id=int(equipment_id), is_active=True)
+        except (ValueError, TypeError, Equipment.DoesNotExist):
+            raise ValidationError('Requested equipment is no longer available.')
+
+        try:
+            requested_quantity = int(quantity)
+        except (TypeError, ValueError):
+            raise ValidationError('Requested equipment quantity is invalid.')
+
+        if requested_quantity <= 0:
+            raise ValidationError('Requested equipment quantity must be greater than zero.')
+
+        assignment, _ = RoomEquipment.objects.get_or_create(
+            room=booking.room,
+            equipment=equipment,
+            defaults={'quantity': 0}
+        )
+        assignment.quantity += requested_quantity
+
+        try:
+            assignment.full_clean()
+        except DjangoValidationError as exc:
+            raise ValidationError(str(exc))
+
+        assignment.save()
     
     def _create_recurring_instances(self, parent_booking):
         """Create recurring booking instances."""
@@ -403,10 +455,13 @@ class BookingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        booking.status = 'APPROVED'
-        booking.approved_by = request.user
-        booking.notes = request.data.get('notes', booking.notes)
-        booking.save()
+        with transaction.atomic():
+            booking.status = 'APPROVED'
+            booking.approved_by = request.user
+            booking.notes = request.data.get('notes', booking.notes)
+            booking.save()
+
+            self._reserve_equipment_for_booking(booking)
         
         # If this is a recurring booking without a parent, create all instances
         if booking.is_recurring and not booking.parent_booking and booking.recurrence_end_date:

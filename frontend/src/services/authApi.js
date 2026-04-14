@@ -10,7 +10,7 @@ export const authApi = {
       const response = await api.post('/auth/users/register/', userData);
       return response.data;
     } catch (error) {
-      throw error.response?.data || error;
+      throw error;
     }
   },
 
@@ -20,7 +20,7 @@ export const authApi = {
       const response = await api.post('/auth/users/login/', { email, password });
       return response.data;
     } catch (error) {
-      throw error.response?.data || error;
+      throw error;
     }
   },
 
@@ -30,7 +30,7 @@ export const authApi = {
       const response = await api.post('/auth/users/logout/');
       return response.data;
     } catch (error) {
-      throw error.response?.data || error;
+      throw error;
     }
   },
 
@@ -40,7 +40,7 @@ export const authApi = {
       const response = await api.get('/auth/users/me/');
       return response.data;
     } catch (error) {
-      throw error.response?.data || error;
+      throw error;
     }
   },
 
@@ -50,7 +50,7 @@ export const authApi = {
       const response = await api.post('/auth/users/refresh_token/', { refresh: refreshToken });
       return response.data;
     } catch (error) {
-      throw error.response?.data || error;
+      throw error;
     }
   },
 
@@ -64,7 +64,7 @@ export const authApi = {
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data || error;
+      throw error;
     }
   },
 

@@ -1,9 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiClock, FiHome, FiWatch, FiList, FiCalendar, FiAlertTriangle } from 'react-icons/fi';
 import SchedulingStatCard from './Stats/SchedulingStatCard';
 import PendingRequestsList from './Requests/PendingRequestsList';
 import usePendingRequests from '../../../hooks/booking/usePendingRequests';
+import { SCHEDULING_STAT_CONFIGS } from './constants/schedulingStatConfigs';
 import styles from './styles/AdminSchedulingStats.module.css';
 
 const AdminSchedulingStats = ({ schedulingStats, onBookingUpdate }) => {
@@ -30,38 +30,18 @@ const AdminSchedulingStats = ({ schedulingStats, onBookingUpdate }) => {
 
       {/* Scheduling Stats Cards */}
       <div className={styles.schedulingStatsGrid}>
-        <SchedulingStatCard
-          icon={<FiClock size={32} color="#f59e0b" />}
-          value={schedulingStats.pending_approvals}
-          label="Pending Approvals"
-          className="pending"
-        />
-        <SchedulingStatCard
-          icon={<FiHome size={32} color="#3b82f6" />}
-          value={schedulingStats.total_rooms}
-          label="Active Rooms"
-        />
-        <SchedulingStatCard
-          icon={<FiWatch size={32} color="#8b5cf6" />}
-          value={schedulingStats.active_time_slots}
-          label="Time Slots"
-        />
-        <SchedulingStatCard
-          icon={<FiList size={32} color="#06b6d4" />}
-          value={schedulingStats.waitlist_entries}
-          label="Waitlist Entries"
-        />
-        <SchedulingStatCard
-          icon={<FiCalendar size={32} color="#10b981" />}
-          value={schedulingStats.upcoming_bookings}
-          label="Upcoming (7 Days)"
-        />
-        <SchedulingStatCard
-          icon={<FiAlertTriangle size={32} color="#ef4444" />}
-          value={schedulingStats.conflicts_today}
-          label="Conflicts Today"
-          className="warning"
-        />
+        {SCHEDULING_STAT_CONFIGS.map((card) => {
+          const Icon = card.Icon;
+          return (
+            <SchedulingStatCard
+              key={card.key}
+              icon={<Icon size={card.iconSize} color={card.iconColor} />}
+              value={schedulingStats?.[card.valueKey] ?? 0}
+              label={card.label}
+              className={card.className || ''}
+            />
+          );
+        })}
       </div>
 
       {/* Pending Requests with Quick Actions */}

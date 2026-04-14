@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FiTool, FiRefreshCw, FiDownload } from 'react-icons/fi';
 import './styles/ModelingModule.css';
 import api from '../../services/api';
+import { exportElementToPdf } from '../../utils/pdfExport';
 
 const EquipmentUsageModel = () => {
+  const exportContainerRef = useRef(null);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportNotice, setExportNotice] = useState('');
 
   const fetchEquipmentData = async () => {
     setLoading(true);
@@ -48,6 +52,23 @@ const EquipmentUsageModel = () => {
     }
   };
 
+  const handleExport = async () => {
+    setExportNotice('');
+    setIsExporting(true);
+
+    try {
+      await exportElementToPdf({
+        element: exportContainerRef.current,
+        fileName: `equipment_usage_${selectedDate}.pdf`,
+      });
+      setExportNotice('Equipment usage report downloaded successfully.');
+    } catch (err) {
+      setExportNotice('Failed to export equipment usage report. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   useEffect(() => {
     fetchEquipmentData();
   }, [selectedDate]);
@@ -59,7 +80,7 @@ const EquipmentUsageModel = () => {
   };
 
   return (
-    <div className="modeling-container">
+    <div className="modeling-container" ref={exportContainerRef}>
       <div className="modeling-header">
         <div className="header-content">
           <h1>
@@ -87,6 +108,12 @@ const EquipmentUsageModel = () => {
         </div>
       )}
 
+      {exportNotice ? (
+        <div className="card" style={{ marginBottom: '1rem' }}>
+          <p style={{ margin: 0 }}>{exportNotice}</p>
+        </div>
+      ) : null}
+
       {data && (
         <div className="modeling-content">
           {/* Summary Cards */}
@@ -113,8 +140,8 @@ const EquipmentUsageModel = () => {
           <div className="card">
             <div className="card-header">
               <h2>Equipment Status & Usage</h2>
-              <button className="btn-export">
-                <FiDownload /> Export Report
+              <button className="btn-export" onClick={handleExport} disabled={isExporting || loading}>
+                <FiDownload /> {isExporting ? 'Exporting...' : 'Export Report'}
               </button>
             </div>
             <table className="equipment-table">

@@ -3,12 +3,21 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from '../features/auth/components/Login';
 import Register from '../features/auth/components/Register';
 import Dashboard from '../features/dashboard/Dashboard';
-import NotificationsPage from '../pages/NotificationsPage';
 import AdminScheduling from '../components/Admin/AdminScheduling/AdminScheduling';
 import BookingsVisualization from '../components/Bookings/BookingsVisualization';
 import MainLayout from '../components/Layout/MainLayout';
 import ProtectedRoute from './ProtectedRoute';
 import { useAuthStore } from '../stores/authStore';
+import BookingsPage from '../pages/Dashboard/BookingsPage';
+import PendingRequestsPage from '../pages/Dashboard/PendingRequestsPage';
+import SchedulePage from '../pages/Dashboard/SchedulePage';
+import EquipmentPage from '../pages/Dashboard/EquipmentPage';
+import NotificationsPage from '../pages/Dashboard/NotificationsPage';
+import SettingsPage from '../pages/Dashboard/SettingsPage';
+import ProfilePage from '../pages/Dashboard/ProfilePage';
+import ReportsPage from '../pages/Dashboard/ReportsPage';
+import EquipmentRequestPage from '../pages/Dashboard/EquipmentRequestPage';
+import AdminEquipmentRequestsPage from '../pages/Dashboard/AdminEquipmentRequestsPage';
 
 // Modeling Components
 import ResourceUtilization from '../components/Modeling/ResourceUtilization';
@@ -32,7 +41,7 @@ const AppRoutes = () => {
   }, [initAuth]);
 
   return (
-    <Router>
+    <Router future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -44,17 +53,6 @@ const AppRoutes = () => {
             <ProtectedRoute>
               <MainLayout userRole={user?.role}>
                 <Dashboard />
-              </MainLayout>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/notifications"
-          element={
-            <ProtectedRoute>
-              <MainLayout userRole={user?.role}>
-                <NotificationsPage />
               </MainLayout>
             </ProtectedRoute>
           }
@@ -77,6 +75,116 @@ const AppRoutes = () => {
             <ProtectedRoute requiredRole={["ADMIN", "FACULTY"]}>
               <MainLayout userRole={user?.role}>
                 <BookingsVisualization />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/student/bookings"
+          element={
+            <ProtectedRoute>
+              <MainLayout userRole={user?.role}>
+                <BookingsPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/pending-requests"
+          element={
+            <ProtectedRoute requiredRole={["ADMIN"]}>
+              <MainLayout userRole={user?.role}>
+                <PendingRequestsPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/schedule"
+          element={
+            <ProtectedRoute>
+              <MainLayout userRole={user?.role}>
+                <SchedulePage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/equipment"
+          element={
+            <ProtectedRoute>
+              <MainLayout userRole={user?.role}>
+                <EquipmentPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/equipment/request"
+          element={
+            <ProtectedRoute>
+              <MainLayout userRole={user?.role}>
+                <EquipmentRequestPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/equipment-requests"
+          element={
+            <ProtectedRoute requiredRole={["ADMIN"]}>
+              <MainLayout userRole={user?.role}>
+                <AdminEquipmentRequestsPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <MainLayout userRole={user?.role}>
+                <NotificationsPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <MainLayout userRole={user?.role}>
+                <SettingsPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <MainLayout userRole={user?.role}>
+                <ProfilePage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/reports"
+          element={
+            <ProtectedRoute requiredRole={["ADMIN", "FACULTY"]}>
+              <MainLayout userRole={user?.role}>
+                <ReportsPage />
               </MainLayout>
             </ProtectedRoute>
           }

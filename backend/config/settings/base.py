@@ -5,8 +5,23 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# Load environment variables from .env file
-load_dotenv(BASE_DIR / '.env')
+# Load environment variables from .env file.
+# `override=True` makes local behavior deterministic across terminals/shells.
+load_dotenv(BASE_DIR / '.env', override=True)
+
+
+def _get_str(name: str, default: str | None = None) -> str | None:
+    value = os.getenv(name, default)
+    if value is None:
+        return None
+
+    value = value.strip()
+
+    # Allow quoted .env values such as DATABASE_URL='postgres://...'
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+        value = value[1:-1].strip()
+
+    return value or default
 
 def _get_bool(name: str, default: bool = False) -> bool:
     value = os.getenv(name)
@@ -22,7 +37,7 @@ def _get_list(name: str, default: list[str]) -> list[str]:
     return [item.strip() for item in value.split(',') if item.strip()]
 
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-temporary-key-for-development')
+SECRET_KEY = _get_str('SECRET_KEY', 'django-insecure-temporary-key-for-development')
 DEBUG = _get_bool('DEBUG', True)
 ALLOWED_HOSTS = _get_list('ALLOWED_HOSTS', ['localhost', '127.0.0.1'])
 
@@ -79,7 +94,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database Configuration
 # Use DATABASE_URL from environment (Neon)
-DATABASE_URL = os.getenv('DATABASE_URL', None)
+DATABASE_URL = _get_str('DATABASE_URL', None)
 
 if DATABASE_URL:
     DATABASES = {

@@ -1,9 +1,13 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import ActivityItem from './RecentActivity/ActivityItem';
 import EmptyState from './RecentActivity/EmptyState';
 import styles from './styles/RecentActivity.module.css';
 
-const RecentActivity = ({ bookings }) => {
+const RecentActivity = ({ bookings, userRole }) => {
+  const navigate = useNavigate();
+  const isAdmin = userRole === 'ADMIN' || userRole === 'FACULTY';
+
   const getStatusClass = (status) => {
     const statusMap = {
       CONFIRMED: 'completed',
@@ -24,7 +28,9 @@ const RecentActivity = ({ bookings }) => {
     <div className={styles.sectionCard}>
       <div className={styles.sectionHeader}>
         <h2 className={styles.sectionTitle}>Recent Activity</h2>
-        <button className={styles.viewAllBtn}>View All</button>
+        <button className={styles.viewAllBtn} onClick={() => navigate(isAdmin ? '/bookings' : '/student/bookings')}>
+          View All
+        </button>
       </div>
       <div className={styles.activityList}>
         {bookings.length > 0 ? (

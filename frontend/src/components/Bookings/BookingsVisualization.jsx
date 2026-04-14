@@ -1,13 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { FiCalendar, FiRefreshCw, FiDownload, FiAlertCircle, FiRepeat } from 'react-icons/fi';
-import { getBookings } from '../../services/schedulingApi';
+import React, { useEffect, useRef, useState } from 'react';
+import { FiCalendar, FiRefreshCw, FiDownload, FiAlertCircle, FiX } from 'react-icons/fi';
+import { getBooking, getBookings } from '../../services/schedulingApi';
+import { exportElementToPdf } from '../../utils/pdfExport';
+import {
+  BookingsList,
+  BookingsStatusFilter,
+  BookingsSummaryStats,
+} from './components';
+import { normalizeBookingsResponse } from './utils/bookingViewUtils';
 import './styles/BookingsVisualization.css';
 
 const BookingsVisualization = () => {
+  const exportContainerRef = useRef(null);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filterStatus, setFilterStatus] = useState('');
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [selectedBookingLoading, setSelectedBookingLoading] = useState(false);
+  const [selectedBookingError, setSelectedBookingError] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportNotice, setExportNotice] = useState('');
 
   useEffect(() => {
     fetchBookings();
@@ -21,18 +34,8 @@ const BookingsVisualization = () => {
       if (filterStatus) params.status = filterStatus;
 
       const response = await getBookings(params);
-      
-      // Handle paginated response
-      let allBookings = [];
-      if (response.results) {
-        allBookings = response.results;
-      } else if (Array.isArray(response)) {
-        allBookings = response;
-      } else {
-        allBookings = response || [];
-      }
 
-      setBookings(allBookings);
+      setBookings(normalizeBookingsResponse(response));
     } catch (err) {
       setError('Failed to fetch bookings');
       console.error('Error fetching bookings:', err);
@@ -41,41 +44,67 @@ const BookingsVisualization = () => {
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
-    });
-  };
+  const handleViewDetails = async (booking) => {
+    setSelectedBooking(booking);
+    setSelectedBookingError('');
+    setSelectedBookingLoading(true);
 
-  const formatTime = (timeString) => {
-    if (!timeString) return 'N/A';
-    return timeString.substring(0, 5); // "HH:MM:SS" -> "HH:MM"
-  };
-
-  const getPriorityColor = (priority) => {
-    switch(priority) {
-      case 'LOW': return '#10b981';
-      case 'MEDIUM': return '#f59e0b';
-      case 'HIGH': return '#ef4444';
-      case 'URGENT': return '#8b0000';
-      default: return '#6b7280';
+    try {
+      const bookingDetails = await getBooking(booking.id);
+      setSelectedBooking(bookingDetails);
+    } catch (err) {
+      setSelectedBookingError('Unable to load the full booking details. Showing the summary information available on this page.');
+    } finally {
+      setSelectedBookingLoading(false);
     }
   };
 
-  const getStatusBadgeClass = (status) => {
-    switch(status) {
-      case 'APPROVED': return 'status-approved';
-      case 'PENDING': return 'status-pending';
-      case 'REJECTED': return 'status-rejected';
-      case 'CANCELLED': return 'status-cancelled';
-      default: return 'status-default';
+  const closeDetails = () => {
+    setSelectedBooking(null);
+    setSelectedBookingError('');
+    setSelectedBookingLoading(false);
+  };
+
+  const handleExport = async () => {
+    setExportNotice('');
+    setIsExporting(true);
+
+    try {
+      await exportElementToPdf({
+        element: exportContainerRef.current,
+        fileName: `bookings_report_${new Date().toISOString().slice(0, 10)}.pdf`,
+      });
+      setExportNotice('Bookings report downloaded successfully.');
+    } catch (err) {
+      setExportNotice('Failed to export bookings report. Please try again.');
+    } finally {
+      setIsExporting(false);
     }
   };
+
+  const selectedBookingDetails = selectedBooking || {};
+
+  const detailRows = [
+    { label: 'Booking ID', value: selectedBookingDetails.id ? `#${selectedBookingDetails.id}` : 'N/A' },
+    { label: 'Requester', value: selectedBookingDetails.user_name || selectedBookingDetails.user_email || 'N/A' },
+    { label: 'Room', value: selectedBookingDetails.room_name || selectedBookingDetails.room_details?.name || 'N/A' },
+    { label: 'Date', value: selectedBookingDetails.date || 'N/A' },
+    {
+      label: 'Time',
+      value: selectedBookingDetails.time_slot_details
+        ? `${selectedBookingDetails.time_slot_details.start_time} - ${selectedBookingDetails.time_slot_details.end_time}`
+        : 'N/A',
+    },
+    { label: 'Status', value: selectedBookingDetails.status || 'N/A' },
+    { label: 'Priority', value: selectedBookingDetails.priority || 'N/A' },
+    { label: 'Participants', value: selectedBookingDetails.participants_count ?? 'N/A' },
+    { label: 'Recurring', value: selectedBookingDetails.is_recurring ? 'Yes' : 'No' },
+    { label: 'Purpose', value: selectedBookingDetails.purpose || 'N/A' },
+    { label: 'Notes', value: selectedBookingDetails.notes || 'N/A' },
+  ];
 
   return (
-    <div className="bookings-visualization">
+    <div className="bookings-visualization" ref={exportContainerRef}>
       <div className="viz-header">
         <div className="header-content">
           <h1>
@@ -94,118 +123,65 @@ const BookingsVisualization = () => {
         </div>
       )}
 
-      {/* Status Filter */}
-      <div className="filter-section">
-        <label>Filter by Status:</label>
-        <div className="status-buttons">
-          <button
-            className={`status-filter-btn ${filterStatus === '' ? 'active' : ''}`}
-            onClick={() => setFilterStatus('')}
-          >
-            All
-          </button>
-          {['PENDING', 'APPROVED', 'REJECTED', 'CONFIRMED', 'CANCELLED', 'COMPLETED'].map(status => (
-            <button
-              key={status}
-              className={`status-filter-btn ${filterStatus === status ? 'active' : ''}`}
-              onClick={() => setFilterStatus(status)}
-            >
-              {status}
-            </button>
-          ))}
-        </div>
-      </div>
+      <BookingsStatusFilter filterStatus={filterStatus} setFilterStatus={setFilterStatus} />
 
-      {/* Summary Stats */}
-      <div className="summary-stats">
-        <div className="stat-card">
-          <div className="stat-value">{bookings.length}</div>
-          <div className="stat-label">Total Bookings</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-value">{bookings.filter(b => b.participants_count).reduce((sum, b) => sum + b.participants_count, 0)}</div>
-          <div className="stat-label">Total Participants</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-value">{bookings.filter(b => b.is_recurring).length}</div>
-          <div className="stat-label">Recurring Bookings</div>
-        </div>
-      </div>
+      <BookingsSummaryStats bookings={bookings} />
 
-      {/* Bookings List */}
-      {loading ? (
-        <div className="loading">Loading bookings...</div>
-      ) : bookings.length === 0 ? (
-        <div className="no-data">
-          <FiAlertCircle /> No {filterStatus.toLowerCase()} bookings found
-        </div>
-      ) : (
-        <div className="bookings-list">
-          {bookings.map(booking => (
-            <div key={booking.id} className="booking-card">
-              <div className="booking-header">
-                <div className="booking-course">
-                  <span className="course-code">{booking.notes?.split(': ')[1] || booking.purpose || 'N/A'}</span>
-                  {booking.is_recurring && (
-                    <span className="badge-recurring">
-                      <FiRepeat style={{ fontSize: '0.9rem', marginRight: '0.25rem' }} />
-                      Recurring
-                    </span>
-                  )}
-                </div>
-                <span className={`status-badge ${getStatusBadgeClass(booking.status)}`}>
-                  {booking.status}
-                </span>
-              </div>
+      <BookingsList
+        loading={loading}
+        bookings={bookings}
+        filterStatus={filterStatus}
+        onViewDetails={handleViewDetails}
+      />
 
-              <div className="booking-details">
-                <div className="detail-row">
-                  <span className="detail-label">Instructor:</span>
-                  <span className="detail-value">{booking.user_name || booking.user_email || 'N/A'}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Date:</span>
-                  <span className="detail-value">{formatDate(booking.date)}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Time:</span>
-                  <span className="detail-value">
-                    {booking.time_slot_details 
-                      ? `${formatTime(booking.time_slot_details.start_time)} - ${formatTime(booking.time_slot_details.end_time)}` 
-                      : 'N/A'}
-                  </span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Room:</span>
-                  <span className="detail-value">{booking.room_name || 'N/A'}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Participants:</span>
-                  <span className="detail-value">{booking.participants_count || 0}</span>
-                </div>
-              </div>
-
-              <div className="booking-footer">
-                <div
-                  className="priority-indicator"
-                  style={{ backgroundColor: getPriorityColor(booking.priority) }}
-                  title={`Priority: ${booking.priority}`}
-                >
-                  {booking.priority}
-                </div>
-                <button className="btn-view">View Details</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      {exportNotice ? <div className="export-notice">{exportNotice}</div> : null}
 
       {/* Export Button */}
       <div className="export-section">
-        <button className="btn-export">
-          <FiDownload /> Export Bookings Report
+        <button className="btn-export" onClick={handleExport} disabled={isExporting}>
+          <FiDownload /> {isExporting ? 'Exporting...' : 'Export Bookings Report'}
         </button>
       </div>
+
+      {selectedBooking && (
+        <div className="modal-overlay" onClick={closeDetails}>
+          <div className="modal-content booking-details-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Booking Details</h3>
+              <button className="modal-close" onClick={closeDetails} type="button">
+                <FiX />
+              </button>
+            </div>
+
+            <div className="modal-body">
+              {selectedBookingLoading ? (
+                <div className="loading">Loading booking details...</div>
+              ) : (
+                <>
+                  {selectedBookingError ? <div className="detail-warning">{selectedBookingError}</div> : null}
+                  <div className="booking-detail-grid">
+                    {detailRows.map((row) => (
+                      <div key={row.label} className="booking-detail-item">
+                        <span className="booking-detail-label">{row.label}</span>
+                        <span className="booking-detail-value">{row.value}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="booking-detail-footer">
+                    <span className={`status-badge status-${String(selectedBookingDetails.status || 'default').toLowerCase()}`}>
+                      {selectedBookingDetails.status || 'UNKNOWN'}
+                    </span>
+                    {selectedBookingDetails.is_recurring ? (
+                      <span className="badge-recurring">Recurring</span>
+                    ) : null}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

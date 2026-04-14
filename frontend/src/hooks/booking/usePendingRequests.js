@@ -1,7 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const usePendingRequests = (initialRequests = [], onBookingUpdate) => {
   const [pendingRequests, setPendingRequests] = useState(initialRequests);
+
+  useEffect(() => {
+    setPendingRequests(initialRequests || []);
+  }, [initialRequests]);
 
   const handleBookingApproved = (bookingId) => {
     setPendingRequests(prev => prev.filter(req => req.id !== bookingId));
