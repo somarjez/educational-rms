@@ -1,6 +1,7 @@
 import React from 'react';
 import { FaUserCircle, FaChalkboardTeacher } from 'react-icons/fa';
 import { getInitials } from '../../../utils/userUtils';
+import Notifications from '../../../components/Common/Notifications';
 import './styles/Dashboard.css';
 
 const DashboardHeader = ({ user, onLogout }) => {
@@ -21,6 +22,9 @@ const DashboardHeader = ({ user, onLogout }) => {
           </div>
         </div>
         <div className="header-user">
+          <div className="header-notifications">
+            <Notifications />
+          </div>
           <div className="user-avatar">
             <FaUserCircle size={32} color="#2563eb" style={{ marginRight: '0.5em' }} />
             <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>

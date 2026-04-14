@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from '../features/auth/components/Login';
 import Register from '../features/auth/components/Register';
 import Dashboard from '../features/dashboard/Dashboard';
+import NotificationsPage from '../pages/NotificationsPage';
 import AdminScheduling from '../components/Admin/AdminScheduling/AdminScheduling';
 import BookingsVisualization from '../components/Bookings/BookingsVisualization';
 import MainLayout from '../components/Layout/MainLayout';
@@ -43,6 +44,17 @@ const AppRoutes = () => {
             <ProtectedRoute>
               <MainLayout userRole={user?.role}>
                 <Dashboard />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <MainLayout userRole={user?.role}>
+                <NotificationsPage />
               </MainLayout>
             </ProtectedRoute>
           }

@@ -11,12 +11,12 @@ from datetime import datetime, timedelta, time
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework.exceptions import ValidationError
 
-from ..models import Booking, Room, TimeSlot, Equipment, Waitlist
+from ..models import Booking, Room, TimeSlot, Equipment, Waitlist, Notification
 from .serializers import (
     BookingSerializer, BookingCreateSerializer, BookingUpdateSerializer,
     BookingApprovalSerializer, RoomSerializer, RoomListSerializer,
     TimeSlotSerializer, EquipmentSerializer, WaitlistSerializer,
-    CalendarEventSerializer
+    CalendarEventSerializer, NotificationSerializer
 )
 from api.permissions import IsAdminUser, IsFacultyOrAdmin
 
@@ -775,3 +775,43 @@ class WaitlistViewSet(viewsets.ModelViewSet):
             'waitlist': WaitlistSerializer(entry).data,
             'booking': BookingSerializer(booking).data
         })
+
+
+class NotificationViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing notifications."""
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = BookingPagination
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['-created_at', 'is_read']
+    ordering = ['-created_at']
+    
+    def get_queryset(self):
+        """Filter notifications for current user."""
+        return Notification.objects.filter(user=self.request.user)
+    
+    @action(detail=False, methods=['get'])
+    def unread_count(self, request):
+        """Get count of unread notifications."""
+        count = Notification.objects.filter(user=request.user, is_read=False).count()
+        return Response({'unread_count': count})
+    
+    @action(detail=False, methods=['post'])
+    def mark_all_read(self, request):
+        """Mark all notifications as read."""
+        Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+        return Response({'status': 'All notifications marked as read'})
+    
+    @action(detail=True, methods=['post'])
+    def mark_read(self, request, pk=None):
+        """Mark a single notification as read."""
+        notification = self.get_object()
+        notification.is_read = True
+        notification.save()
+        return Response(NotificationSerializer(notification).data)
+    
+    def destroy(self, request, *args, **kwargs):
+        """Delete a notification."""
+        notification = self.get_object()
+        notification.delete()
+        return Response({'status': 'Notification deleted'}, status=status.HTTP_204_NO_CONTENT)

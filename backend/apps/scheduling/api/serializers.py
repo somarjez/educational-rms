@@ -1,7 +1,7 @@
 """Serializers for scheduling app."""
 from rest_framework import serializers
 from django.db import models as django_models
-from ..models import Booking, Room, TimeSlot, Equipment, Waitlist
+from ..models import Booking, Room, TimeSlot, Equipment, Waitlist, Notification
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -236,3 +236,18 @@ class CalendarEventSerializer(serializers.Serializer):
     purpose = serializers.CharField()
     priority = serializers.CharField()
     is_recurring = serializers.BooleanField()
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    """Serializer for Notification model."""
+    
+    booking_details = BookingSerializer(source='booking', read_only=True)
+    notification_type_display = serializers.CharField(source='get_notification_type_display', read_only=True)
+    
+    class Meta:
+        model = Notification
+        fields = [
+            'id', 'user', 'booking', 'booking_details', 'notification_type',
+            'notification_type_display', 'title', 'message', 'is_read', 'created_at'
+        ]
+        read_only_fields = ['id', 'user', 'created_at']

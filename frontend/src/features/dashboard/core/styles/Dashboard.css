@@ -78,6 +78,40 @@
   gap: 1.25rem;
 }
 
+.header-notifications {
+  display: flex;
+  align-items: center;
+  order: -1;
+}
+
+.header-user .notification-bell {
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  font-size: 1.25rem;
+  backdrop-filter: blur(10px);
+  width: 45px;
+  height: 45px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18) inset;
+}
+
+.header-user .notification-bell:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.header-user .notifications-container {
+  position: relative;
+  z-index: 1200;
+}
+
+.header-user .notification-panel {
+  right: 0;
+  z-index: 1300;
+}
+
 .user-avatar {
   width: 48px;
   height: 48px;
@@ -110,6 +144,30 @@
   font-size: 0.875rem;
   color: rgba(255, 255, 255, 0.75);
   margin: 0;
+}
+
+.notifications-btn {
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 45px;
+  height: 45px;
+}
+
+.notifications-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 .logout-btn {
