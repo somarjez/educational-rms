@@ -68,6 +68,35 @@ export const authApi = {
     }
   },
 
+  // Public: request a password reset email
+  requestPasswordReset: async (email) => {
+    const response = await api.post('/auth/users/forgot_password/', { email });
+    return response.data;
+  },
+
+  // Public: confirm password reset using uid + one-time token
+  confirmPasswordReset: async (uid, token, newPassword, newPasswordConfirm) => {
+    const response = await api.post('/auth/users/reset_password/', {
+      uid,
+      token,
+      new_password: newPassword,
+      new_password_confirm: newPasswordConfirm,
+    });
+    return response.data;
+  },
+
+  // Admin: list users
+  adminListUsers: async (params = {}) => {
+    const response = await api.get('/auth/users/', { params });
+    return response.data;
+  },
+
+  // Admin: trigger reset email for user
+  adminSendPasswordReset: async (userId) => {
+    const response = await api.post(`/auth/users/${userId}/send_password_reset/`);
+    return response.data;
+  },
+
   // Get available roles
   getRoles: async () => {
     const response = await api.get('/auth/users/roles/');

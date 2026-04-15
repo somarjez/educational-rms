@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from '../features/auth/components/Login';
 import Register from '../features/auth/components/Register';
+import ForgotPassword from '../features/auth/components/ForgotPassword';
+import ResetPassword from '../features/auth/components/ResetPassword';
 import Dashboard from '../features/dashboard/Dashboard';
 import AdminScheduling from '../components/Admin/AdminScheduling/AdminScheduling';
 import BookingsVisualization from '../components/Bookings/BookingsVisualization';
@@ -18,6 +20,7 @@ import ProfilePage from '../pages/Dashboard/ProfilePage';
 import ReportsPage from '../pages/Dashboard/ReportsPage';
 import EquipmentRequestPage from '../pages/Dashboard/EquipmentRequestPage';
 import AdminEquipmentRequestsPage from '../pages/Dashboard/AdminEquipmentRequestsPage';
+import UserManagementPage from '../pages/Dashboard/UserManagementPage';
 
 // Modeling Components
 import ResourceUtilization from '../components/Modeling/ResourceUtilization';
@@ -45,6 +48,8 @@ const AppRoutes = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         
         {/* Protected Routes with Sidebar */}
         <Route
@@ -141,6 +146,17 @@ const AppRoutes = () => {
             <ProtectedRoute requiredRole={["ADMIN"]}>
               <MainLayout userRole={user?.role}>
                 <AdminEquipmentRequestsPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute requiredRole={["ADMIN"]}>
+              <MainLayout userRole={user?.role}>
+                <UserManagementPage />
               </MainLayout>
             </ProtectedRoute>
           }

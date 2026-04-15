@@ -221,3 +221,65 @@ class Waitlist(models.Model):
     
     def __str__(self):
         return f"Waitlist: {self.user.email} - {self.room.name} on {self.date}"
+
+
+class Notification(models.Model):
+    """User notification for booking status changes and reminders."""
+    
+    TYPE_CHOICES = [
+        ('STATUS_ALERT', 'Booking Status Alert'),
+        ('REMINDER', 'Booking Reminder'),
+        ('OVERDUE_ALERT', 'Overdue Alert'),
+        ('CONFLICT_ALERT', 'Conflict Alert'),
+    ]
+    
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='notifications', null=True, blank=True)
+    notification_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['is_read', '-created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.get_notification_type_display()} for {self.user.email}"
+    
+    @classmethod
+    def create_status_alert(cls, booking, user, old_status, new_status):
+        """Create a booking status change notification."""
+        return cls.objects.create(
+            user=user,
+            booking=booking,
+            notification_type='STATUS_ALERT',
+            title=f'Booking Status Changed: {new_status}',
+            message=f'Your booking for {booking.room.name} on {booking.date} has been {new_status.lower()}.'
+        )
+    
+    @classmethod
+    def create_reminder(cls, booking, user, days_until=1):
+        """Create an upcoming booking reminder."""
+        return cls.objects.create(
+            user=user,
+            booking=booking,
+            notification_type='REMINDER',
+            title=f'Upcoming Booking Reminder',
+            message=f'Reminder: You have a booking for {booking.room.name} on {booking.date} at {booking.time_slot.start_time}.'
+        )
+    
+    @classmethod
+    def create_overdue_alert(cls, booking, user):
+        """Create an overdue booking alert."""
+        return cls.objects.create(
+            user=user,
+            booking=booking,
+            notification_type='OVERDUE_ALERT',
+            title='Booking Overdue',
+            message=f'Your booking for {booking.room.name} on {booking.date} has not been marked as completed.'
+        )

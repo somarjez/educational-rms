@@ -167,6 +167,16 @@ export const cancelBooking = async (id, data = {}) => {
   return response.data;
 };
 
+export const modifyBooking = async (id, data = {}) => {
+  const response = await api.post(`/scheduling/bookings/${id}/modify/`, data);
+  return response.data;
+};
+
+export const getBookingHistory = async (params = {}) => {
+  const response = await api.get('/scheduling/bookings/history/', { params });
+  return response.data;
+};
+
 export const overrideConflict = async (id, overrideReason) => {
   const response = await api.post(`/scheduling/bookings/${id}/override_conflict/`, {
     override_reason: overrideReason
@@ -286,6 +296,8 @@ export default {
   approveBooking,
   rejectBooking,
   cancelBooking,
+  modifyBooking,
+  getBookingHistory,
   overrideConflict,
   bulkCancelBookings,
   bulkDeleteBookings,

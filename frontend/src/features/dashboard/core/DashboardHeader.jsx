@@ -1,6 +1,7 @@
 import React from 'react';
 import { FaChalkboardTeacher } from 'react-icons/fa';
 import { getInitials } from '../../../utils/userUtils';
+import Notifications from '../../../components/Common/Notifications';
 import './styles/Dashboard.css';
 
 const DashboardHeader = ({ user, onLogout, onProfileClick }) => {
@@ -21,6 +22,9 @@ const DashboardHeader = ({ user, onLogout, onProfileClick }) => {
         </div>
 
         <div className="header-user">
+          <div className="header-notifications">
+            <Notifications />
+          </div>
           <button
             type="button"
             className="account-trigger"

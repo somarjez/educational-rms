@@ -240,6 +240,32 @@
   transform: translateX(-10px);
 }
 
+.nav-badge {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+  animation: badgePulse 2s infinite;
+  letter-spacing: 0;
+}
+
+@keyframes badgePulse {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.6);
+  }
+}
+
 .submenu-arrow {
   font-size: 0.7rem;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);

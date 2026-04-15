@@ -93,3 +93,32 @@ class UserProfile(models.Model):
     
     def __str__(self):
         return f"Profile of {self.user.get_full_name() or self.user.username}"
+
+
+class PasswordResetToken(models.Model):
+    """One-time-use password reset token (stored as a hash)."""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='password_reset_tokens',
+    )
+    token_hash = models.CharField(
+        max_length=64,
+        unique=True,
+        db_index=True,
+        help_text='HMAC-SHA256 hash of the raw reset token'
+    )
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'password_reset_tokens'
+        verbose_name = 'Password Reset Token'
+        verbose_name_plural = 'Password Reset Tokens'
+        ordering = ['-created_at']
+
+    @property
+    def is_used(self) -> bool:
+        return self.used_at is not None

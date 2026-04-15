@@ -41,6 +41,13 @@ SECRET_KEY = _get_str('SECRET_KEY', 'django-insecure-temporary-key-for-developme
 DEBUG = _get_bool('DEBUG', True)
 ALLOWED_HOSTS = _get_list('ALLOWED_HOSTS', ['localhost', '127.0.0.1'])
 
+# Email configuration (safe defaults for development)
+EMAIL_HOST = _get_str('EMAIL_HOST', 'localhost')
+EMAIL_PORT = int(_get_str('EMAIL_PORT', '587') or '587')
+EMAIL_HOST_USER = _get_str('EMAIL_HOST_USER', None)
+EMAIL_HOST_PASSWORD = _get_str('EMAIL_HOST_PASSWORD', None)
+EMAIL_USE_TLS = _get_bool('EMAIL_USE_TLS', True)
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -168,3 +175,12 @@ CORS_ALLOWED_ORIGINS = _get_list(
     ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174'],
 )
 CORS_ALLOW_CREDENTIALS = True
+
+# Frontend URL used in emails (password reset links, etc.)
+FRONTEND_BASE_URL = _get_str('FRONTEND_BASE_URL', 'https://example.com')
+
+# Email defaults
+DEFAULT_FROM_EMAIL = _get_str('DEFAULT_FROM_EMAIL', 'noreply@educational-rms.local')
+
+# Password reset token configuration
+PASSWORD_RESET_TOKEN_TTL_SECONDS = int(_get_str('PASSWORD_RESET_TOKEN_TTL_SECONDS', '3600') or '3600')

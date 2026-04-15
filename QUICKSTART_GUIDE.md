@@ -148,6 +148,23 @@ Use this when the frontend runs on a different device than the backend.
 4. Click Register
 5. You should be redirected to dashboard
 
+## Forgot Password (Terminal Shortcut)
+
+Use this when you want to generate a one-time reset link directly in terminal (local dev):
+
+```powershell
+.\print_reset_link.bat "user_email@gmail.com"
+```
+
+Notes:
+- The email must exist in your local database and be active.
+- The printed token is one-time use and expires based on `PASSWORD_RESET_TOKEN_TTL_SECONDS`.
+
+## Manual Smoke Tests
+
+The files under `backend/scripts/` are manual smoke tests only.
+They are kept out of Django test discovery so `manage.py test` stays clean in CI.
+
 ## Useful Commands
 
 ### Backend

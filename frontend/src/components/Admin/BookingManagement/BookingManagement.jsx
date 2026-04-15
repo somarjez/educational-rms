@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   getBookings, approveBooking, rejectBooking, cancelBooking,
-  overrideConflict, bulkCancelBookings, bulkDeleteBookings, deleteBooking
+  overrideConflict, bulkCancelBookings, bulkDeleteBookings, deleteBooking,
+  modifyBooking, getBookingHistory, getRooms, getTimeSlots
 } from '../../../services/schedulingApi';
 import QuickCreateBooking from '../../../features/dashboard/QuickCreateBooking';
 import PromptModal from '../../Common/Modal/PromptModal';
@@ -23,6 +24,20 @@ const BookingManagement = () => {
   const [currentBooking, setCurrentBooking] = useState(null);
   const [overrideReason, setOverrideReason] = useState('');
   const [showCreateBooking, setShowCreateBooking] = useState(false);
+  const [viewMode, setViewMode] = useState('active');
+  const [showModifyModal, setShowModifyModal] = useState(false);
+  const [roomOptions, setRoomOptions] = useState([]);
+  const [timeSlotOptions, setTimeSlotOptions] = useState([]);
+  const [modifyingBooking, setModifyingBooking] = useState(null);
+  const [modifyForm, setModifyForm] = useState({
+    room: '',
+    time_slot: '',
+    date: '',
+    purpose: '',
+    participants_count: 1,
+    priority: 'MEDIUM',
+    change_reason: ''
+  });
   
   // Modal states
   const [promptModal, setPromptModal] = useState({ isOpen: false, title: '', label: '', placeholder: '', onConfirm: null });
@@ -60,7 +75,7 @@ const BookingManagement = () => {
 
   useEffect(() => {
     fetchBookings();
-  }, [filters, currentPage]);
+  }, [filters, currentPage, viewMode]);
 
   const fetchBookings = async () => {
     try {
@@ -74,7 +89,9 @@ const BookingManagement = () => {
 
       params.page = currentPage;
       params.page_size = pageSize;
-      const response = await getBookings(params);
+      const response = viewMode === 'history'
+        ? await getBookingHistory(params)
+        : await getBookings(params);
 
       if (response && Array.isArray(response.results)) {
         setBookings(response.results);
@@ -104,6 +121,96 @@ const BookingManagement = () => {
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleViewModeToggle = (mode) => {
+    setCurrentPage(1);
+    setViewMode(mode);
+  };
+
+  const fetchModifyOptions = async () => {
+    try {
+      const [roomsResponse, timeSlotsResponse] = await Promise.all([
+        getRooms({ is_active: true }),
+        getTimeSlots({ is_active: true })
+      ]);
+
+      const normalizedRooms = Array.isArray(roomsResponse?.results)
+        ? roomsResponse.results
+        : (Array.isArray(roomsResponse) ? roomsResponse : []);
+      const normalizedTimeSlots = Array.isArray(timeSlotsResponse?.results)
+        ? timeSlotsResponse.results
+        : (Array.isArray(timeSlotsResponse) ? timeSlotsResponse : []);
+
+      setRoomOptions(normalizedRooms);
+      setTimeSlotOptions(normalizedTimeSlots);
+    } catch (err) {
+      console.error('Error loading modify options:', err);
+      setError('Failed to load room/time slot options');
+    }
+  };
+
+  const openModifyModal = async (booking) => {
+    setModifyingBooking(booking);
+    setModifyForm({
+      room: booking.room || '',
+      time_slot: booking.time_slot || '',
+      date: booking.date || '',
+      purpose: booking.purpose || '',
+      participants_count: booking.participants_count || 1,
+      priority: booking.priority || 'MEDIUM',
+      change_reason: ''
+    });
+
+    if (roomOptions.length === 0 || timeSlotOptions.length === 0) {
+      await fetchModifyOptions();
+    }
+
+    setShowModifyModal(true);
+  };
+
+  const handleModifyFieldChange = (e) => {
+    const { name, value } = e.target;
+    setModifyForm((prev) => ({
+      ...prev,
+      [name]: name === 'participants_count' ? Number(value) : value
+    }));
+  };
+
+  const handleModifySubmit = async () => {
+    if (!modifyingBooking) return;
+
+    if (!modifyForm.room || !modifyForm.time_slot || !modifyForm.date || !modifyForm.purpose.trim()) {
+      setAlertModal({
+        isOpen: true,
+        title: 'Missing Fields',
+        message: 'Room, time slot, date, and purpose are required for modification.',
+        type: 'warning'
+      });
+      return;
+    }
+
+    try {
+      await modifyBooking(modifyingBooking.id, {
+        room: Number(modifyForm.room),
+        time_slot: Number(modifyForm.time_slot),
+        date: modifyForm.date,
+        purpose: modifyForm.purpose,
+        participants_count: Number(modifyForm.participants_count),
+        priority: modifyForm.priority,
+        change_reason: modifyForm.change_reason || ''
+      });
+
+      setShowModifyModal(false);
+      setModifyingBooking(null);
+      setSuccess('Booking modified successfully');
+      fetchBookings();
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      const detail = err?.response?.data?.detail || err?.response?.data?.error;
+      setError(detail || 'Failed to modify booking');
+      console.error('Error modifying booking:', err);
+    }
   };
 
   const handleApprove = async (bookingId) => {
@@ -330,6 +437,20 @@ const BookingManagement = () => {
       <div className="booking-management-header">
         <h2>Booking Management</h2>
         <div className="header-actions">
+          <div className="view-toggle" role="group" aria-label="booking view mode">
+            <button
+              className={`btn btn-sm ${viewMode === 'active' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => handleViewModeToggle('active')}
+            >
+              Active Bookings
+            </button>
+            <button
+              className={`btn btn-sm ${viewMode === 'history' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => handleViewModeToggle('history')}
+            >
+              Booking History
+            </button>
+          </div>
           <button
             className="btn btn-primary"
             onClick={() => setShowCreateBooking(true)}
@@ -566,13 +687,22 @@ const BookingManagement = () => {
                           )}
 
                           {['APPROVED', 'CONFIRMED'].includes(booking.status) && (
-                            <button
-                              className="btn btn-sm btn-warning"
-                              onClick={() => handleCancel(booking.id)}
-                              title="Cancel"
-                            >
-                              Cancel
-                            </button>
+                            <>
+                              <button
+                                className="btn btn-sm btn-secondary"
+                                onClick={() => openModifyModal(booking)}
+                                title="Modify"
+                              >
+                                Modify
+                              </button>
+                              <button
+                                className="btn btn-sm btn-warning"
+                                onClick={() => handleCancel(booking.id)}
+                                title="Cancel"
+                              >
+                                Cancel
+                              </button>
+                            </>
                           )}
 
                           {booking.status === 'CANCELLED' && (
@@ -678,6 +808,127 @@ const BookingManagement = () => {
           onCreated={fetchBookings}
           onClose={() => setShowCreateBooking(false)}
         />
+      )}
+
+      {showModifyModal && (
+        <div className="modal-overlay" onClick={() => setShowModifyModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Modify Booking</h3>
+              <button className="modal-close" onClick={() => setShowModifyModal(false)}>×</button>
+            </div>
+
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Room *</label>
+                <select
+                  name="room"
+                  value={modifyForm.room}
+                  onChange={handleModifyFieldChange}
+                  className="form-input"
+                >
+                  <option value="">Select room</option>
+                  {roomOptions.map((room) => (
+                    <option key={room.id} value={room.id}>{room.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Time Slot *</label>
+                <select
+                  name="time_slot"
+                  value={modifyForm.time_slot}
+                  onChange={handleModifyFieldChange}
+                  className="form-input"
+                >
+                  <option value="">Select time slot</option>
+                  {timeSlotOptions.map((slot) => (
+                    <option key={slot.id} value={slot.id}>
+                      {slot.name || `${formatTime(slot.start_time)} - ${formatTime(slot.end_time)}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Date *</label>
+                <input
+                  type="date"
+                  name="date"
+                  value={modifyForm.date}
+                  onChange={handleModifyFieldChange}
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Purpose *</label>
+                <textarea
+                  name="purpose"
+                  value={modifyForm.purpose}
+                  onChange={handleModifyFieldChange}
+                  rows="3"
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Participants</label>
+                <input
+                  type="number"
+                  min="1"
+                  name="participants_count"
+                  value={modifyForm.participants_count}
+                  onChange={handleModifyFieldChange}
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Priority</label>
+                <select
+                  name="priority"
+                  value={modifyForm.priority}
+                  onChange={handleModifyFieldChange}
+                  className="form-input"
+                >
+                  <option value="LOW">Low</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="HIGH">High</option>
+                  <option value="URGENT">Urgent</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Change Reason (optional)</label>
+                <textarea
+                  name="change_reason"
+                  value={modifyForm.change_reason}
+                  onChange={handleModifyFieldChange}
+                  rows="2"
+                  className="form-input"
+                  placeholder="Document why this booking was changed"
+                />
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowModifyModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={handleModifySubmit}
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <PromptModal
