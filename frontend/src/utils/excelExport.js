@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 const sanitizeSheetName = (value) => String(value || 'Report').replace(/[\\/?*\[\]:]/g, ' ').slice(0, 31);
 
@@ -109,21 +109,35 @@ export const exportReportsToExcel = async ({
   canViewUserActivity,
   fileName = 'report.xlsx',
 }) => {
-  const workbook = XLSX.utils.book_new();
-  const overviewSheet = XLSX.utils.aoa_to_sheet([
-    ['Report Overview', ''],
-    ...buildOverviewRows({ activeTab, filters, summary: reports?.summary, filterOptions }),
-  ]);
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Educational RMS';
+  workbook.created = new Date();
 
-  overviewSheet['!cols'] = [{ wch: 24 }, { wch: 44 }];
-  XLSX.utils.book_append_sheet(workbook, overviewSheet, 'Overview');
+  const overviewSheet = workbook.addWorksheet('Overview');
+  overviewSheet.columns = [{ width: 24 }, { width: 44 }];
+  overviewSheet.addRow(['Report Overview', '']);
+  overviewSheet.addRows(buildOverviewRows({ activeTab, filters, summary: reports?.summary, filterOptions }));
+  overviewSheet.getRow(1).font = { bold: true };
 
   const dataSheetInfo = buildDataSheet({ activeTab, reports, canViewUserActivity });
-  const dataSheet = XLSX.utils.aoa_to_sheet([dataSheetInfo.header, ...dataSheetInfo.rows]);
-  dataSheet['!cols'] = dataSheetInfo.header.map((header) => ({ wch: Math.max(String(header).length + 2, 16) }));
-  XLSX.utils.book_append_sheet(workbook, dataSheet, sanitizeSheetName(dataSheetInfo.sheetName));
+  const dataSheet = workbook.addWorksheet(sanitizeSheetName(dataSheetInfo.sheetName));
+  dataSheet.columns = dataSheetInfo.header.map((header) => ({
+    width: Math.max(String(header).length + 2, 16),
+  }));
+  dataSheet.addRow(dataSheetInfo.header);
+  dataSheet.addRows(dataSheetInfo.rows);
+  dataSheet.getRow(1).font = { bold: true };
 
-  XLSX.writeFile(workbook, fileName, { bookType: 'xlsx' });
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+  const downloadUrl = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = downloadUrl;
+  link.download = fileName;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(downloadUrl), 0);
 };
 
 export default exportReportsToExcel;
