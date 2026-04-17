@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   getBookings, approveBooking, rejectBooking, cancelBooking,
   overrideConflict, bulkCancelBookings, bulkDeleteBookings, deleteBooking,
-  modifyBooking, getBookingHistory, getRooms, getTimeSlots
+  modifyBooking, getRooms, getTimeSlots
 } from '../../../services/schedulingApi';
 import QuickCreateBooking from '../../../features/dashboard/QuickCreateBooking';
 import PromptModal from '../../Common/Modal/PromptModal';
@@ -24,7 +24,6 @@ const BookingManagement = () => {
   const [currentBooking, setCurrentBooking] = useState(null);
   const [overrideReason, setOverrideReason] = useState('');
   const [showCreateBooking, setShowCreateBooking] = useState(false);
-  const [viewMode, setViewMode] = useState('active');
   const [showModifyModal, setShowModifyModal] = useState(false);
   const [roomOptions, setRoomOptions] = useState([]);
   const [timeSlotOptions, setTimeSlotOptions] = useState([]);
@@ -75,7 +74,7 @@ const BookingManagement = () => {
 
   useEffect(() => {
     fetchBookings();
-  }, [filters, currentPage, viewMode]);
+  }, [filters, currentPage]);
 
   const fetchBookings = async () => {
     try {
@@ -89,9 +88,7 @@ const BookingManagement = () => {
 
       params.page = currentPage;
       params.page_size = pageSize;
-      const response = viewMode === 'history'
-        ? await getBookingHistory(params)
-        : await getBookings(params);
+      const response = await getBookings(params);
 
       if (response && Array.isArray(response.results)) {
         setBookings(response.results);
@@ -121,11 +118,6 @@ const BookingManagement = () => {
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleViewModeToggle = (mode) => {
-    setCurrentPage(1);
-    setViewMode(mode);
   };
 
   const fetchModifyOptions = async () => {
@@ -437,20 +429,9 @@ const BookingManagement = () => {
       <div className="booking-management-header">
         <h2>Booking Management</h2>
         <div className="header-actions">
-          <div className="view-toggle" role="group" aria-label="booking view mode">
-            <button
-              className={`btn btn-sm ${viewMode === 'active' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => handleViewModeToggle('active')}
-            >
-              Active Bookings
-            </button>
-            <button
-              className={`btn btn-sm ${viewMode === 'history' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => handleViewModeToggle('history')}
-            >
-              Booking History
-            </button>
-          </div>
+          <button className="btn btn-sm btn-primary" type="button" disabled>
+            Active Bookings
+          </button>
           <button
             className="btn btn-primary"
             onClick={() => setShowCreateBooking(true)}
