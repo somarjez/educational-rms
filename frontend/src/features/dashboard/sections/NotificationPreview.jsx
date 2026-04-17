@@ -1,7 +1,8 @@
 import React from 'react';
-import { FiBell, FiCheckCircle, FiAlertCircle, FiArrowRight } from 'react-icons/fi';
+import { FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import styles from './styles/ScheduleSections.module.css';
+import { DashboardBellIcon } from '../icons/DashboardIcons';
 
 const NotificationPreview = ({ bookings = [] }) => {
   const navigate = useNavigate();
@@ -76,7 +77,7 @@ const NotificationPreview = ({ bookings = [] }) => {
       case 'pending':
         return <FiAlertCircle className={styles.iconPending} />;
       default:
-        return <FiBell className={styles.iconDefault} />;
+        return <DashboardBellIcon className={styles.iconDefault} />;
     }
   };
 
@@ -95,7 +96,7 @@ const NotificationPreview = ({ bookings = [] }) => {
     <div className={styles.notificationCard}>
       <div className={styles.notificationHeader}>
         <h3 className={styles.notificationTitle}>
-          <FiBell className={styles.icon} />
+          <DashboardBellIcon className={styles.icon} />
           Notifications
         </h3>
         <button
@@ -103,7 +104,7 @@ const NotificationPreview = ({ bookings = [] }) => {
           onClick={() => navigate('/notifications')}
           title="View all notifications"
         >
-          View All <FiArrowRight />
+          View All
         </button>
       </div>
 
@@ -132,7 +133,7 @@ const NotificationPreview = ({ bookings = [] }) => {
           ))
         ) : (
           <div className={styles.emptyState}>
-            <FiBell className={styles.emptyIcon} />
+            <DashboardBellIcon className={styles.emptyIcon} />
             <p>No notifications yet</p>
           </div>
         )}

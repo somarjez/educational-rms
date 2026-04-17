@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiClock, FiRefreshCw, FiLayers, FiPackage, FiMapPin } from 'react-icons/fi';
+import { FiRefreshCw, FiPackage, FiMapPin } from 'react-icons/fi';
 import {
   getConflictSummary,
   getCurrentUtilization,
@@ -8,6 +8,7 @@ import {
   getDecisionSupport,
 } from '../../../services/simulationApi';
 import styles from './styles/DecisionSupportPanel.module.css';
+import { DashboardClockIcon, DashboardStackIcon } from '../icons/DashboardIcons';
 
 const normalizeRole = (role) => String(role || '').toUpperCase();
 
@@ -32,8 +33,8 @@ const getLocalDateString = () => {
 
 const recommendationIcons = {
   'room-allocation': FiMapPin,
-  'schedule-improvements': FiClock,
-  bottlenecks: FiLayers,
+  'schedule-improvements': DashboardClockIcon,
+  bottlenecks: DashboardStackIcon,
   equipment: FiPackage,
 };
 
@@ -171,7 +172,7 @@ const DecisionSupportPanel = ({ userRole, showViewDetails = false }) => {
   const cards = useMemo(
     () => recommendations.map((item) => ({
       ...item,
-      icon: recommendationIcons[item.id] || FiLayers,
+      icon: recommendationIcons[item.id] || DashboardStackIcon,
     })),
     [recommendations]
   );
@@ -215,7 +216,10 @@ const DecisionSupportPanel = ({ userRole, showViewDetails = false }) => {
           const Icon = item.icon;
 
           return (
-            <article key={item.id} className={`${styles.recommendationCard} ${styles[item.tone] || ''}`}>
+            <article
+              key={item.id}
+              className={`${styles.recommendationCard} ${styles[item.tone] || ''} ${styles[item.id] || ''}`}
+            >
               <div className={styles.cardHeader}>
                 <div className={styles.iconShell}>
                   <Icon />

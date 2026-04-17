@@ -1,7 +1,15 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { FiChevronDown } from 'react-icons/fi';
 import { getRooms, getTimeSlots, createBooking } from '../../../services/schedulingApi';
 import { useAuthStore } from '../../../stores/authStore';
 import AlertModal from '../../../components/Common/Modal/AlertModal';
+import {
+  DashboardCalendarIcon,
+  DashboardClockIcon,
+  DashboardHouseIcon,
+  DashboardListIcon,
+  DashboardUsersIcon,
+} from '../icons/DashboardIcons';
 import '../core/styles/Dashboard.css';
 
 const QuickCreateBooking = ({ onCreated, onClose }) => {
@@ -182,8 +190,8 @@ const QuickCreateBooking = ({ onCreated, onClose }) => {
 
   if (loading) {
     return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-overlay booking-modal-overlay" onClick={onClose}>
+        <div className="modal-content booking-modal-content" onClick={(e) => e.stopPropagation()}>
           <p>Loading...</p>
         </div>
       </div>
@@ -191,86 +199,125 @@ const QuickCreateBooking = ({ onCreated, onClose }) => {
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>Create New Booking</h2>
+    <div className="modal-overlay booking-modal-overlay" onClick={onClose}>
+      <div className="modal-content booking-modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header booking-modal-header">
+          <h2>
+            <span className="booking-header-icon" aria-hidden="true">
+              <DashboardHouseIcon />
+            </span>
+            Create New Booking
+          </h2>
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
 
-        <form onSubmit={handleSubmit} className="quick-booking-form">
+        <form onSubmit={handleSubmit} className="quick-booking-form booking-form-shell">
           <div className="form-group">
-            <label>Room/Lab *</label>
-            <select
-              name="room"
-              value={formData.room}
-              onChange={handleChange}
-              required
-            >
-              <option value="">Select a room</option>
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name} ({room.room_type}) - Capacity: {room.capacity}
-                </option>
-              ))}
-            </select>
+            <label>Room / Lab</label>
+            <div className="booking-field booking-field-select">
+              <span className="booking-field-icon" aria-hidden="true">
+                <DashboardHouseIcon />
+              </span>
+              <select
+                name="room"
+                value={formData.room}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select a room.</option>
+                {rooms.map((room) => (
+                  <option key={room.id} value={room.id}>
+                    {room.name} ({room.room_type}) - Capacity: {room.capacity}
+                  </option>
+                ))}
+              </select>
+              <span className="booking-field-caret" aria-hidden="true">
+                <FiChevronDown />
+              </span>
+            </div>
           </div>
 
           <div className="form-group">
-            <label>Date *</label>
-            <input
-              type="date"
-              name="date"
-              value={formData.date}
-              onChange={handleChange}
-              min={new Date().toISOString().split('T')[0]}
-              required
-            />
+            <label>Date</label>
+            <div className="booking-field booking-field-date">
+              <span className="booking-field-icon" aria-hidden="true">
+                <DashboardCalendarIcon />
+              </span>
+              <input
+                type="date"
+                name="date"
+                value={formData.date}
+                onChange={handleChange}
+                min={new Date().toISOString().split('T')[0]}
+                required
+              />
+              <span className="booking-field-caret" aria-hidden="true">
+                <FiChevronDown />
+              </span>
+            </div>
           </div>
 
           <div className="form-group">
-            <label>Time Slot *</label>
-            <select
-              name="time_slot"
-              value={formData.time_slot}
-              onChange={handleChange}
-              required
-            >
-              <option value="">Select a time slot</option>
-              {availableTimeSlots.map((slot) => (
-                <option key={slot.id} value={slot.id}>
-                  {slot.name} ({slot.start_time} - {slot.end_time})
-                </option>
-              ))}
-            </select>
+            <label>Time Slot</label>
+            <div className="booking-field booking-field-select">
+              <span className="booking-field-icon" aria-hidden="true">
+                <DashboardClockIcon />
+              </span>
+              <select
+                name="time_slot"
+                value={formData.time_slot}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select a time slot.</option>
+                {availableTimeSlots.map((slot) => (
+                  <option key={slot.id} value={slot.id}>
+                    {slot.name} ({slot.start_time} - {slot.end_time})
+                  </option>
+                ))}
+              </select>
+              <span className="booking-field-caret" aria-hidden="true">
+                <FiChevronDown />
+              </span>
+            </div>
           </div>
 
           <div className="form-group">
-            <label>Purpose *</label>
-            <textarea
-              name="purpose"
-              value={formData.purpose}
-              onChange={handleChange}
-              placeholder="Enter booking purpose..."
-              rows="3"
-              required
-            />
+            <label>Purpose</label>
+            <div className="booking-field booking-field-textarea">
+              <span className="booking-field-icon booking-field-icon-top" aria-hidden="true">
+                <DashboardListIcon />
+              </span>
+              <textarea
+                name="purpose"
+                value={formData.purpose}
+                onChange={handleChange}
+                placeholder="Enter booking purposes."
+                rows="3"
+                required
+              />
+            </div>
           </div>
 
           <div className="form-group">
-            <label>Number of Participants *</label>
-            <input
-              type="number"
-              name="participants_count"
-              value={formData.participants_count}
-              onChange={handleChange}
-              min="1"
-              required
-            />
+            <label>Number of Participants</label>
+            <div className="booking-field">
+              <span className="booking-field-icon" aria-hidden="true">
+                <DashboardUsersIcon />
+              </span>
+              <input
+                type="number"
+                name="participants_count"
+                value={formData.participants_count}
+                onChange={handleChange}
+                min="1"
+                required
+              />
+            </div>
           </div>
 
-          <div className="form-group">
-            <label className="checkbox-label">
+          <div className="form-group booking-repeat-group">
+            <label className="checkbox-label booking-checkbox-label">
               <input
                 type="checkbox"
                 name="is_recurring"
@@ -280,7 +327,7 @@ const QuickCreateBooking = ({ onCreated, onClose }) => {
               Repeat this booking
             </label>
             {formData.is_recurring && (
-              <p style={{ fontSize: '0.85rem', color: '#666', marginTop: '5px', marginBottom: '0' }}>
+              <p className="booking-recurring-note">
                 ℹ️ A recurring booking will be created as one request. Once approved, all instances will be automatically approved.
               </p>
             )}
@@ -289,38 +336,56 @@ const QuickCreateBooking = ({ onCreated, onClose }) => {
           {formData.is_recurring && (
             <>
               <div className="form-group">
-                <label>Repeat Pattern *</label>
-                <select
-                  name="recurrence_pattern"
-                  value={formData.recurrence_pattern}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="DAILY">Daily</option>
-                  <option value="WEEKLY">Weekly</option>
-                  <option value="BIWEEKLY">Bi-weekly (Every 2 weeks)</option>
-                  <option value="MONTHLY">Monthly</option>
-                </select>
+                <label>Repeat Pattern</label>
+                <div className="booking-field booking-field-select">
+                  <span className="booking-field-icon" aria-hidden="true">
+                    <DashboardCalendarIcon />
+                  </span>
+                  <select
+                    name="recurrence_pattern"
+                    value={formData.recurrence_pattern}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="DAILY">Daily</option>
+                    <option value="WEEKLY">Weekly</option>
+                    <option value="BIWEEKLY">Bi-weekly (Every 2 weeks)</option>
+                    <option value="MONTHLY">Monthly</option>
+                  </select>
+                  <span className="booking-field-caret" aria-hidden="true">
+                    <FiChevronDown />
+                  </span>
+                </div>
               </div>
 
               <div className="form-group">
-                <label>Repeat Until *</label>
-                <input
-                  type="date"
-                  name="recurrence_end_date"
-                  value={formData.recurrence_end_date}
-                  onChange={handleChange}
-                  min={formData.date || new Date().toISOString().split('T')[0]}
-                  required
-                />
+                <label>Repeat Until</label>
+                <div className="booking-field booking-field-date">
+                  <span className="booking-field-icon" aria-hidden="true">
+                    <DashboardCalendarIcon />
+                  </span>
+                  <input
+                    type="date"
+                    name="recurrence_end_date"
+                    value={formData.recurrence_end_date}
+                    onChange={handleChange}
+                    min={formData.date || new Date().toISOString().split('T')[0]}
+                    required
+                  />
+                  <span className="booking-field-caret" aria-hidden="true">
+                    <FiChevronDown />
+                  </span>
+                </div>
               </div>
             </>
           )}
 
-          <div className="modal-actions">
+          <div className="booking-form-divider" aria-hidden="true" />
+
+          <div className="modal-actions booking-modal-actions">
             <button
               type="button"
-              className="modal-btn-secondary"
+              className="modal-btn-secondary booking-cancel-btn"
               onClick={onClose}
               disabled={submitting}
             >
@@ -328,7 +393,7 @@ const QuickCreateBooking = ({ onCreated, onClose }) => {
             </button>
             <button
               type="submit"
-              className="modal-btn-primary"
+              className="modal-btn-primary booking-submit-btn"
               disabled={submitting}
             >
               {submitting ? 'Creating...' : 'Create Booking'}

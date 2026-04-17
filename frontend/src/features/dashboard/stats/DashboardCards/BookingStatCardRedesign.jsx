@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const BookingStatCard = ({ label, icon, value, change, period, transition, styles, tone }) => {
+const BookingStatCardRedesign = ({ label, icon, value, subtitle, detail, transition, styles, tone }) => {
   const toneClass = styles[`${tone}Card`] || '';
 
   return (
@@ -12,19 +12,19 @@ const BookingStatCard = ({ label, icon, value, change, period, transition, style
       transition={transition}
     >
       <div className={styles.statHeader}>
+        <div className={styles.statIcon} aria-hidden="true">{icon}</div>
         <p className={styles.statLabel}>{label}</p>
-        <div className={styles.statIcon}>{icon}</div>
       </div>
+
       <div className={styles.statBody}>
         <p className={styles.statValue}>{value}</p>
-        <span className={styles.statDivider} aria-hidden="true" />
+        <div className={styles.statFooter}>
+          <span className={styles.statSubtitle}>{subtitle}</span>
+          <span className={styles.statDetail}>{detail}</span>
+        </div>
       </div>
-      <div className={styles.statFooter}>
-      <span className={`${styles.statChange} ${change === 'neutral' ? styles.neutral : styles.positive}`}>{change === 'neutral' ? '—' : change}</span>
-        <span className={styles.statPeriod}>{period}</span>
-      </div>
-  </motion.div>
+    </motion.div>
   );
 };
 
-export default BookingStatCard;
+export default BookingStatCardRedesign;

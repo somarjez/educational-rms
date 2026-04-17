@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { getBookings } from '../../services/schedulingApi';
-import { FiMapPin, FiClock } from 'react-icons/fi';
+import { FiMapPin } from 'react-icons/fi';
+import { DashboardCalendarIcon, DashboardClockIcon } from '../../features/dashboard/icons/DashboardIcons';
 import './LandingPages.css';
 
 const toList = (data) => (Array.isArray(data) ? data : data?.results || []);
@@ -102,23 +103,36 @@ const SchedulePage = () => {
                   style={{ backgroundColor: getStatusColor(item.status) }}
                 />
                 <div className="timeline-content">
-                  <div className="timeline-header">
-                    <div className="timeline-date">{dateStr}</div>
-                    <div className="timeline-time">{timeStr}</div>
+                  <div className="timeline-top">
+                    <div className="timeline-title-group">
+                      <div className="timeline-room-name">
+                        {item.room_name || item.room?.name || item.resource_name || 'Resource'}
+                      </div>
+                      {item.course_code && (
+                        <div className="timeline-course">{item.course_code}</div>
+                      )}
+                    </div>
+                    <span className={`timeline-status-badge status-pill status-${getStatusBadgeClass(item.status).split('-')[1]}`}>
+                      {item.status || 'UNKNOWN'}
+                    </span>
                   </div>
                   <div className="timeline-details">
-                    <div className="timeline-room">
+                    <div className="timeline-meta">
+                      <div className="timeline-room">
+                        <DashboardCalendarIcon className="timeline-icon" />
+                        <span>{dateStr}</span>
+                      </div>
+                      <div className="timeline-time">
+                        <DashboardClockIcon className="timeline-icon" />
+                        <span>{timeStr}</span>
+                      </div>
+                    </div>
+                    <div className="timeline-room timeline-location">
                       <FiMapPin className="timeline-icon" />
                       <span>{item.room_name || item.room?.name || item.resource_name || 'Resource'}</span>
                     </div>
-                    {item.course_code && (
-                      <div className="timeline-course">{item.course_code}</div>
-                    )}
                   </div>
                 </div>
-                <span className={`timeline-status-badge status-pill status-${getStatusBadgeClass(item.status).split('-')[1]}`}>
-                  {item.status || 'UNKNOWN'}
-                </span>
               </div>
             );
           })}
