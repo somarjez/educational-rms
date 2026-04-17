@@ -1,11 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import QuickCreateBooking from './QuickCreateBooking';
-import NewBookingAction from './QuickActions/NewBookingAction';
-import RequestEquipmentAction from './QuickActions/RequestEquipmentAction';
-import RunSimulationAction from './QuickActions/RunSimulationAction';
-import EditProfileAction from './QuickActions/EditProfileAction';
-import AdminSchedulingAction from './QuickActions/AdminSchedulingAction';
+import NewBookingAction from './QuickActions/NewBookingActionClean';
+import RequestEquipmentAction from './QuickActions/RequestEquipmentActionClean';
+import RunSimulationAction from './QuickActions/RunSimulationActionClean';
+import EditProfileAction from './QuickActions/EditProfileActionClean';
+import AdminSchedulingAction from './QuickActions/AdminSchedulingActionClean';
 import DisplayUtilizationChartsAction from './QuickActions/DisplayUtilizationChartsAction';
 import useBookingModal from '../../../hooks/useBookingModal';
 import styles from './styles/QuickActions.module.css';
@@ -26,20 +26,21 @@ const QuickActions = ({ onEditProfile, userRole, onBookingCreated }) => {
     <>
       <div className={styles.sectionCard}>
         <div className={styles.sectionHeader}>
+          <span className={styles.headerIcon} aria-hidden="true">➤</span>
           <h2 className={styles.sectionTitle}>Quick Actions</h2>
         </div>
         <div className={styles.quickActions}>
           <NewBookingAction onClick={openModal} />
+          <EditProfileAction onClick={onEditProfile} />
           <RequestEquipmentAction onClick={() => navigate('/equipment/request')} />
           {isAdmin && (
             <RunSimulationAction onClick={() => navigate('/simulation/room-usage')} />
           )}
-          {isAdmin && (
-            <DisplayUtilizationChartsAction onClick={() => navigate('/modeling/resource-utilization')} />
-          )}
-          <EditProfileAction onClick={onEditProfile} />
           {isAdminUser && (
             <AdminSchedulingAction onClick={() => navigate('/admin-scheduling')} />
+          )}
+          {isAdmin && (
+            <DisplayUtilizationChartsAction onClick={() => navigate('/modeling/resource-utilization')} />
           )}
         </div>
       </div>

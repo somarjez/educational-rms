@@ -97,11 +97,29 @@ const EditProfileModal = ({ isOpen, onClose, onUpdate }) => {
 
   if (!isOpen) return null;
 
+  const displayName =
+    `${formData.first_name} ${formData.last_name}`.trim() ||
+    formData.username ||
+    'User Name';
+
+  const profileInitials =
+    `${formData.first_name?.[0] || ''}${formData.last_name?.[0] || ''}`.trim() ||
+    formData.username?.[0] ||
+    'U';
+  const normalizedRole = String(user?.role || 'user').toLowerCase();
+  const profileAvatarRoleClass =
+    normalizedRole === 'faculty'
+      ? ' faculty-avatar-shell'
+      : normalizedRole === 'admin'
+        ? ' admin-avatar-shell'
+        : normalizedRole === 'student'
+          ? ' student-avatar-shell'
+          : '';
+
   return (
     <div className="modal-overlay" onClick={handleClose}>
-      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2 className="modal-title">Edit Profile</h2>
+      <div className="modal-container edit-profile-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header edit-profile-header">
           <button 
             className="modal-close-btn" 
             onClick={handleClose}
@@ -111,7 +129,17 @@ const EditProfileModal = ({ isOpen, onClose, onUpdate }) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="modal-form">
+        <div className="profile-hero">
+          <div
+            className={`profile-avatar-shell${profileAvatarRoleClass}`}
+            aria-label="Profile initials"
+          >
+            <span className="profile-avatar-initials">{profileInitials.toUpperCase()}</span>
+          </div>
+          <h2 className="profile-hero-name">{displayName}</h2>
+        </div>
+
+        <form onSubmit={handleSubmit} className="modal-form edit-profile-form">
           {error && (
             <div className="alert alert-error">
               {error}
@@ -124,7 +152,7 @@ const EditProfileModal = ({ isOpen, onClose, onUpdate }) => {
             </div>
           )}
 
-          <div className="form-row">
+          <div className="form-row profile-form-row">
             <div className="form-group">
               <label htmlFor="first_name" className="form-label">
                 First Name
@@ -233,7 +261,9 @@ const EditProfileModal = ({ isOpen, onClose, onUpdate }) => {
             />
           </div>
 
-          <div className="modal-footer">
+          <div className="profile-form-divider" aria-hidden="true" />
+
+          <div className="modal-footer edit-profile-footer">
             <button
               type="button"
               onClick={handleClose}

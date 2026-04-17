@@ -2,26 +2,31 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   FiGrid,
-  FiCalendar,
-  FiBarChart2,
+  FiBriefcase,
   FiMenu,
   FiX,
   FiChevronDown,
   FiInfo,
-  FiLayers,
-  FiActivity,
   FiTrendingUp,
-  FiAlertTriangle,
-  FiTool,
-  FiClock,
   FiZap,
   FiAlertCircle,
   FiSettings,
-  FiBell,
-  FiUser,
   FiUsers,
 } from 'react-icons/fi';
 import api from '../../services/api';
+import {
+  DashboardBellIcon,
+  DashboardCalendarIcon,
+  DashboardCalendarCheckIcon,
+  DashboardChartBarIcon,
+  DashboardClockIcon,
+  DashboardStackIcon,
+  DashboardUserIcon,
+  DashboardWarningIcon,
+  DashboardWrenchIcon,
+  DashboardWrenchScrewdriverIcon,
+} from '../../features/dashboard/icons/DashboardIcons';
+import sidebarBooksLogo from '../../assets/images/sidebar-books-logo.svg';
 import './styles/Sidebar.css';
 
 const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) => {
@@ -64,25 +69,26 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
 
   const menuItems = [
     {
-      id: 'notifications',
-      label: 'Notifications',
-      icon: <FiBell />,
-      path: '/notifications',
-      available: true,
-      badge: unreadCount > 0 ? unreadCount : null,
-    },
-    {
       id: 'dashboard',
       label: 'Dashboard',
       icon: <FiGrid />,
       path: '/dashboard',
       available: true,
     },
+    {
+      id: 'faculty-notifications',
+      label: 'Notifications',
+      icon: <DashboardBellIcon />,
+      path: '/notifications',
+      available: isFacultyUser,
+      description: 'View your notifications',
+      badge: unreadCount > 0 ? unreadCount : null,
+    },
     // Student Navigation Items (visible only to students)
     {
       id: 'student-bookings',
       label: 'Bookings',
-      icon: <FiCalendar />,
+      icon: <DashboardCalendarIcon />,
       path: '/student/bookings',
       available: isStudent,
       description: 'View your resource bookings',
@@ -90,7 +96,7 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
     {
       id: 'student-schedule',
       label: 'Schedule',
-      icon: <FiClock />,
+      icon: <DashboardClockIcon />,
       path: '/schedule',
       available: isStudent,
       description: 'View your upcoming schedule',
@@ -98,7 +104,7 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
     {
       id: 'student-equipment',
       label: 'Equipment',
-      icon: <FiTool />,
+      icon: <DashboardWrenchIcon />,
       path: '/equipment',
       available: isStudent,
       description: 'Browse available resources',
@@ -106,7 +112,7 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
     {
       id: 'student-equipment-request',
       label: 'Request Equipment',
-      icon: <FiTool />,
+      icon: <DashboardWrenchScrewdriverIcon />,
       path: '/equipment/request',
       available: isStudent,
       description: 'Submit equipment requests',
@@ -114,7 +120,7 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
     {
       id: 'student-notifications',
       label: 'Notifications',
-      icon: <FiBell />,
+      icon: <DashboardBellIcon />,
       path: '/notifications',
       available: isStudent,
       description: 'View your notifications',
@@ -130,7 +136,7 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
     {
       id: 'student-profile',
       label: 'Profile',
-      icon: <FiUser />,
+      icon: <DashboardUserIcon />,
       path: '/profile',
       available: isStudent,
       description: 'Manage your profile settings',
@@ -139,7 +145,7 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
     {
       id: 'scheduling',
       label: 'Scheduling & Resources',
-      icon: <FiCalendar />,
+      icon: <DashboardCalendarCheckIcon />,
       available: isAdmin,
       path: '/admin-scheduling',
       state: { tab: 'calendar' },
@@ -148,7 +154,7 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
     {
       id: 'bookings',
       label: 'Bookings Overview',
-      icon: <FiCalendar />,
+      icon: <DashboardCalendarIcon />,
       available: isAdmin,
       path: '/bookings',
       description: 'View and manage all resource bookings',
@@ -156,7 +162,7 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
     {
       id: 'admin-equipment-request',
       label: 'Request Equipment',
-      icon: <FiTool />,
+      icon: <DashboardWrenchScrewdriverIcon />,
       available: isAdmin,
       path: '/equipment/request',
       description: 'Submit equipment requests',
@@ -164,7 +170,7 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
     {
       id: 'admin-equipment-requests',
       label: 'Equipment Requests',
-      icon: <FiCalendar />,
+      icon: <DashboardCalendarIcon />,
       available: isAdminUser,
       path: '/admin/equipment-requests',
       description: 'Approve or reject equipment requests',
@@ -172,7 +178,7 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
     {
       id: 'reports',
       label: 'Reports',
-      icon: <FiBarChart2 />,
+      icon: <DashboardChartBarIcon />,
       available: isAdmin,
       path: '/dashboard/reports',
       description: 'View room, equipment, and activity insights',
@@ -188,19 +194,19 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
     {
       id: 'modeling-simulation',
       label: 'Modeling & Simulation',
-      icon: <FiActivity />,
+      icon: <FiBriefcase />,
       available: isAdmin,
       submenu: [
         {
           id: 'modeling',
           label: 'Modeling',
-          icon: <FiLayers />,
+          icon: <DashboardStackIcon />,
           description: 'Resource analysis models',
           submenu: [
             {
               id: 'resource-utilization',
               label: 'Resource Utilization',
-              icon: <FiBarChart2 />,
+              icon: <DashboardChartBarIcon />,
               path: '/modeling/resource-utilization',
               description: 'Measure resource usage vs availability',
             },
@@ -214,14 +220,14 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
             {
               id: 'booking-conflict',
               label: 'Booking Conflict Model',
-              icon: <FiAlertTriangle />,
+              icon: <DashboardWarningIcon />,
               path: '/modeling/booking-conflict',
               description: 'Detect and predict scheduling clashes',
             },
             {
               id: 'equipment-usage',
               label: 'Equipment Usage',
-              icon: <FiTool />,
+              icon: <DashboardWrenchIcon />,
               path: '/modeling/equipment-usage',
               description: 'Analyze equipment wear and demand',
             },
@@ -243,14 +249,14 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
             {
               id: 'equipment-usage-sim',
               label: 'Equipment Usage Simulation',
-              icon: <FiTool />,
+              icon: <DashboardWrenchIcon />,
               path: '/simulation/equipment-usage',
               description: 'Simulate equipment availability',
             },
             {
               id: 'peak-hour-scenario',
               label: 'Peak-Hour Scenarios',
-              icon: <FiClock />,
+              icon: <DashboardClockIcon />,
               path: '/simulation/peak-hour',
               description: 'Test high-demand scenarios',
             },
@@ -367,9 +373,13 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
         <div className="sidebar-header">
           <div className={`sidebar-brand ${isCollapsed ? 'hidden' : ''}`}>
             <div className="brand-icon">
-              <FiLayers />
+              <img src={sidebarBooksLogo} alt="RMS" className="brand-logo-image" />
             </div>
-            <span className="brand-text">RMS</span>
+            <div className="brand-copy">
+              <span className="brand-text">RMS</span>
+              <span className="brand-subtext">Educational Resource Management</span>
+              <span className="brand-description">Your comprehensive resource management platform.</span>
+            </div>
           </div>
           <button
             className="toggle-btn"
@@ -379,6 +389,8 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
             {isCollapsed ? <FiMenu /> : <FiX />}
           </button>
         </div>
+
+        <div className="sidebar-divider" aria-hidden="true" />
 
         {/* Navigation Menu */}
         <nav className="sidebar-nav">

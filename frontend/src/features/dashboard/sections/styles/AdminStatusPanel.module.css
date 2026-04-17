@@ -1,0 +1,87 @@
+.statusPanel {
+  padding: 0.78rem;
+  border: 1.5px solid #d7d7d7;
+  border-radius: 18px;
+  background: #fffdf5;
+  box-shadow: 0 8px 18px rgba(25, 24, 72, 0.06);
+}
+
+.sectionHeader {
+  margin-bottom: 0.65rem;
+}
+
+.sectionTitle {
+  margin: 0;
+  color: #1b1d3f;
+  font-size: 0.96rem;
+  font-weight: 800;
+}
+
+.statusItems {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.statusItem {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.68rem;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #e2e2e8;
+}
+
+.statusIndicator {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.statusInfo {
+  min-width: 0;
+}
+
+.statusLabel {
+  display: block;
+  margin-bottom: 0.12rem;
+  color: #6a6a7a;
+  font-size: 0.58rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.statusValue {
+  color: #1b1d3f;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.noteBox {
+  margin-top: 0.65rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 14px;
+  background: #fbfbfe;
+  border: 1px solid #e2e2e8;
+}
+
+.noteText {
+  margin: 0;
+  color: #6a6a7a;
+  font-size: 0.62rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 1100px) {
+  .statusItems {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .statusItems {
+    grid-template-columns: 1fr;
+  }
+}

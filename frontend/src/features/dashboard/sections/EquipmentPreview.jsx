@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { FiTool, FiArrowRight } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { getEquipment } from '../../../services/schedulingApi';
 import styles from './styles/ScheduleSections.module.css';
+import { DashboardWrenchIcon } from '../icons/DashboardIcons';
 
 const EquipmentPreview = () => {
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ const EquipmentPreview = () => {
     <div className={styles.equipmentCard}>
       <div className={styles.equipmentHeader}>
         <h3 className={styles.equipmentTitle}>
-          <FiTool className={styles.icon} />
+          <DashboardWrenchIcon className={styles.icon} />
           Available Equipment
         </h3>
         <button
@@ -49,7 +49,7 @@ const EquipmentPreview = () => {
           onClick={() => navigate('/equipment')}
           title="View all equipment"
         >
-          View All <FiArrowRight />
+          View All
         </button>
       </div>
 
@@ -82,7 +82,7 @@ const EquipmentPreview = () => {
           </div>
         ) : (
           <div className={styles.emptyState}>
-            <FiTool className={styles.emptyIcon} />
+            <DashboardWrenchIcon className={styles.emptyIcon} />
             <p>No equipment available</p>
           </div>
         )}

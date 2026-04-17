@@ -1,5 +1,5 @@
 import React from 'react';
-import BookingStatCard from './DashboardCards/BookingStatCard';
+import BookingStatCardRedesign from './DashboardCards/BookingStatCardRedesign';
 import { DASHBOARD_CARD_CONFIGS } from './constants/dashboardCardConfigs';
 import styles from './styles/DashboardCards.module.css';
 
@@ -8,14 +8,16 @@ const DashboardCards = ({ bookingStats }) => {
     <div className={styles.statsGrid}>
       {DASHBOARD_CARD_CONFIGS.map((card) => {
         const Icon = card.Icon;
+
         return (
-          <BookingStatCard
+          <BookingStatCardRedesign
             key={card.key}
+            tone={card.key}
             label={card.label}
-            icon={<Icon size={card.iconSize} color={card.iconColor} />}
+            icon={<Icon size={card.iconSize} />}
             value={bookingStats?.[card.valueKey] ?? card.fallback}
-            change={card.change}
-            period={card.period}
+            subtitle={card.subtitle}
+            detail={card.detail}
             transition={{ duration: card.duration }}
             styles={styles}
           />

@@ -1,5 +1,6 @@
 import React from 'react';
-import { FiUsers, FiTrendingUp, FiCalendar, FiAlertCircle } from 'react-icons/fi';
+import { FiTrendingUp, FiAlertCircle } from 'react-icons/fi';
+import { DashboardCalendarIcon, DashboardUsersIcon } from '../icons/DashboardIcons';
 import styles from './styles/FacultyDashboardLayout.module.css';
 
 const FacultyDashboardLayout = ({ schedulingStats = {} }) => {
@@ -15,7 +16,7 @@ const FacultyDashboardLayout = ({ schedulingStats = {} }) => {
       id: 'total-bookings',
       title: 'Total Bookings',
       value: total_bookings,
-      icon: <FiCalendar className={styles.cardIcon} />,
+      icon: <DashboardCalendarIcon className={styles.cardIcon} />,
       color: 'primary',
       trend: '+' + (total_bookings > 0 ? Math.floor(total_bookings * 0.1) : 0) + ' this week',
     },
@@ -23,7 +24,7 @@ const FacultyDashboardLayout = ({ schedulingStats = {} }) => {
       id: 'confirmed',
       title: 'Confirmed',
       value: confirmed_bookings,
-      icon: <FiUsers className={styles.cardIcon} />,
+      icon: <DashboardUsersIcon className={styles.cardIcon} />,
       color: 'success',
       trend: total_bookings > 0 ? Math.round((confirmed_bookings / total_bookings) * 100) + '%' : '0%',
     },
