@@ -61,9 +61,10 @@
 
 .filters-row {
   display: flex;
-  gap: 12px;
+  gap: 22px;
   flex-wrap: wrap;
   margin-bottom: 16px;
+  align-items: center;
 }
 
 .filter-input,
@@ -72,21 +73,21 @@
   border: 1px solid #e4d9cc;
   border-radius: 14px;
   font-size: 14px;
-  min-width: 180px;
+  min-width: 210px;
   background: white;
   box-shadow: 0 6px 14px rgba(107, 91, 71, 0.04);
 }
 
 .filter-input {
   flex: 1;
-  min-width: 220px;
+  min-width: 240px;
 }
 
 .section-header h3 {
   margin: 0;
   font-size: 20px;
   color: #2d2a26;
-}
+  min-width: 240px;
 
 .items-grid {
   display: grid;
@@ -144,6 +145,14 @@
 /* Forms */
 .form-group {
   margin-bottom: 20px;
+}
+
+.modal-body .form-group {
+  margin-bottom: 18px;
+}
+
+.modal-body .form-group {
+  margin-bottom: 18px;
 }
 
 .form-group label {
@@ -324,7 +333,7 @@ textarea.form-input {
 
 .modal-header h3 {
   margin: 0;
-  color: #2d2a26;
+  color: #ffffff;
 }
 
 .modal-close {
@@ -414,4 +423,5 @@ textarea.form-input {
   .item-actions .btn {
     width: 100%;
   }
+}
 }

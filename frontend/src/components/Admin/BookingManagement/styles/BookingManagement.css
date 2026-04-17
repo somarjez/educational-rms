@@ -148,9 +148,24 @@
 /* Filters */
 .filters {
   display: flex;
-  gap: 15px;
+  gap: 18px;
   margin-bottom: 20px;
   flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filter-field-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #7b6a5c;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 .filter-input,
@@ -159,10 +174,17 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;
+  min-width: 190px;
+}
+
+.filter-input[type='date'] {
+  min-width: 210px;
+  max-width: 280px;
+  border-color: #c7d2fe;
 }
 
 .filter-select {
-  min-width: 150px;
+  min-width: 180px;
 }
 
 /* Table */
@@ -442,8 +464,8 @@
 
 .modal-header h3 {
   margin: 0;
-  color: #333;
-}
+  color: #ffffff;
+  color: #ffffff;
 
 .modal-close {
   background: none;
@@ -577,4 +599,5 @@ textarea.form-input {
     flex-direction: column;
     align-items: flex-start;
   }
+}
 }

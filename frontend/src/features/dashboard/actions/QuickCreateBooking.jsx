@@ -194,7 +194,7 @@ const QuickCreateBooking = ({ onCreated, onClose }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Create New Booking</h2>
+          <h2 style={{ color: '#ffffff' }}>Create New Booking</h2>
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
 

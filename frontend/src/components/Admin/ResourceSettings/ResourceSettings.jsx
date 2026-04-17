@@ -612,7 +612,7 @@ const ResourceSettings = () => {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>
+              <h3 style={{ color: '#ffffff' }}>
                 {modalType === 'equipment'
                   ? currentItem ? 'Edit Equipment' : 'Add Equipment'
                   : currentItem ? 'Edit Time Slot' : 'Add Time Slot'

@@ -1264,7 +1264,7 @@
 .modal-header h2 {
   margin: 0;
   font-size: 1.5rem;
-  color: #1a202c;
+  color: #ffffff;
 }
 
 .modal-close {
@@ -1356,7 +1356,17 @@
 .quick-booking-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
+}
+
+.quick-booking-form .form-group {
+  gap: 0.8rem;
+}
+
+.quick-booking-form .form-group input[type='date'] {
+  padding-right: 0.85rem;
+  border-color: #c7d2fe;
+  min-width: 220px;
 }
 
 .form-group {
