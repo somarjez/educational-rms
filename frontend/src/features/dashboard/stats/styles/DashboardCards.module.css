@@ -1,0 +1,55 @@
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.statCard {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 1.2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.statHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.statLabel {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2563eb;
+  margin-right: 0.5rem;
+}
+
+.statIcon {
+  font-size: 1.5rem;
+}
+
+.statValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.statFooter {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  color: #64748b;
+}
+
+.statChange.neutral {
+  color: #64748b;
+}
+
+.statChange.positive {
+  color: #059669;
+}

@@ -1,0 +1,18 @@
+.welcomeSection {
+  padding: 1.5rem 2rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.welcomeTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2563eb;
+  margin-bottom: 0.5rem;
+}
+
+.welcomeText {
+  font-size: 1.1rem;
+  color: #64748b;
+}

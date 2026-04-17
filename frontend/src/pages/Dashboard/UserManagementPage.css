@@ -1,0 +1,58 @@
+.um-refresh {
+  border: none;
+  background: #2563eb;
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 0.48rem 0.82rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.um-refresh:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.um-error {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.um-role {
+  font-weight: 700;
+}
+
+.um-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.um-btn {
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1e3a8a;
+  border-radius: 8px;
+  padding: 0.42rem 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.um-btn.secondary {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.um-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.um-empty {
+  text-align: center;
+  color: #64748b;
+  padding: 1rem;
+}

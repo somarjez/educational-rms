@@ -1,0 +1,23 @@
+/* QuickActions.module.css - Isolated styles for QuickActions component */
+.sectionCard {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #222;
+}
+.quickActions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
