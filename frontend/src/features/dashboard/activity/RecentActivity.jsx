@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import ActivityItem from './RecentActivity/ActivityItem';
 import EmptyState from './RecentActivity/EmptyState';
 import styles from './styles/RecentActivity.module.css';
+import { DashboardClockIcon } from '../icons/DashboardIcons';
 
 const RecentActivity = ({ bookings, userRole }) => {
   const navigate = useNavigate();
@@ -11,7 +12,10 @@ const RecentActivity = ({ bookings, userRole }) => {
   const getStatusClass = (status) => {
     const statusMap = {
       CONFIRMED: 'completed',
+      APPROVED: 'completed',
       PENDING: 'pending',
+      REJECTED: 'cancelled',
+      DECLINED: 'cancelled',
       CANCELLED: 'cancelled',
       COMPLETED: 'completed'
     };
@@ -27,7 +31,12 @@ const RecentActivity = ({ bookings, userRole }) => {
   return (
     <div className={styles.sectionCard}>
       <div className={styles.sectionHeader}>
-        <h2 className={styles.sectionTitle}>Recent Activity</h2>
+        <h2 className={styles.sectionTitle}>
+          <span className={styles.sectionTitleIcon}>
+            <DashboardClockIcon />
+          </span>
+          Recent Activity
+        </h2>
         <button className={styles.viewAllBtn} onClick={() => navigate(isAdmin ? '/bookings' : '/student/bookings')}>
           View All
         </button>

@@ -1,55 +1,167 @@
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-bottom: 0;
 }
 
 .statCard {
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  padding: 1.2rem 1.5rem;
+  --card-accent: #f0a11f;
+  --card-icon-bg: rgba(240, 161, 31, 0.18);
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  min-height: 164px;
+  height: 100%;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1.5px solid rgba(67, 67, 67, 0.35);
+  border-radius: 26px;
+  padding: 1rem 1.15rem 0.95rem;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
 }
 
 .statHeader {
   display: flex;
+  width: 100%;
   align-items: center;
-  margin-bottom: 0.5rem;
+  justify-content: flex-start;
+  gap: 0.72rem;
+  margin-bottom: 0.75rem;
 }
 
 .statLabel {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #2563eb;
-  margin-right: 0.5rem;
+  margin: 0;
+  flex: 1;
+  color: var(--card-accent);
+  font-size: 1.04rem;
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-align: left;
+  max-width: 10.75rem;
 }
 
 .statIcon {
-  font-size: 1.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-icon-bg);
+  color: var(--card-accent);
+  flex-shrink: 0;
+}
+
+.statIcon svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  color: currentColor;
+  stroke-width: 1.9;
+}
+
+.totalCard {
+  --card-accent: #f0a11f;
+  --card-icon-bg: rgba(240, 161, 31, 0.18);
+}
+
+.confirmedCard {
+  --card-accent: #59a6ea;
+  --card-icon-bg: rgba(89, 166, 234, 0.18);
+}
+
+.approvedCard {
+  --card-accent: #4a56a4;
+  --card-icon-bg: rgba(74, 86, 164, 0.18);
+}
+
+.pendingCard {
+  --card-accent: #c8a052;
+  --card-icon-bg: rgba(200, 160, 82, 0.18);
+}
+
+.statBody {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  align-self: center;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding-bottom: 0.15rem;
+  text-align: center;
 }
 
 .statValue {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 0.5rem;
+  margin: 0;
+  width: 100%;
+  color: #11174f;
+  font-size: clamp(2.35rem, 2.9vw, 3rem);
+  font-weight: 800;
+  line-height: 1;
+  display: block;
+  text-align: center;
+  letter-spacing: -0.05em;
 }
 
 .statFooter {
   display: flex;
-  gap: 0.5rem;
-  font-size: 0.95rem;
-  color: #64748b;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.16rem;
 }
 
-.statChange.neutral {
-  color: #64748b;
+.statSubtitle {
+  color: #8b939f;
+  font-size: 0.48rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.1;
+  text-transform: none;
 }
 
-.statChange.positive {
-  color: #059669;
+.statDetail {
+  color: #5f6773;
+  font-size: 0.6rem;
+  font-weight: 400;
+  text-align: center;
+  line-height: 1.1;
+  text-transform: none;
+}
+
+@media (max-width: 1100px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .statCard {
+    min-height: 156px;
+    border-radius: 22px;
+    padding: 0.95rem 1rem 0.9rem;
+  }
+
+  .statLabel {
+    font-size: 0.96rem;
+    max-width: 9.3rem;
+  }
+
+  .statIcon {
+    width: 2.1rem;
+    height: 2.1rem;
+  }
+
+  .statValue {
+    font-size: 2.2rem;
+  }
 }

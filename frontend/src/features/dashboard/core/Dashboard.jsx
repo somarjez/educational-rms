@@ -13,13 +13,13 @@ import './styles/Dashboard.css';
 const DashboardCards = lazy(() => import('../stats/DashboardCards'));
 const RecentActivity = lazy(() => import('../activity/RecentActivity'));
 const QuickActions = lazy(() => import('../actions/QuickActions'));
-const MiniCalendar = lazy(() => import('../calendar/MiniCalendar'));
 const UpcomingSchedule = lazy(() => import('../sections/UpcomingSchedule'));
 const NotificationPreview = lazy(() => import('../sections/NotificationPreview'));
 const EquipmentPreview = lazy(() => import('../sections/EquipmentPreview'));
 const DecisionSupportPanel = lazy(() => import('../sections/DecisionSupportPanel'));
 const FacultyDashboardLayout = lazy(() => import('../sections/FacultyDashboardLayout'));
 const AdminDashboardLayout = lazy(() => import('../sections/AdminDashboardLayout'));
+const AdminStatusPanel = lazy(() => import('../sections/AdminStatusPanel'));
 
 const Dashboard = () => {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
@@ -55,6 +55,14 @@ const Dashboard = () => {
   const isAdmin = normalizedRole === 'ADMIN' || normalizedRole === 'FACULTY';
   const isAdminUser = normalizedRole === 'ADMIN';
   const isFacultyUser = normalizedRole === 'FACULTY';
+  const roleOverview = isAdminUser ? (
+    <AdminDashboardLayout
+      bookingStats={booking_stats}
+      schedulingStats={scheduling_stats || {}}
+    />
+  ) : isFacultyUser ? (
+    <FacultyDashboardLayout schedulingStats={scheduling_stats || {}} />
+  ) : null;
 
   return (
     <div className="dashboard">
@@ -65,63 +73,45 @@ const Dashboard = () => {
       />
 
       <div className="dashboard-content">
-        <WelcomeSection userName={userData.first_name || userData.username} />
+        <WelcomeSection
+          userName={userData.first_name || userData.username}
+          userRole={userData.role}
+        />
 
         <Suspense fallback={<div className="loading">Loading dashboard sections...</div>}>
           <DashboardCards
             bookingStats={booking_stats}
             simulationStats={simulation_stats}
+            userRole={userData.role}
           />
 
-          <DecisionSupportPanel userRole={userData.role} showViewDetails />
+          {isAdmin ? (
+            <DecisionSupportPanel userRole={userData.role} showViewDetails />
+          ) : null}
 
-          {/* Admin/Faculty Scheduling Stats - Only for admins/faculty */}
-          {isAdmin && (
-            <>
-              {scheduling_stats && (
-                <>
-                  {isFacultyUser && (
-                    <FacultyDashboardLayout schedulingStats={scheduling_stats} />
-                  )}
-                </>
-              )}
-              {isAdminUser && (
-                <AdminDashboardLayout
-                  bookingStats={booking_stats}
-                  schedulingStats={scheduling_stats || {}}
-                  recentBookings={recent_bookings}
-                />
-              )}
-            </>
-          )}
+          {isAdmin ? roleOverview : null}
 
           <div className="content-sections">
-            {isAdminUser ? (
-              <>
-                <MiniCalendar />
-                <RecentActivity bookings={recent_bookings} userRole={userData.role} />
-              </>
-            ) : isFacultyUser ? (
-              <>
-                <MiniCalendar />
-                <RecentActivity bookings={recent_bookings} userRole={userData.role} />
-                <NotificationPreview bookings={recent_bookings} />
-                <EquipmentPreview />
-              </>
-            ) : (
-              <>
-                <RecentActivity bookings={recent_bookings} userRole={userData.role} />
-                <UpcomingSchedule />
-                <NotificationPreview bookings={recent_bookings} />
-                <EquipmentPreview />
-              </>
-            )}
+            <div className="content-primary">
+              <UpcomingSchedule />
+              <RecentActivity bookings={recent_bookings} userRole={userData.role} />
+              {isAdminUser ? (
+                <AdminStatusPanel
+                  bookingStats={booking_stats}
+                  schedulingStats={scheduling_stats || {}}
+                />
+              ) : null}
+            </div>
 
-            <QuickActions
-              onEditProfile={() => setIsEditProfileOpen(true)}
-              userRole={userData.role}
-              onBookingCreated={refreshDashboard}
-            />
+            <div className="content-secondary">
+              <QuickActions
+                onEditProfile={() => setIsEditProfileOpen(true)}
+                userRole={userData.role}
+                onBookingCreated={refreshDashboard}
+              />
+              <NotificationPreview bookings={recent_bookings} />
+              <EquipmentPreview />
+            </div>
           </div>
         </Suspense>
       </div>

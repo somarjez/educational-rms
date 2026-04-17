@@ -1,15 +1,19 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiHardDrive, FiLayers, FiActivity, FiUsers } from 'react-icons/fi';
-import NotificationPreview from './NotificationPreview';
-import EquipmentPreview from './EquipmentPreview';
+import {
+  HiOutlineHandRaised,
+} from 'react-icons/hi2';
 import styles from './styles/AdminDashboardLayout.module.css';
+import {
+  DashboardCalendarIcon,
+  DashboardClockIcon,
+  DashboardHouseIcon,
+} from '../icons/DashboardIcons';
 
-const AdminDashboardLayout = ({ bookingStats = {}, schedulingStats = {}, recentBookings = [] }) => {
+const AdminDashboardLayout = ({ bookingStats = {}, schedulingStats = {} }) => {
   const navigate = useNavigate();
   const {
     total_bookings = 0,
-    confirmed_bookings = 0,
     pending_bookings = 0,
   } = bookingStats || {};
 
@@ -25,33 +29,33 @@ const AdminDashboardLayout = ({ bookingStats = {}, schedulingStats = {}, recentB
       id: 'total-rooms',
       title: 'Active Rooms',
       value: total_rooms,
-      icon: <FiLayers className={styles.cardIcon} />,
+      icon: <DashboardHouseIcon className={styles.iconSvg} />,
       color: 'primary',
-      description: 'Resources managed',
+      description: 'resources managed',
     },
     {
       id: 'total-bookings',
       title: 'System Bookings',
       value: total_bookings,
-      icon: <FiActivity className={styles.cardIcon} />,
+      icon: <DashboardCalendarIcon className={styles.iconSvg} />,
       color: 'info',
-      description: 'Total reservations',
+      description: 'total reservation',
     },
     {
       id: 'pending-actions',
-      title: 'Pending Requests',
+      title: 'Pending Request',
       value: pendingRequestsCount,
-      icon: <FiUsers className={styles.cardIcon} />,
+      icon: <HiOutlineHandRaised className={styles.iconSvg} />,
       color: 'warning',
-      description: 'Awaiting approval',
+      description: 'awaiting approval',
     },
     {
       id: 'system-health',
       title: "Today's Activity",
       value: upcoming_bookings,
-      icon: <FiHardDrive className={styles.cardIcon} />,
+      icon: <DashboardClockIcon className={styles.iconSvg} />,
       color: 'success',
-      description: 'Sessions scheduled',
+      description: 'sessions scheduled',
     },
   ];
 
@@ -84,71 +88,32 @@ const AdminDashboardLayout = ({ bookingStats = {}, schedulingStats = {}, recentB
             onClick={() => card.id === 'pending-actions' && navigate('/admin/pending-requests')}
             style={card.id === 'pending-actions' ? { cursor: 'pointer' } : {}}
           >
-            <div className={styles.cardIcon}>
-              {card.icon}
-            </div>
             <div className={styles.cardInfo}>
-              <h4 className={styles.cardTitle}>{card.title}</h4>
+              <div className={styles.cardHeader}>
+                <div className={styles.cardIconWrap}>
+                  {card.icon}
+                </div>
+                <h4 className={styles.cardTitle}>{card.title}</h4>
+              </div>
               <div className={styles.cardValue}>{card.value}</div>
-              <p className={styles.cardDescription}>{card.description}</p>
-              {card.id === 'pending-actions' && (
-                <button
-                  type="button"
-                  className={styles.viewAllButton}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate('/admin/pending-requests');
-                  }}
-                >
-                  View All
-                </button>
-              )}
+              <div className={styles.cardFooter}>
+                <p className={styles.cardDescription}>{card.description}</p>
+                {card.id === 'pending-actions' && (
+                  <button
+                    type="button"
+                    className={styles.viewAllButton}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/admin/pending-requests');
+                    }}
+                  >
+                    View All
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         ))}
-      </div>
-
-      <NotificationPreview bookings={recentBookings} />
-      <EquipmentPreview />
-
-      <div className={styles.managementSection}>
-        <div className={styles.managementHeader}>
-          <h4 className={styles.managementTitle}>System Status</h4>
-        </div>
-
-        <div className={styles.statusItems}>
-          <div className={styles.statusItem}>
-            <div className={styles.statusIndicator} style={{ backgroundColor: '#22c55e' }}></div>
-            <div className={styles.statusInfo}>
-              <span className={styles.statusLabel}>Confirmation Rate</span>
-              <span className={styles.statusValue}>
-                {total_bookings > 0 ? Math.round((confirmed_bookings / total_bookings) * 100) : 0}%
-              </span>
-            </div>
-          </div>
-
-          <div className={styles.statusItem}>
-            <div className={styles.statusIndicator} style={{ backgroundColor: '#ca8a04' }}></div>
-            <div className={styles.statusInfo}>
-              <span className={styles.statusLabel}>Pending Requests</span>
-              <span className={styles.statusValue}>{pendingRequestsCount}</span>
-            </div>
-          </div>
-
-          <div className={styles.statusItem}>
-            <div className={styles.statusIndicator} style={{ backgroundColor: '#0066cc' }}></div>
-            <div className={styles.statusInfo}>
-              <span className={styles.statusLabel}>Resources Configured</span>
-              <span className={styles.statusValue}>{total_rooms}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className={styles.notesSection}>
-        <p className={styles.noteText}>
-          All system data is automatically synchronized. Use the Scheduling & Resources tab to manage rooms, equipment, and bookings.
-        </p>
       </div>
     </div>
   );

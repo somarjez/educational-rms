@@ -1,56 +1,72 @@
 import React from 'react';
-import { FaChalkboardTeacher } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import { getInitials } from '../../../utils/userUtils';
-import Notifications from '../../../components/Common/Notifications';
+import { DashboardBellIcon } from '../icons/DashboardIcons';
 import './styles/Dashboard.css';
 
 const DashboardHeader = ({ user, onLogout, onProfileClick }) => {
+  const navigate = useNavigate();
   const fullName = `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.username || 'User';
   const avatarSrc = user?.avatar || user?.avatar_url || '';
+  const normalizedRole = String(user?.role || 'user').toLowerCase();
+  const roleKey = normalizedRole.includes('faculty')
+    ? 'faculty'
+    : normalizedRole.includes('admin')
+      ? 'admin'
+      : normalizedRole.includes('student')
+        ? 'student'
+        : 'user';
+  const avatarRoleClass =
+    roleKey === 'faculty'
+      ? 'faculty-avatar-shell'
+      : roleKey === 'admin'
+        ? 'admin-avatar-shell'
+        : roleKey === 'student'
+          ? 'student-avatar-shell'
+          : '';
 
   return (
     <div className="dashboard-header">
-      <div className="header-content">
-        <div className="header-brand">
-          <div className="brand-logo">
-            <FaChalkboardTeacher size={32} color="#2563eb" />
-          </div>
-          <div className="brand-info">
-            <h1>Educational Resource Management</h1>
-            <p>Your comprehensive resource management platform</p>
-          </div>
-        </div>
+      <div className="dashboard-header-inner">
+        <div className="dashboard-header-cluster">
+          <div className="dashboard-header-controls">
+            <button
+              type="button"
+              className="header-icon-button"
+              aria-label="Notifications"
+              onClick={() => navigate('/notifications')}
+            >
+              <DashboardBellIcon />
+            </button>
+            <button className="logout-btn" onClick={onLogout}>
+              Log Out
+            </button>
 
-        <div className="header-user">
-          <div className="header-notifications">
-            <Notifications />
-          </div>
-          <button
-            type="button"
-            className="account-trigger"
-            onClick={onProfileClick}
-            onKeyDown={(e) => e.key === 'Enter' && onProfileClick()}
-          >
-            <span className="avatar-shell">
-              {avatarSrc ? (
-                <img src={avatarSrc} alt={fullName} className="avatar-image" />
-              ) : (
+            <span className={`header-role-pill role-${normalizedRole}`}>{user?.role || 'User'}</span>
+
+            <button
+              type="button"
+              className="account-trigger"
+              aria-label="Open profile"
+              onClick={onProfileClick}
+              onKeyDown={(e) => e.key === 'Enter' && onProfileClick()}
+            >
+              <span className={`avatar-shell ${avatarRoleClass}`.trim()}>
+                {avatarSrc ? (
+                  <img src={avatarSrc} alt={fullName} className="avatar-image" />
+                ) : (
                 <span className="avatar-initials">
                   {getInitials(user.first_name, user.last_name, user.username)}
                 </span>
-              )}
-              <span className="avatar-status-dot" aria-hidden="true" />
-            </span>
+                )}
+              </span>
+            </button>
+          </div>
 
-            <span className="account-meta">
-              <span className="user-name">{fullName}</span>
-              <span className="user-role role-pill">{user?.role || 'User'}</span>
-            </span>
-          </button>
-
-          <button className="logout-btn" onClick={onLogout}>
-            Logout
-          </button>
+          <div className="dashboard-header-brand">
+            <div className="dashboard-breadcrumb">Educational Resource Management</div>
+            <div className="dashboard-brand-subtitle">Your comprehensive resource management platform.</div>
+          </div>
         </div>
       </div>
     </div>

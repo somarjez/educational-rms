@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FiCalendar, FiArrowRight, FiRefreshCw } from 'react-icons/fi';
+import { FiRefreshCw } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import styles from './styles/ScheduleSections.module.css';
 import { getBookings } from '../../../services/schedulingApi';
+import { DashboardCalendarIcon } from '../icons/DashboardIcons';
 
 const UpcomingSchedule = () => {
   const navigate = useNavigate();
@@ -100,7 +101,7 @@ const UpcomingSchedule = () => {
       <div className={styles.scheduleHeader}>
         <div>
           <h3 className={styles.scheduleTitle}>
-            <FiCalendar className={styles.icon} />
+            <DashboardCalendarIcon className={styles.icon} />
             Today's Schedule
           </h3>
           <p className={styles.scheduleSubtitle}>{formatDate(selectedDate)}</p>
@@ -113,7 +114,7 @@ const UpcomingSchedule = () => {
             title="Refresh schedule"
             aria-label="Refresh schedule"
           >
-            <FiRefreshCw style={{ 
+            <FiRefreshCw className={styles.refreshIcon} style={{ 
               transform: isRefreshing ? 'rotate(180deg)' : 'rotate(0deg)',
               transition: 'transform 0.3s ease'
             }} />
@@ -123,7 +124,7 @@ const UpcomingSchedule = () => {
             onClick={() => navigate('/schedule')}
             title="View full schedule"
           >
-            View All <FiArrowRight />
+            View All
           </button>
         </div>
       </div>

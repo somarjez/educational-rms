@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 @import "@fontsource/roboto/400.css";
 @import "@fontsource/roboto/700.css";
 
@@ -53,7 +54,7 @@ body {
   --info: #0284c7;
   
   /* Typography */
-  font-family: 'Roboto', Arial, Helvetica, sans-serif;
+  font-family: 'Poppins', 'Roboto', Arial, Helvetica, sans-serif;
   line-height: 1.6;
   font-weight: 400;
   
@@ -83,7 +84,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   color: var(--text-primary);
-  font-family: 'Roboto', Arial, Helvetica, sans-serif;
+  font-family: 'Poppins', 'Roboto', Arial, Helvetica, sans-serif;
   font-size: 16px;
   background: var(--bg-primary);
   font-weight: 400;
@@ -92,7 +93,7 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   color: var(--primary-navy);
-  font-family: 'Roboto', Arial, Helvetica, sans-serif;
+  font-family: 'Poppins', 'Roboto', Arial, Helvetica, sans-serif;
   font-weight: 700;
   line-height: 1.2;
   margin-bottom: 0.5em;
@@ -117,7 +118,7 @@ h4 {
 
 p {
   color: var(--text-secondary);
-  font-family: 'Roboto', Arial, Helvetica, sans-serif;
+  font-family: 'Poppins', 'Roboto', Arial, Helvetica, sans-serif;
   font-size: 1rem;
   line-height: 1.7;
 }
@@ -128,7 +129,7 @@ button {
   padding: 10px 20px;
   font-size: 14px;
   font-weight: 600;
-  font-family: 'Roboto', Arial, Helvetica, sans-serif;
+  font-family: 'Poppins', 'Roboto', Arial, Helvetica, sans-serif;
   background: linear-gradient(135deg, #1e3a5f 0%, #3b82f6 100%);
   color: white;
   cursor: pointer;
