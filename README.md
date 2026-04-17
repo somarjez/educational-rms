@@ -37,6 +37,7 @@ Access the UI at http://localhost:5173
 - Waitlist: create entries, prioritize, fulfill, auto-fill on cancellations
 - Equipment configuration: link/unlink, bulk updates, room/equipment matrix, distribution and auto-distribute
 - Simulation: scenario CRUD, run/estimate queue metrics, results history, system snapshot for setup
+- Simulation Analytics: equipment saturation analysis, actual vs simulated comparison, simulation history tracking, audit logs, backup/export capabilities
 - Capacity analysis: utilization, demand scenarios, peak hours, trends, saved scenarios, custom allocations, CSV export
 
 ## API Endpoints (Selected)
@@ -122,6 +123,11 @@ POST   /simulation/
 POST   /simulation/{id}/run/
 GET    /simulation/{id}/results/
 GET    /simulation/system_snapshot/
+GET    /simulation/{id}/history/
+GET    /simulation/analytics/equipment_saturation/
+GET    /simulation/analytics/actual_vs_simulated/
+GET    /simulation/{id}/audit_logs/
+POST   /simulation/{id}/export_backup/
 ```
 
 ### Capacity analysis
@@ -185,4 +191,4 @@ VITE_API_URL=http://localhost:8000/api/v1
 - [vercel.json](vercel.json) for frontend deployment
 - [start_backend.bat](start_backend.bat) for local Windows startup
 
-Last Updated: February 6, 2026
+Last Updated: April 17, 2026
