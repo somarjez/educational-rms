@@ -11,7 +11,6 @@ import {
   FiZap,
   FiAlertCircle,
   FiSettings,
-  FiBell,
   FiUsers,
 } from 'react-icons/fi';
 import api from '../../services/api';
@@ -70,19 +69,20 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
 
   const menuItems = [
     {
-      id: 'notifications',
-      label: 'Notifications',
-      icon: <FiBell />,
-      path: '/notifications',
-      available: true,
-      badge: unreadCount > 0 ? unreadCount : null,
-    },
-    {
       id: 'dashboard',
       label: 'Dashboard',
       icon: <FiGrid />,
       path: '/dashboard',
       available: true,
+    },
+    {
+      id: 'faculty-notifications',
+      label: 'Notifications',
+      icon: <DashboardBellIcon />,
+      path: '/notifications',
+      available: isFacultyUser,
+      description: 'View your notifications',
+      badge: unreadCount > 0 ? unreadCount : null,
     },
     // Student Navigation Items (visible only to students)
     {

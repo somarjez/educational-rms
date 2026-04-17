@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getInitials } from '../../../utils/userUtils';
 import { DashboardBellIcon } from '../icons/DashboardIcons';
-import Notifications from '../../../components/Common/Notifications';
 import './styles/Dashboard.css';
 
 const DashboardHeader = ({ user, onLogout, onProfileClick }) => {
@@ -31,11 +30,6 @@ const DashboardHeader = ({ user, onLogout, onProfileClick }) => {
       <div className="dashboard-header-inner">
         <div className="dashboard-header-cluster">
           <div className="dashboard-header-controls">
-            <div className="header-user">
-              <div className="header-notifications">
-                <Notifications />
-              </div>
-            </div>
             <button
               type="button"
               className="header-icon-button"
