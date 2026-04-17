@@ -2,7 +2,7 @@ from rest_framework.routers import DefaultRouter
 from apps.users.api.views import UserViewSet, UserProfileViewSet
 from apps.scheduling.api.viewsets import (
     BookingViewSet, RoomViewSet, TimeSlotViewSet,
-    EquipmentViewSet, WaitlistViewSet
+    EquipmentViewSet, WaitlistViewSet, NotificationViewSet
 )
 from apps.scheduling.api.equipment_config_viewsets import EquipmentConfigViewSet
 from apps.simulation.api.views import SimulationViewSet
@@ -20,6 +20,7 @@ router.register(r'scheduling/rooms', RoomViewSet, basename='room')
 router.register(r'scheduling/timeslots', TimeSlotViewSet, basename='timeslot')
 router.register(r'scheduling/equipment', EquipmentViewSet, basename='equipment')
 router.register(r'scheduling/waitlist', WaitlistViewSet, basename='waitlist')
+router.register(r'scheduling/notifications', NotificationViewSet, basename='notification')
 
 # Equipment Configuration endpoints
 router.register(r'equipment-config', EquipmentConfigViewSet, basename='equipment-config')

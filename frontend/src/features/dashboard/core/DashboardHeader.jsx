@@ -2,11 +2,13 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getInitials } from '../../../utils/userUtils';
 import { DashboardBellIcon } from '../icons/DashboardIcons';
+import Notifications from '../../../components/Common/Notifications';
 import './styles/Dashboard.css';
 
 const DashboardHeader = ({ user, onLogout, onProfileClick }) => {
   const navigate = useNavigate();
   const fullName = `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.username || 'User';
+  const avatarSrc = user?.avatar || user?.avatar_url || '';
   const normalizedRole = String(user?.role || 'user').toLowerCase();
   const roleKey = normalizedRole.includes('faculty')
     ? 'faculty'
@@ -29,6 +31,11 @@ const DashboardHeader = ({ user, onLogout, onProfileClick }) => {
       <div className="dashboard-header-inner">
         <div className="dashboard-header-cluster">
           <div className="dashboard-header-controls">
+            <div className="header-user">
+              <div className="header-notifications">
+                <Notifications />
+              </div>
+            </div>
             <button
               type="button"
               className="header-icon-button"
@@ -37,7 +44,6 @@ const DashboardHeader = ({ user, onLogout, onProfileClick }) => {
             >
               <DashboardBellIcon />
             </button>
-
             <button className="logout-btn" onClick={onLogout}>
               Log Out
             </button>
@@ -52,9 +58,13 @@ const DashboardHeader = ({ user, onLogout, onProfileClick }) => {
               onKeyDown={(e) => e.key === 'Enter' && onProfileClick()}
             >
               <span className={`avatar-shell ${avatarRoleClass}`.trim()}>
+                {avatarSrc ? (
+                  <img src={avatarSrc} alt={fullName} className="avatar-image" />
+                ) : (
                 <span className="avatar-initials">
                   {getInitials(user.first_name, user.last_name, user.username)}
                 </span>
+                )}
               </span>
             </button>
           </div>

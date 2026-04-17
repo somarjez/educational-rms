@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../../hooks/useAuth';
 import { BsEnvelope, BsLock } from 'react-icons/bs';
 import { motion } from 'framer-motion';
@@ -141,6 +141,9 @@ const Login = () => {
                   />
                   <span>Remember Me.</span>
                 </label>
+                <Link to="/forgot-password" className="auth-link">
+                  Forgot Password?
+                </Link>
               </div>
               {validationErrors.password && (
                 <span className="error-message" role="alert">

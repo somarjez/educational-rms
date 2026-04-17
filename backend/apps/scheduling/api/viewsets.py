@@ -1,5 +1,5 @@
 """Views for scheduling app."""
-from rest_framework import viewsets, status, filters
+from rest_framework import mixins, viewsets, status, filters
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -12,12 +12,12 @@ from datetime import datetime, timedelta, time
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework.exceptions import ValidationError
 
-from ..models import Booking, Room, TimeSlot, Equipment, Waitlist, RoomEquipment
+from ..models import Booking, Room, TimeSlot, Equipment, Waitlist, RoomEquipment, Notification
 from .serializers import (
-    BookingSerializer, BookingCreateSerializer, BookingUpdateSerializer,
+    BookingSerializer, BookingCreateSerializer, BookingModifySerializer,
     BookingApprovalSerializer, RoomSerializer, RoomListSerializer,
     TimeSlotSerializer, EquipmentSerializer, WaitlistSerializer,
-    CalendarEventSerializer
+    CalendarEventSerializer, NotificationSerializer
 )
 from api.permissions import IsAdminUser, IsFacultyOrAdmin
 
@@ -270,14 +270,14 @@ class BookingViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return BookingCreateSerializer
         elif self.action in ['update', 'partial_update']:
-            return BookingUpdateSerializer
+            return BookingModifySerializer
         elif self.action in ['approve', 'reject']:
             return BookingApprovalSerializer
         return BookingSerializer
     
     def get_permissions(self):
         """Permission based on action."""
-        if self.action in ['approve', 'reject', 'override_conflict', 'bulk_cancel', 'bulk_delete']:
+        if self.action in ['update', 'partial_update', 'destroy', 'approve', 'reject', 'override_conflict', 'bulk_cancel', 'bulk_delete']:
             return [IsAdminUser()]
         return [IsAuthenticated()]
     
@@ -525,6 +525,37 @@ class BookingViewSet(viewsets.ModelViewSet):
         self._check_waitlist(booking.room, booking.date, booking.time_slot)
         
         return Response(BookingSerializer(booking).data)
+
+    @action(detail=True, methods=['post'])
+    def modify(self, request, pk=None):
+        """Modify an existing booking (owner or admin)."""
+        booking = self.get_object()
+        user = request.user
+
+        if booking.user != user and user.role.upper() != 'ADMIN':
+            return Response(
+                {'error': 'You do not have permission to modify this booking'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if booking.status in ['CANCELLED', 'COMPLETED']:
+            return Response(
+                {'error': f'Cannot modify a {booking.status.lower()} booking'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = BookingModifySerializer(booking, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        change_reason = request.data.get('change_reason', '').strip()
+        if change_reason:
+            base_notes = booking.notes or ''
+            audit_note = f"[Modified] {change_reason}"
+            booking.notes = f"{base_notes}\n{audit_note}".strip()
+            booking.save(update_fields=['notes', 'updated_at'])
+
+        return Response(BookingSerializer(booking).data)
     
     @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
     def override_conflict(self, request, pk=None):
@@ -652,6 +683,26 @@ class BookingViewSet(viewsets.ModelViewSet):
             })
         
         return Response(events)
+
+    @action(detail=False, methods=['get'])
+    def history(self, request):
+        """Get booking history (past or finalized bookings)."""
+        queryset = self.get_queryset()
+        today = timezone.now().date()
+
+        include_future = request.query_params.get('include_future', 'false').lower() == 'true'
+        if not include_future:
+            queryset = queryset.filter(
+                Q(date__lt=today) | Q(status__in=['CANCELLED', 'COMPLETED', 'REJECTED'])
+            )
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = BookingSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = BookingSerializer(queryset, many=True)
+        return Response(serializer.data)
     
     @action(detail=True, methods=['patch'])
     def drag_update(self, request, pk=None):
@@ -830,3 +881,37 @@ class WaitlistViewSet(viewsets.ModelViewSet):
             'waitlist': WaitlistSerializer(entry).data,
             'booking': BookingSerializer(booking).data
         })
+
+
+class NotificationViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+    """ViewSet for managing notifications."""
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = BookingPagination
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['-created_at', 'is_read']
+    ordering = ['-created_at']
+    
+    def get_queryset(self):
+        """Filter notifications for current user."""
+        return Notification.objects.filter(user=self.request.user)
+    
+    @action(detail=False, methods=['get'])
+    def unread_count(self, request):
+        """Get count of unread notifications."""
+        count = Notification.objects.filter(user=request.user, is_read=False).count()
+        return Response({'unread_count': count})
+    
+    @action(detail=False, methods=['post'])
+    def mark_all_read(self, request):
+        """Mark all notifications as read."""
+        Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+        return Response({'status': 'All notifications marked as read'})
+    
+    @action(detail=True, methods=['post'])
+    def mark_read(self, request, pk=None):
+        """Mark a single notification as read."""
+        notification = self.get_object()
+        notification.is_read = True
+        notification.save()
+        return Response(NotificationSerializer(notification).data)

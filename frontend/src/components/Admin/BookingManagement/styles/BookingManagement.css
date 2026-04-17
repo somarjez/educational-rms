@@ -1,5 +1,10 @@
 .booking-management {
   padding: 20px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 224, 204, 0.45), transparent 26%),
+    radial-gradient(circle at top right, rgba(203, 220, 255, 0.36), transparent 24%),
+    linear-gradient(180deg, #faf7f4 0%, #fffdfb 100%);
+  border-radius: 28px;
 }
 
 .booking-management-header {
@@ -7,6 +12,12 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  gap: 16px;
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(203, 214, 229, 0.8);
+  border-radius: 24px;
+  box-shadow: 0 12px 28px rgba(107, 91, 71, 0.06);
 }
 
 .header-actions {
@@ -18,7 +29,7 @@
 
 .booking-management-header h2 {
   margin: 0;
-  color: #333;
+  color: #2d2a26;
 }
 
 /* Booking Statistics */
@@ -29,19 +40,21 @@
   align-items: flex-start;
   flex-wrap: wrap;
   padding: 20px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 24px;
+  border: 1px solid rgba(203, 214, 229, 0.8);
+  box-shadow: 0 12px 28px rgba(107, 91, 71, 0.06);
 }
 
 .stat-box {
   display: flex;
   align-items: center;
   gap: 15px;
-  background: white;
+  background: linear-gradient(180deg, #ffffff 0%, #fffaf5 100%);
   padding: 20px 25px;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
+  border: 1px solid #eadfd1;
+  box-shadow: 0 8px 18px rgba(107, 91, 71, 0.06);
 }
 
 .stat-icon {
@@ -56,7 +69,7 @@
 
 .stat-label {
   font-size: 0.85rem;
-  color: #666;
+  color: #7b6a5c;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -65,7 +78,7 @@
 .stat-value {
   font-size: 2rem;
   font-weight: 700;
-  color: #2c3e50;
+  color: #3f5066;
 }
 
 .stat-breakdown {
@@ -79,47 +92,48 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
-  background: white;
+  background: linear-gradient(180deg, #ffffff 0%, #fffaf5 100%);
   padding: 12px 18px;
-  border-radius: 8px;
+  border-radius: 18px;
   min-width: 130px;
-  border-left: 4px solid #ddd;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  border-left: 4px solid #d9e3f0;
+  border: 1px solid #eadfd1;
+  box-shadow: 0 6px 14px rgba(107, 91, 71, 0.05);
 }
 
 .breakdown-item.pending {
-  border-left-color: #f59e0b;
-  background: #fffbeb;
+  border-left-color: #f4b66d;
+  background: #fff8ef;
 }
 
 .breakdown-item.approved {
-  border-left-color: #10b981;
-  background: #ecfdf5;
+  border-left-color: #9fd7b4;
+  background: #f3fbf6;
 }
 
 .breakdown-item.confirmed {
-  border-left-color: #3b82f6;
-  background: #eff6ff;
+  border-left-color: #9fbde6;
+  background: #f4f8ff;
 }
 
 .breakdown-item.completed {
-  border-left-color: #06b6d4;
-  background: #ecfdf5;
+  border-left-color: #8fd7de;
+  background: #f2fbfc;
 }
 
 .breakdown-item.cancelled {
-  border-left-color: #ef4444;
-  background: #fef2f2;
+  border-left-color: #e9a2a2;
+  background: #fff4f4;
 }
 
 .breakdown-item.rejected {
-  border-left-color: #8b5cf6;
-  background: #f5f3ff;
+  border-left-color: #c0a7e7;
+  background: #faf6ff;
 }
 
 .breakdown-label {
   font-size: 0.75rem;
-  color: #666;
+  color: #7b6a5c;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -128,7 +142,7 @@
 .breakdown-value {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #1f2937;
+  color: #3f5066;
 }
 
 /* Filters */
@@ -154,9 +168,10 @@
 /* Table */
 .table-container {
   overflow-x: auto;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 24px;
+  border: 1px solid #eadfd1;
+  box-shadow: 0 12px 24px rgba(107, 91, 71, 0.06);
 }
 
 .pagination-controls {
@@ -193,28 +208,28 @@
 }
 
 .bookings-table thead {
-  background: #f5f5f5;
+  background: #f4f8ff;
 }
 
 .bookings-table th,
 .bookings-table td {
   padding: 12px;
   text-align: left;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #eef0f4;
 }
 
 .bookings-table th {
   font-weight: 600;
-  color: #333;
+  color: #425267;
   white-space: nowrap;
 }
 
 .bookings-table tbody tr:hover {
-  background: #f9f9f9;
+  background: #fcf8f2;
 }
 
 .bookings-table tbody tr.selected {
-  background: #e3f2fd;
+  background: #eef4ff;
 }
 
 .purpose-cell {
@@ -301,13 +316,13 @@
 
 .btn {
   padding: 10px 20px;
-  border: none;
-  border-radius: 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  font-family: 'Roboto', Arial, sans-serif;
+  font-family: 'Poppins', 'Roboto', Arial, sans-serif;
 }
 
 .btn-sm {
@@ -316,74 +331,81 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #1e3a5f 0%, #3b82f6 100%);
+  background: #a7c0e7;
   color: white;
-  box-shadow: 0 2px 8px rgba(30, 58, 95, 0.3);
+  box-shadow: 0 8px 18px rgba(127, 152, 186, 0.26);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2d5287 0%, #2d5287 100%);
+  background: #92b1df;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(30, 58, 95, 0.4);
+  box-shadow: 0 10px 22px rgba(127, 152, 186, 0.32);
 }
 
 .btn-primary:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
+  box-shadow: 0 6px 14px rgba(127, 152, 186, 0.26);
 }
 
 .btn-secondary {
-  background: white;
-  color: #1e293b;
-  border: 2px solid #e5e7eb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  background: #fffdfb;
+  color: #5f5b57;
+  border-color: #eadfd1;
+  box-shadow: 0 6px 14px rgba(107, 91, 71, 0.05);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: #f0f4f8;
-  border-color: #3b82f6;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  background: #f7f1ea;
+  border-color: #d9c8b8;
+  box-shadow: 0 10px 18px rgba(107, 91, 71, 0.08);
 }
 
 .btn-success {
-  background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+  background: #b6d9bc;
   color: white;
-  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 8px 18px rgba(139, 176, 145, 0.24);
 }
 
 .btn-success:hover:not(:disabled) {
-  background: linear-gradient(135deg, #15803d 0%, #15803d 100%);
+  background: #a4cfab;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
+  box-shadow: 0 10px 22px rgba(139, 176, 145, 0.3);
 }
 
 .btn-danger {
-  background: #dc2626;
+  background: #eca8a8;
   color: white;
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+  box-shadow: 0 8px 18px rgba(207, 140, 140, 0.24);
 }
 
 .btn-danger:hover:not(:disabled) {
-  background: #b91c1c;
+  background: #e18f8f;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4);
+  box-shadow: 0 10px 22px rgba(207, 140, 140, 0.3);
 }
 
 .btn-danger:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  box-shadow: 0 6px 14px rgba(207, 140, 140, 0.24);
 }
 
 .btn-warning {
-  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  background: #f3c98c;
   color: white;
-  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 8px 18px rgba(197, 160, 117, 0.24);
 }
 
 .btn-warning:hover:not(:disabled) {
-  background: linear-gradient(135deg, #d97706 0%, #d97706 100%);
+  background: #eab974;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+  box-shadow: 0 10px 22px rgba(197, 160, 117, 0.3);
+}
+
+.btn:disabled {
+  opacity: 1;
+  cursor: default;
+  transform: none;
+  box-shadow: 0 8px 18px rgba(127, 152, 186, 0.2);
 }
 
 /* Modal */

@@ -1,7 +1,7 @@
 """Serializers for scheduling app."""
 from rest_framework import serializers
 from django.db import models as django_models
-from ..models import Booking, Room, TimeSlot, Equipment, Waitlist
+from ..models import Booking, Room, TimeSlot, Equipment, Waitlist, Notification
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -189,6 +189,46 @@ class BookingUpdateSerializer(serializers.ModelSerializer):
         read_only_fields = ['user']
 
 
+class BookingModifySerializer(serializers.ModelSerializer):
+    """Serializer for safe booking modifications by owners or admins."""
+
+    def validate(self, data):
+        instance = getattr(self, 'instance', None)
+        room = data.get('room', getattr(instance, 'room', None))
+        time_slot = data.get('time_slot', getattr(instance, 'time_slot', None))
+        date = data.get('date', getattr(instance, 'date', None))
+        end_date = data.get('end_date', getattr(instance, 'end_date', None))
+        participants_count = data.get('participants_count', getattr(instance, 'participants_count', 0))
+
+        if room and participants_count > room.capacity:
+            raise serializers.ValidationError(
+                f"Participants count ({participants_count}) exceeds room capacity ({room.capacity})"
+            )
+
+        if date and time_slot and time_slot.days_of_week:
+            try:
+                slot_days = [int(d) for d in time_slot.days_of_week]
+            except (TypeError, ValueError):
+                slot_days = []
+
+            if slot_days and date.weekday() not in slot_days:
+                raise serializers.ValidationError(
+                    "Selected time slot is not available on this day."
+                )
+
+        if end_date and date and end_date < date:
+            raise serializers.ValidationError("End date cannot be before start date")
+
+        return data
+
+    class Meta:
+        model = Booking
+        fields = [
+            'room', 'time_slot', 'date', 'end_date', 'purpose',
+            'priority', 'participants_count', 'notes'
+        ]
+
+
 class BookingApprovalSerializer(serializers.ModelSerializer):
     """Serializer for approving/rejecting bookings."""
     
@@ -236,3 +276,18 @@ class CalendarEventSerializer(serializers.Serializer):
     purpose = serializers.CharField()
     priority = serializers.CharField()
     is_recurring = serializers.BooleanField()
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    """Serializer for Notification model."""
+    
+    booking_details = BookingSerializer(source='booking', read_only=True)
+    notification_type_display = serializers.CharField(source='get_notification_type_display', read_only=True)
+    
+    class Meta:
+        model = Notification
+        fields = [
+            'id', 'user', 'booking', 'booking_details', 'notification_type',
+            'notification_type_display', 'title', 'message', 'is_read', 'created_at'
+        ]
+        read_only_fields = ['id', 'user', 'created_at']

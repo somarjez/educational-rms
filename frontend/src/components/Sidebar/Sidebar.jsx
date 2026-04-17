@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   FiGrid,
@@ -11,7 +11,10 @@ import {
   FiZap,
   FiAlertCircle,
   FiSettings,
+  FiBell,
+  FiUsers,
 } from 'react-icons/fi';
+import api from '../../services/api';
 import {
   DashboardBellIcon,
   DashboardCalendarIcon,
@@ -30,8 +33,26 @@ import './styles/Sidebar.css';
 const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState({});
+  const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Fetch unread notifications count
+  useEffect(() => {
+    fetchUnreadCount();
+    // Poll every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const response = await api.get('/scheduling/notifications/unread_count/');
+      setUnreadCount(response.data.unread_count || 0);
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+    }
+  };
 
   const normalizedRole = String(userRole || '').toUpperCase();
   const isAdminUser = normalizedRole === 'ADMIN';
@@ -48,6 +69,14 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
   };
 
   const menuItems = [
+    {
+      id: 'notifications',
+      label: 'Notifications',
+      icon: <FiBell />,
+      path: '/notifications',
+      available: true,
+      badge: unreadCount > 0 ? unreadCount : null,
+    },
     {
       id: 'dashboard',
       label: 'Dashboard',
@@ -153,6 +182,14 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
       available: isAdmin,
       path: '/dashboard/reports',
       description: 'View room, equipment, and activity insights',
+    },
+    {
+      id: 'user-management',
+      label: 'User Management',
+      icon: <FiUsers />,
+      available: isAdminUser,
+      path: '/admin/users',
+      description: 'View users and send password reset emails',
     },
     {
       id: 'modeling-simulation',
@@ -378,6 +415,11 @@ const Sidebar = ({ userRole, onCollapsedChange, fullyHideOnCollapse = false }) =
                     <span className={`nav-label ${isCollapsed ? 'hidden' : ''}`}>
                       {item.label}
                     </span>
+                    {item.badge && item.badge > 0 && (
+                      <span className="nav-badge">
+                        {item.badge > 9 ? '9+' : item.badge}
+                      </span>
+                    )}
                     {hasSubmenu && !isCollapsed && (
                       <span
                         className={`submenu-arrow ${isExpanded ? 'expanded' : ''}`}

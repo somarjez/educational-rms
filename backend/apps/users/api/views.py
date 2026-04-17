@@ -4,6 +4,15 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
+from django.conf import settings
+from django.core.mail import send_mail
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.utils import timezone
+from datetime import timedelta
+import hashlib
+import hmac
+import secrets
 import logging
 from .serializers import (
     UserSerializer,
@@ -11,8 +20,12 @@ from .serializers import (
     UserRegisterSerializer,
     UserLoginSerializer,
     UserChangePasswordSerializer,
+    PasswordResetRequestSerializer,
+    PasswordResetConfirmSerializer,
 )
 from ..models import UserProfile
+from ..models import PasswordResetToken
+from api.permissions import IsAdminUser
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -27,9 +40,16 @@ class UserViewSet(viewsets.ModelViewSet):
     
     def get_permissions(self):
         """Allow unauthenticated access to register and login."""
-        if self.action in ['register', 'login']:
-            return [AllowAny()]
-        return [permission() for permission in self.permission_classes]
+        if self.action in ['register', 'login', 'forgot_password', 'reset_password']:
+            self.permission_classes = [AllowAny]
+            return super().get_permissions()
+
+        if self.action in ['list', 'retrieve', 'update', 'partial_update', 'destroy']:
+            self.permission_classes = [IsAdminUser]
+            return super().get_permissions()
+
+        # Fall back to whatever the view/action configured (including @action overrides).
+        return super().get_permissions()
     
     def get_serializer_class(self):
         """Return appropriate serializer based on action."""
@@ -39,6 +59,10 @@ class UserViewSet(viewsets.ModelViewSet):
             return UserLoginSerializer
         elif self.action == 'change_password':
             return UserChangePasswordSerializer
+        elif self.action == 'forgot_password':
+            return PasswordResetRequestSerializer
+        elif self.action == 'reset_password':
+            return PasswordResetConfirmSerializer
         return self.serializer_class
 
     @staticmethod
@@ -54,6 +78,29 @@ class UserViewSet(viewsets.ModelViewSet):
             'department': user.department,
             'is_active': user.is_active,
         }
+
+    @staticmethod
+    def _hash_reset_token(raw_token: str) -> str:
+        secret = (getattr(settings, 'SECRET_KEY', '') or '').encode('utf-8')
+        return hmac.new(secret, raw_token.encode('utf-8'), hashlib.sha256).hexdigest()
+
+    @classmethod
+    def _create_password_reset_token(cls, user):
+        raw_token = secrets.token_urlsafe(32)
+        token_hash = cls._hash_reset_token(raw_token)
+        ttl_seconds = int(getattr(settings, 'PASSWORD_RESET_TOKEN_TTL_SECONDS', 3600))
+        token_obj = PasswordResetToken.objects.create(
+            user=user,
+            token_hash=token_hash,
+            expires_at=timezone.now() + timedelta(seconds=ttl_seconds),
+        )
+        return raw_token, token_obj
+
+    @staticmethod
+    def _build_reset_url(user, raw_token: str) -> str:
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        frontend_base = getattr(settings, 'FRONTEND_BASE_URL', 'https://example.com')
+        return f"{frontend_base.rstrip('/')}/reset-password?uid={uid}&token={raw_token}"
     
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def register(self, request):
@@ -220,6 +267,121 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response({
             'message': 'Password changed successfully'
         }, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    def forgot_password(self, request):
+        """Request a password reset link."""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data['email'].strip()
+        user = User.objects.filter(email__iexact=email).first()
+
+        # Avoid account enumeration - always return the same response.
+        # Only proceed if the user exists AND is active.
+        if user and user.is_active:
+            raw_token, _ = self._create_password_reset_token(user)
+            reset_url = self._build_reset_url(user, raw_token)
+
+            # Local development helper: print a clear reset link in the backend console.
+            if settings.DEBUG:
+                debug_line = f'RESET LINK FOR {user.email}: {reset_url}'
+                print(debug_line, flush=True)
+                logger.warning(debug_line)
+
+            subject = 'Educational RMS password reset'
+            message = (
+                f"Hello {user.get_full_name() or user.username},\n\n"
+                "We received a request to reset your password. "
+                "Use the link below to set a new password (valid for 1 hour):\n\n"
+                f"{reset_url}\n\n"
+                "If you did not request this, you can ignore this email."
+            )
+
+            try:
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@educational-rms.local'),
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                )
+            except Exception:
+                logger.exception('Password reset email failed to send for user id=%s', user.id)
+
+        return Response(
+            {'message': 'If an account exists for that email, a reset link has been sent.'},
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    def reset_password(self, request):
+        """Reset a password using a token from forgot_password."""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            uid = force_str(urlsafe_base64_decode(serializer.validated_data['uid']))
+            user = User.objects.get(pk=uid)
+        except Exception:
+            return Response({'error': 'Invalid reset link.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not user.is_active:
+            return Response({'error': 'Reset link has expired or is invalid.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        raw_token = serializer.validated_data['token']
+        token_hash = self._hash_reset_token(raw_token)
+
+        token_obj = PasswordResetToken.objects.filter(
+            user=user,
+            token_hash=token_hash,
+            used_at__isnull=True,
+            expires_at__gt=timezone.now(),
+        ).first()
+
+        if not token_obj:
+            return Response({'error': 'Reset link has expired or is invalid.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(serializer.validated_data['new_password'])
+        user.save(update_fields=['password'])
+
+        token_obj.used_at = timezone.now()
+        token_obj.save(update_fields=['used_at'])
+
+        return Response({'message': 'Password reset successfully.'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    def send_password_reset(self, request, pk=None):
+        """Admin: trigger a password reset email for a user (admin cannot see/set the password)."""
+        user = self.get_object()
+
+        if not user.is_active:
+            return Response(
+                {'error': 'Cannot send password reset for a deactivated account.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        raw_token, _ = self._create_password_reset_token(user)
+        reset_url = self._build_reset_url(user, raw_token)
+
+        subject = 'Educational RMS password reset'
+        message = (
+            f"Hello {user.get_full_name() or user.username},\n\n"
+            "An administrator initiated a password reset for your account. "
+            "Use the link below to set a new password (valid for 1 hour):\n\n"
+            f"{reset_url}\n\n"
+            "If you did not expect this, please contact support."
+        )
+
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@educational-rms.local'),
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+
+        return Response({'message': 'Password reset email sent.'}, status=status.HTTP_200_OK)
     
     @action(detail=False, methods=['get'])
     def roles(self, request):
