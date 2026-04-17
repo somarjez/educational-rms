@@ -1,0 +1,103 @@
+.miniCalendarWidget {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.widgetHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.todayDate {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.dateIcon {
+  font-size: 1.5rem;
+  margin-right: 0.7rem;
+}
+
+.dateInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.dateDay {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.dateFull {
+  font-size: 1rem;
+  color: #64748b;
+}
+
+.calendarLoading {
+  color: #64748b;
+  margin-top: 1rem;
+}
+
+.eventsTimeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.timelineEvent {
+  background: #f1f5f9;
+  border-radius: 6px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.eventIndicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 1rem;
+}
+
+.eventContent {
+  flex: 1;
+}
+
+.eventTime {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.eventRoom {
+  font-size: 1rem;
+  color: #2563eb;
+}
+
+.eventUser {
+  font-size: 0.95rem;
+  color: #64748b;
+}
+
+.eventStatusBadge {
+  padding: 0.2rem 0.7rem;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  margin-left: 1rem;
+}
+
+.noEvents {
+  text-align: center;
+  color: #64748b;
+  margin-top: 2rem;
+}
+.noEventsIcon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}

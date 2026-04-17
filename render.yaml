@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: educational-rms-api
+    env: python
+    region: oregon
+    plan: free
+    runtime:
+      runtimeImage: render/python:3.12
+    buildCommand: |
+      cd backend
+      pip install -r requirements.txt
+    startCommand: |
+      cd backend
+      python manage.py collectstatic --no-input
+      python manage.py migrate
+      gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12
+      - key: DEBUG
+        value: 'False'
+      - key: DATABASE_URL
+        fromDatabase:
+          name: educational-rms-db
+          property: connectionString
+      - key: ALLOWED_HOSTS
+        value: '*.render.com,localhost'
+      - key: CORS_ALLOWED_ORIGINS
+        value: 'https://your-vercel-app.vercel.app'
+
+  - type: pserv
+    name: educational-rms-db
+    env: postgres
+    plan: free
+    ipAllowList: []
+    postgresVersion: 15

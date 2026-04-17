@@ -1,0 +1,302 @@
+.adminDashboardLayout {
+  background: var(--color-surface, #ffffff);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--color-border, #e0e0e0);
+}
+
+.layoutHeader {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border, #e0e0e0);
+}
+
+.layoutTitle {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #1a1a1a);
+}
+
+.layoutSubtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary, #555);
+}
+
+/* System Grid */
+.systemGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.systemCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.systemCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  bottom: 0;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.systemCard:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.systemCard:hover::before {
+  opacity: 1;
+}
+
+/* Card Colors */
+.cardPrimary {
+  background: linear-gradient(135deg, rgba(0, 102, 204, 0.08), rgba(0, 102, 204, 0.03));
+  border-color: rgba(0, 102, 204, 0.2);
+  color: #0066cc;
+}
+
+.cardSuccess {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(34, 197, 94, 0.03));
+  border-color: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.cardWarning {
+  background: linear-gradient(135deg, rgba(227, 168, 14, 0.08), rgba(227, 168, 14, 0.03));
+  border-color: rgba(227, 168, 14, 0.2);
+  color: #ca8a04;
+}
+
+.cardInfo {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.03));
+  border-color: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.cardIcon {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.6);
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+/* Icon styles */
+.systemCard .cardIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  background: none;
+}
+
+.cardInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: inherit;
+}
+
+.cardValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: inherit;
+}
+
+.cardDescription {
+  margin: 0;
+  font-size: 0.8rem;
+  color: inherit;
+  opacity: 0.8;
+}
+
+.viewAllButton {
+  margin-top: 0.35rem;
+  align-self: flex-start;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+/* Management Section */
+.managementSection {
+  background-color: var(--color-surface-secondary, #fafafa);
+  border-radius: 6px;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border, #e0e0e0);
+  margin-bottom: 1rem;
+}
+
+.managementHeader {
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border, #e0e0e0);
+}
+
+.managementTitle {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #1a1a1a);
+}
+
+/* Status Items */
+.statusItems {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.statusItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--color-border, #e0e0e0);
+}
+
+.statusIndicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.statusInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.statusLabel {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #555);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.statusValue {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #1a1a1a);
+}
+
+/* Notes Section */
+.notesSection {
+  background-color: rgba(0, 102, 204, 0.05);
+  border-left: 3px solid #0066cc;
+  padding: 0.875rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+.noteText {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary, #555);
+  line-height: 1.5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .adminDashboardLayout {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .systemGrid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .systemCard {
+    padding: 1rem;
+  }
+
+  .cardValue {
+    font-size: 1.25rem;
+  }
+
+  .statusItems {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .adminDashboardLayout {
+    padding: 0.75rem;
+  }
+
+  .systemGrid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .systemCard {
+    padding: 0.75rem;
+  }
+
+  .managementSection {
+    padding: 1rem;
+  }
+
+  .statusItems {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .statusItem {
+    gap: 0.5rem;
+  }
+
+  .layoutTitle {
+    font-size: 1rem;
+  }
+}

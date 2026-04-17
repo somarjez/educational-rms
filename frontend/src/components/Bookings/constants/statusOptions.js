@@ -1,0 +1,8 @@
+export const BOOKING_STATUS_OPTIONS = [
+  'PENDING',
+  'APPROVED',
+  'REJECTED',
+  'CONFIRMED',
+  'CANCELLED',
+  'COMPLETED',
+];

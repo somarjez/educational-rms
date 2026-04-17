@@ -1,0 +1,61 @@
+import {
+  FiAlertTriangle,
+  FiCalendar,
+  FiClock,
+  FiHome,
+  FiList,
+  FiWatch,
+} from 'react-icons/fi';
+
+export const SCHEDULING_STAT_CONFIGS = [
+  {
+    key: 'pending_approvals',
+    label: 'Pending Approvals',
+    valueKey: 'pending_approvals',
+    Icon: FiClock,
+    iconColor: '#f59e0b',
+    iconSize: 32,
+    className: 'pending',
+  },
+  {
+    key: 'total_rooms',
+    label: 'Active Rooms',
+    valueKey: 'total_rooms',
+    Icon: FiHome,
+    iconColor: '#3b82f6',
+    iconSize: 32,
+  },
+  {
+    key: 'active_time_slots',
+    label: 'Time Slots',
+    valueKey: 'active_time_slots',
+    Icon: FiWatch,
+    iconColor: '#8b5cf6',
+    iconSize: 32,
+  },
+  {
+    key: 'waitlist_entries',
+    label: 'Waitlist Entries',
+    valueKey: 'waitlist_entries',
+    Icon: FiList,
+    iconColor: '#06b6d4',
+    iconSize: 32,
+  },
+  {
+    key: 'upcoming_bookings',
+    label: 'Upcoming (7 Days)',
+    valueKey: 'upcoming_bookings',
+    Icon: FiCalendar,
+    iconColor: '#10b981',
+    iconSize: 32,
+  },
+  {
+    key: 'conflicts_today',
+    label: 'Conflicts Today',
+    valueKey: 'conflicts_today',
+    Icon: FiAlertTriangle,
+    iconColor: '#ef4444',
+    iconSize: 32,
+    className: 'warning',
+  },
+];

@@ -1,0 +1,89 @@
+.sectionCard {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.sectionTitle {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.viewAllBtn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.4rem 1rem;
+  cursor: pointer;
+}
+
+.activityList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.activityItem {
+  background: #f1f5f9;
+  border-radius: 6px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.activityHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.activityType {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.activityStatus.completed {
+  color: #059669;
+}
+
+.activityStatus.pending {
+  color: #f59e0b;
+}
+
+.activityStatus.cancelled {
+  color: #ef4444;
+}
+
+.activityDate {
+  font-size: 0.95rem;
+  color: #64748b;
+}
+
+.emptyState {
+  text-align: center;
+  color: #64748b;
+  margin-top: 2rem;
+}
+.emptyStateIcon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+.emptyStateTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.emptyStateText {
+  font-size: 1rem;
+}
