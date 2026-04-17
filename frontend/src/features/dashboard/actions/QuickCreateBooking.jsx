@@ -1,15 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { FiChevronDown } from 'react-icons/fi';
+import { FiCalendar, FiChevronDown, FiClock, FiHome, FiList, FiUsers } from 'react-icons/fi';
 import { getRooms, getTimeSlots, createBooking } from '../../../services/schedulingApi';
 import { useAuthStore } from '../../../stores/authStore';
 import AlertModal from '../../../components/Common/Modal/AlertModal';
-import {
-  DashboardCalendarIcon,
-  DashboardClockIcon,
-  DashboardHouseIcon,
-  DashboardListIcon,
-  DashboardUsersIcon,
-} from '../icons/DashboardIcons';
 import '../core/styles/Dashboard.css';
 
 const QuickCreateBooking = ({ onCreated, onClose }) => {
@@ -204,7 +197,7 @@ const QuickCreateBooking = ({ onCreated, onClose }) => {
         <div className="modal-header booking-modal-header">
           <h2>
             <span className="booking-header-icon" aria-hidden="true">
-              <DashboardHouseIcon />
+              <FiHome />
             </span>
             Create New Booking
           </h2>
@@ -216,7 +209,7 @@ const QuickCreateBooking = ({ onCreated, onClose }) => {
             <label>Room / Lab</label>
             <div className="booking-field booking-field-select">
               <span className="booking-field-icon" aria-hidden="true">
-                <DashboardHouseIcon />
+                <FiHome />
               </span>
               <select
                 name="room"
@@ -241,7 +234,7 @@ const QuickCreateBooking = ({ onCreated, onClose }) => {
             <label>Date</label>
             <div className="booking-field booking-field-date">
               <span className="booking-field-icon" aria-hidden="true">
-                <DashboardCalendarIcon />
+                <FiCalendar />
               </span>
               <input
                 type="date"
@@ -261,7 +254,7 @@ const QuickCreateBooking = ({ onCreated, onClose }) => {
             <label>Time Slot</label>
             <div className="booking-field booking-field-select">
               <span className="booking-field-icon" aria-hidden="true">
-                <DashboardClockIcon />
+                <FiClock />
               </span>
               <select
                 name="time_slot"
@@ -286,7 +279,7 @@ const QuickCreateBooking = ({ onCreated, onClose }) => {
             <label>Purpose</label>
             <div className="booking-field booking-field-textarea">
               <span className="booking-field-icon booking-field-icon-top" aria-hidden="true">
-                <DashboardListIcon />
+                <FiList />
               </span>
               <textarea
                 name="purpose"
@@ -303,7 +296,7 @@ const QuickCreateBooking = ({ onCreated, onClose }) => {
             <label>Number of Participants</label>
             <div className="booking-field">
               <span className="booking-field-icon" aria-hidden="true">
-                <DashboardUsersIcon />
+                <FiUsers />
               </span>
               <input
                 type="number"
@@ -339,7 +332,7 @@ const QuickCreateBooking = ({ onCreated, onClose }) => {
                 <label>Repeat Pattern</label>
                 <div className="booking-field booking-field-select">
                   <span className="booking-field-icon" aria-hidden="true">
-                    <DashboardCalendarIcon />
+                    <FiCalendar />
                   </span>
                   <select
                     name="recurrence_pattern"
@@ -362,7 +355,7 @@ const QuickCreateBooking = ({ onCreated, onClose }) => {
                 <label>Repeat Until</label>
                 <div className="booking-field booking-field-date">
                   <span className="booking-field-icon" aria-hidden="true">
-                    <DashboardCalendarIcon />
+                    <FiCalendar />
                   </span>
                   <input
                     type="date"

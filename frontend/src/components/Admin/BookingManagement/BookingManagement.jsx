@@ -512,47 +512,61 @@ const BookingManagement = () => {
         )}
 
         <div className="filters">
-          <select
-            name="status"
-            value={filters.status}
-            onChange={handleFilterChange}
-            className="filter-select"
-          >
-            {statusOptions.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <div className="filter-field">
+            <label className="filter-field-label" htmlFor="booking-status">Status</label>
+            <select
+              id="booking-status"
+              name="status"
+              value={filters.status}
+              onChange={handleFilterChange}
+              className="filter-select"
+            >
+              {statusOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          <input
-            type="date"
-            name="start_date"
-            value={filters.start_date}
-            onChange={handleFilterChange}
-            className="filter-input"
-            placeholder="Start Date"
-          />
+          <div className="filter-field">
+            <label className="filter-field-label" htmlFor="start_date">Start Date</label>
+            <input
+              id="start_date"
+              type="date"
+              name="start_date"
+              value={filters.start_date}
+              onChange={handleFilterChange}
+              className="filter-input"
+            />
+          </div>
 
-          <input
-            type="date"
-            name="end_date"
-            value={filters.end_date}
-            onChange={handleFilterChange}
-            className="filter-input"
-            placeholder="End Date"
-          />
+          <div className="filter-field">
+            <label className="filter-field-label" htmlFor="end_date">End Date</label>
+            <input
+              id="end_date"
+              type="date"
+              name="end_date"
+              value={filters.end_date}
+              onChange={handleFilterChange}
+              className="filter-input"
+            />
+          </div>
 
-          <select
-            name="is_recurring"
-            value={filters.is_recurring}
-            onChange={handleFilterChange}
-            className="filter-select"
-          >
-            <option value="">All Bookings</option>
-            <option value="true">Recurring Only</option>
-            <option value="false">One-time Only</option>
-          </select>
+          <div className="filter-field">
+            <label className="filter-field-label" htmlFor="booking-type">Booking Type</label>
+            <select
+              id="booking-type"
+              name="is_recurring"
+              value={filters.is_recurring}
+              onChange={handleFilterChange}
+              className="filter-select"
+            >
+              <option value="">All Bookings</option>
+              <option value="true">Recurring Only</option>
+              <option value="false">One-time Only</option>
+            </select>
+          </div>
         </div>
 
         {loading ? (

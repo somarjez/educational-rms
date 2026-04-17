@@ -516,7 +516,7 @@ const RoomManagement = () => {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>{currentRoom ? 'Edit Room' : 'Create New Room'}</h3>
+              <h3 style={{ color: '#ffffff' }}>{currentRoom ? 'Edit Room' : 'Create New Room'}</h3>
               <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
             </div>
 
