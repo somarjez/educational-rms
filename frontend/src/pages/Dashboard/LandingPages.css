@@ -127,6 +127,330 @@
   background: #f8fafc;
 }
 
+.notifications-dashboard {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0a071f 0 88px, #ffffff 88px 100%);
+}
+
+.notifications-page {
+  width: 100%;
+  min-height: calc(100vh - 52px);
+  padding: 2.15rem 2rem 3rem;
+  background: #ffffff;
+  border-top-left-radius: 30px;
+  font-family: 'Poppins', 'Roboto', Arial, sans-serif;
+}
+
+.notifications-heading {
+  position: relative;
+  width: 100%;
+  margin: 0 0 1.85rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.notifications-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-left: 0;
+}
+
+.notifications-heading-icon {
+  width: 3rem;
+  height: 3rem;
+  margin-top: -0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #030335;
+  flex-shrink: 0;
+}
+
+.notifications-heading-icon svg {
+  width: 1.75rem;
+  height: 1.75rem;
+  stroke-width: 2.8;
+}
+
+.notifications-title {
+  margin: 0;
+  color: #050505;
+  font-size: clamp(1.45rem, 2.45vw, 2.35rem);
+  line-height: 0.95;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.notifications-subtitle {
+  margin: 0.55rem 0 0;
+  color: #7a7a7a;
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.notifications-delete-link {
+  position: absolute;
+  right: max(1.2rem, calc((100% - 980px) / 2 + 1.2rem));
+  bottom: -1.45rem;
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  background: transparent !important;
+  color: #2948ff;
+  padding: 0;
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: 'Poppins', 'Roboto', Arial, sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: none !important;
+  text-decoration: none;
+  transform: none !important;
+}
+
+.notifications-delete-link:hover,
+.notifications-delete-link:active,
+.notifications-delete-link:focus,
+.notifications-delete-link:focus-visible {
+  color: #2948ff !important;
+  background: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.notification-board {
+  width: min(100%, 980px);
+  margin: 0 auto;
+  border: none;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #eeeeee;
+  box-shadow: none;
+}
+
+.notification-row {
+  position: relative;
+  min-height: 9.65rem;
+  display: grid;
+  grid-template-columns: 1.6rem minmax(0, 1fr);
+  align-items: start;
+  gap: 0.55rem;
+  padding: 1.9rem 5.7rem 1.65rem 3.55rem;
+  background: #eeeeee;
+  border-bottom: 1px solid #777777;
+  color: #111111;
+}
+
+.notification-row:hover {
+  background: #eeeeee;
+}
+
+.notification-row:last-of-type {
+  border-bottom: none;
+}
+
+.notification-status-icon {
+  width: 1.3rem;
+  height: 1.3rem;
+  margin-top: 0;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notification-status-icon img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.notification-status-icon.confirmed {
+  background: transparent;
+}
+
+.notification-status-icon.pending {
+  background: transparent;
+}
+
+.notification-status-icon.declined {
+  background: transparent;
+}
+
+.notification-main {
+  min-width: 0;
+}
+
+.notification-row-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2rem;
+}
+
+.notification-row-title {
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1.1;
+  font-weight: 900;
+  color: #ffa90c;
+  letter-spacing: 0;
+}
+
+.notification-row-title.confirmed {
+  color: #ffa90c;
+}
+
+.notification-row-title.declined {
+  color: #ff626a;
+}
+
+.notification-row-title.pending {
+  color: #92ec72;
+}
+
+.notification-status-badge {
+  min-width: 5.6rem;
+  height: 1.28rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.75rem;
+  font-size: 0.66rem;
+  line-height: 1;
+  font-weight: 900;
+  color: #7f6400;
+}
+
+.notification-status-badge.confirmed {
+  background: #ffe66d;
+}
+
+.notification-status-badge.pending {
+  background: #a7ee8c;
+  color: #167322;
+}
+
+.notification-status-badge.declined {
+  background: #ff626a;
+  color: #ffffff;
+}
+
+.notification-message {
+  margin: 0.75rem 0 1.5rem;
+  color: #777777;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.notification-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.7rem 0.9rem;
+  color: #b3b3b3;
+  font-size: 0.58rem;
+  font-weight: 700;
+}
+
+.notification-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  white-space: nowrap;
+}
+
+.notification-meta svg {
+  width: 0.68rem;
+  height: 0.68rem;
+  stroke-width: 2.6;
+}
+
+.notification-board-footer {
+  height: 0;
+  background: #eeeeee;
+}
+
+.notification-empty-state {
+  width: min(100%, 1060px);
+  min-height: 12rem;
+  margin: 0 auto;
+  border: 1px dashed #b5b5b5;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #d9d9d9;
+  color: #686868;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .notifications-page {
+    padding: 1.5rem 1rem 2rem;
+  }
+
+  .notifications-heading {
+    align-items: flex-start;
+  }
+
+  .notification-row {
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+    padding: 1rem 1rem 1rem 1.2rem;
+  }
+
+  .notification-row-title {
+    font-size: 1.1rem;
+  }
+
+  .notification-message {
+    text-align: left;
+  }
+}
+
+@media (max-width: 640px) {
+  .notifications-heading {
+    flex-direction: column;
+  }
+
+  .notifications-subtitle {
+    text-align: left;
+  }
+
+  .notification-board {
+    border-radius: 16px;
+  }
+
+  .notification-row {
+    grid-template-columns: 1.8rem minmax(0, 1fr);
+    min-height: 0;
+  }
+
+  .notification-row-top {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+
+  .notification-status-badge {
+    justify-self: start;
+  }
+
+  .notification-meta {
+    justify-content: flex-start;
+  }
+}
+
 /* Timeline Layout */
 .schedule-timeline {
   display: flex;
