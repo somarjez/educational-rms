@@ -1,13 +1,24 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../stores/authStore';
 import { getEquipment } from '../../services/schedulingApi';
+import DashboardHeader from '../../features/dashboard/core/DashboardHeader';
 import './LandingPages.css';
+import './EquipmentPage.css';
 
 const toList = (data) => (Array.isArray(data) ? data : data?.results || []);
 
 const EquipmentPage = () => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuthStore();
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   useEffect(() => {
     const fetchEquipment = async () => {
@@ -28,42 +39,50 @@ const EquipmentPage = () => {
   }, []);
 
   return (
-    <div className="landing-page">
-      <div className="landing-header">
-        <div>
-          <h1 className="landing-title">Equipment</h1>
-          <p className="landing-subtitle">Resource inventory and current availability.</p>
-        </div>
-      </div>
+    <div className="equipment-management-page">
+      <DashboardHeader
+        user={user || { role: 'User' }}
+        onLogout={handleLogout}
+        onProfileClick={() => navigate('/profile')}
+      />
 
-      {loading ? (
-        <div className="empty-state">Loading equipment...</div>
-      ) : error ? (
-        <div className="empty-state">{error}</div>
-      ) : equipment.length === 0 ? (
-        <div className="empty-state">No equipment found.</div>
-      ) : (
-        <div className="landing-list">
-          <div className="landing-list-header">
-            <span>Equipment</span>
-            <span>Category</span>
-            <span>Quantity</span>
-            <span>Status</span>
+      <div className="landing-page equipment-management-content">
+        <div className="landing-header">
+          <div>
+            <h1 className="landing-title">Equipment</h1>
+            <p className="landing-subtitle">Resource inventory and current availability.</p>
           </div>
-          {equipment.map((item) => (
-            <div key={item.id} className="landing-list-item">
-              <span>{item.name || 'N/A'}</span>
-              <span>{item.category || 'N/A'}</span>
-              <span>{item.quantity ?? 'N/A'}</span>
-              <span>
-                <span className={item.is_available || item.is_active ? 'status-pill status-confirmed' : 'status-pill status-default'}>
-                  {item.is_available || item.is_active ? 'Available' : 'In Use'}
-                </span>
-              </span>
-            </div>
-          ))}
         </div>
-      )}
+
+        {loading ? (
+          <div className="empty-state">Loading equipment...</div>
+        ) : error ? (
+          <div className="empty-state">{error}</div>
+        ) : equipment.length === 0 ? (
+          <div className="empty-state">No equipment found.</div>
+        ) : (
+          <div className="landing-list">
+            <div className="landing-list-header">
+              <span>Equipment</span>
+              <span>Category</span>
+              <span>Quantity</span>
+              <span>Status</span>
+            </div>
+            {equipment.map((item) => (
+              <div key={item.id} className="landing-list-item">
+                <span>{item.name || 'N/A'}</span>
+                <span>{item.category || 'N/A'}</span>
+                <span>{item.quantity ?? 'N/A'}</span>
+                <span>
+                  <span className={item.is_available || item.is_active ? 'status-pill status-confirmed' : 'status-pill status-default'}>
+                    {item.is_available || item.is_active ? 'Available' : 'In Use'}
+                  </span>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

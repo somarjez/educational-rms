@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { getCalendarEvents, getRooms, dragUpdateBooking } from '../../../services/schedulingApi';
+import React, { useEffect, useState } from 'react';
+import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { getCalendarEvents, getRooms } from '../../../services/schedulingApi';
+import classroomIcon from '../../../assets/scheduling/HouseFilled.svg';
 import './styles/SchedulingCalendar.css';
 
 const SchedulingCalendar = () => {
@@ -7,7 +9,7 @@ const SchedulingCalendar = () => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [view, setView] = useState('week'); // day, week, month
+  const [view, setView] = useState('week');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedRooms, setSelectedRooms] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -18,14 +20,16 @@ const SchedulingCalendar = () => {
 
   useEffect(() => {
     if (rooms.length > 0 && selectedRooms.length === 0) {
-      // Select all rooms by default
-      setSelectedRooms(rooms.map(r => r.id));
+      setSelectedRooms(rooms.map((room) => room.id));
     }
-  }, [rooms]);
+  }, [rooms, selectedRooms.length]);
 
   useEffect(() => {
     if (selectedRooms.length > 0) {
       fetchEvents();
+    } else if (rooms.length > 0) {
+      setEvents([]);
+      setLoading(false);
     }
   }, [currentDate, view, selectedRooms]);
 
@@ -44,9 +48,8 @@ const SchedulingCalendar = () => {
     try {
       setLoading(true);
       const { startDate, endDate } = getDateRange();
-      
       const data = await getCalendarEvents(startDate, endDate, selectedRooms);
-      setEvents(data);
+      setEvents(Array.isArray(data) ? data : data.results || []);
       setError(null);
     } catch (err) {
       setError('Failed to fetch calendar events');
@@ -63,11 +66,9 @@ const SchedulingCalendar = () => {
     if (view === 'day') {
       end.setDate(end.getDate() + 1);
     } else if (view === 'week') {
-      // Start from Monday
       const day = start.getDay();
       const diff = start.getDate() - day + (day === 0 ? -6 : 1);
       start.setDate(diff);
-      // End is Sunday (6 days after Monday)
       end.setTime(start.getTime());
       end.setDate(end.getDate() + 6);
     } else if (view === 'month') {
@@ -78,169 +79,189 @@ const SchedulingCalendar = () => {
 
     return {
       startDate: start.toISOString().split('T')[0],
-      endDate: end.toISOString().split('T')[0]
+      endDate: end.toISOString().split('T')[0],
     };
   };
 
   const navigateDate = (direction) => {
-    const newDate = new Date(currentDate);
-    
-    if (view === 'day') {
-      newDate.setDate(newDate.getDate() + direction);
-    } else if (view === 'week') {
-      newDate.setDate(newDate.getDate() + (direction * 7));
-    } else if (view === 'month') {
-      newDate.setMonth(newDate.getMonth() + direction);
-    }
-    
-    setCurrentDate(newDate);
-  };
+    const nextDate = new Date(currentDate);
 
-  const goToToday = () => {
-    setCurrentDate(new Date());
+    if (view === 'day') {
+      nextDate.setDate(nextDate.getDate() + direction);
+    } else if (view === 'week') {
+      nextDate.setDate(nextDate.getDate() + direction * 7);
+    } else {
+      nextDate.setMonth(nextDate.getMonth() + direction);
+    }
+
+    setCurrentDate(nextDate);
   };
 
   const toggleRoom = (roomId) => {
-    setSelectedRooms(prev => {
-      if (prev.includes(roomId)) {
-        return prev.filter(id => id !== roomId);
-      } else {
-        return [...prev, roomId];
-      }
-    });
+    setSelectedRooms((prev) => (
+      prev.includes(roomId)
+        ? prev.filter((id) => id !== roomId)
+        : [...prev, roomId]
+    ));
   };
 
   const getStatusColor = (status) => {
     const colors = {
-      'PENDING': '#ff9800',
-      'APPROVED': '#4caf50',
-      'CONFIRMED': '#2196f3',
-      'REJECTED': '#f44336',
-      'CANCELLED': '#9e9e9e',
-      'COMPLETED': '#9c27b0'
+      PENDING: '#ffb234',
+      APPROVED: '#5ca9de',
+      CONFIRMED: '#80c4eb',
+      REJECTED: '#414b8c',
+      CANCELLED: '#caa05b',
+      COMPLETED: '#ffec7a',
     };
-    return colors[status] || '#757575';
+    return colors[status] || '#414b8c';
   };
 
-  const getRoomColor = (roomId) => {
-    const palette = [
-      '#1e88e5',
-      '#8e24aa',
-      '#43a047',
-      '#f4511e',
-      '#3949ab',
-      '#00897b',
-      '#6d4c41',
-      '#c0ca33',
-      '#d81b60',
-      '#546e7a'
-    ];
-    if (!roomId) return '#1976d2';
-    return palette[roomId % palette.length];
+  const getPaletteIndex = (value) => {
+    const key = String(value || '');
+    const numericValue = Number(key);
+
+    if (Number.isFinite(numericValue)) {
+      return Math.abs(numericValue);
+    }
+
+    return key.split('').reduce((total, char) => total + char.charCodeAt(0), 0);
+  };
+
+  const getEventPaletteIndex = (event, visibleIndex = 0) => {
+    const colorKey = [
+      event.id,
+      event.booking_id,
+      event.resource_id,
+      event.room_id,
+      event.resource_name,
+      event.start,
+      visibleIndex,
+    ].filter(Boolean).join('-');
+
+    return getPaletteIndex(colorKey) % 6;
+  };
+
+  const getRoomColor = (event, visibleIndex = 0) => {
+    const palette = ['#414b8c', '#5ca9de', '#80c4eb', '#ffec7a', '#ffb234', '#caa05b'];
+    return palette[getEventPaletteIndex(event, visibleIndex)];
+  };
+
+  const isLightEventColor = (color) => ['#80c4eb', '#ffec7a', '#ffb234', '#caa05b'].includes(color);
+
+  const getEventHoverColors = (color) => {
+    const colors = {
+      '#414b8c': { background: '#c8cdec', text: '#1f2659' },
+      '#5ca9de': { background: '#b8dcf3', text: '#155f95' },
+      '#80c4eb': { background: '#c6e7f8', text: '#1a6e9e' },
+      '#ffec7a': { background: '#fff1a8', text: '#7f5d0f' },
+      '#ffb234': { background: '#ffd48a', text: '#835000' },
+      '#caa05b': { background: '#e4c995', text: '#654617' },
+    };
+
+    return colors[color] || { background: '#c8cdec', text: '#1f2659' };
+  };
+
+  const getEventColorStyle = (event, visibleIndex = 0) => {
+    const backgroundColor = getRoomColor(event, visibleIndex);
+    const isLightColor = isLightEventColor(backgroundColor);
+    const hoverColors = getEventHoverColors(backgroundColor);
+
+    return {
+      '--event-color': backgroundColor,
+      '--event-status-color': getStatusColor(event.status),
+      '--event-text-color': isLightColor ? '#17204f' : '#ffffff',
+      '--event-muted-text-color': isLightColor ? 'rgba(23, 32, 79, 0.72)' : 'rgba(255, 255, 255, 0.76)',
+      '--event-hover-color': hoverColors.background,
+      '--event-hover-text-color': hoverColors.text,
+      '--event-hover-muted-text-color': `${hoverColors.text}cc`,
+      color: 'var(--event-text-color)',
+    };
   };
 
   const getEventPositionStyle = (event, cellHeight) => {
     const start = new Date(event.start);
     const end = new Date(event.end);
-    const durationMs = end - start;
-    const durationHours = Math.max(durationMs / 3600000, 1);
-    const minutes = start.getMinutes();
-    const top = (minutes / 60) * cellHeight;
-    const height = Math.max(durationHours * cellHeight - 6, cellHeight - 6);
+    const durationHours = Math.max((end - start) / 3600000, 1);
+    const calculatedHeight = Math.max(durationHours * cellHeight - 10, cellHeight - 10);
 
     return {
-      top: `${top}px`,
-      height: `${height}px`,
+      top: `${(start.getMinutes() / 60) * cellHeight}px`,
+      height: `${Math.min(calculatedHeight, cellHeight * 1.55)}px`,
     };
   };
 
   const formatDateHeader = () => {
-    const options = { year: 'numeric', month: 'long' };
     if (view === 'day') {
-      options.day = 'numeric';
-    } else if (view === 'week') {
-      const { startDate, endDate } = getDateRange();
-      return `${new Date(startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${new Date(endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+      return currentDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     }
-    return currentDate.toLocaleDateString('en-US', options);
+
+    if (view === 'week') {
+      const { startDate, endDate } = getDateRange();
+      return `${new Date(startDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} - ${new Date(endDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`;
+    }
+
+    return currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   };
 
   const renderWeekView = () => {
     const { startDate } = getDateRange();
     const weekStart = new Date(startDate);
-    const days = [];
-    
-    for (let i = 0; i < 7; i++) {
+    const days = Array.from({ length: 7 }, (_, index) => {
       const day = new Date(weekStart);
-      day.setDate(day.getDate() + i);
-      days.push(day);
-    }
-
-    const hours = Array.from({ length: 14 }, (_, i) => i + 7); // 7 AM to 8 PM
-    const hourRowHeight = 60;
+      day.setDate(day.getDate() + index);
+      return day;
+    });
+    const hours = Array.from({ length: 13 }, (_, index) => index + 7);
+    const hourRowHeight = 68;
 
     return (
       <div className="calendar-week-view">
         <div className="calendar-grid">
           <div className="calendar-header">
             <div className="time-column">Time</div>
-            {days.map(day => (
+            {days.map((day) => (
               <div key={day.toISOString()} className="day-column">
                 <div className="day-name">{day.toLocaleDateString('en-US', { weekday: 'short' })}</div>
                 <div className="day-date">{day.getDate()}</div>
               </div>
             ))}
           </div>
-          
-          <div className="calendar-body">
-            {hours.map(hour => (
-              <div key={hour} className="calendar-row">
-                <div className="time-cell">
-                  {hour.toString().padStart(2, '0')}:00
-                </div>
-                {days.map(day => {
-                  const dayStr = day.toISOString().split('T')[0];
-                  const dayEvents = events.filter(event => {
-                    const eventDate = event.start.split('T')[0];
-                    if (eventDate !== dayStr) return false;
 
-                    const start = new Date(event.start);
-                    const startHour = start.getHours();
-                    return hour === startHour;
+          <div className="calendar-body">
+            {hours.map((hour) => (
+              <div key={hour} className="calendar-row">
+                <div className="time-cell">{hour.toString().padStart(2, '0')}:00</div>
+                {days.map((day) => {
+                  const dayStr = day.toISOString().split('T')[0];
+                  const dayEvents = events.filter((event) => {
+                    const eventDate = event.start?.split('T')[0];
+                    return eventDate === dayStr && new Date(event.start).getHours() === hour;
                   });
 
                   return (
-                    <div key={`${day}-${hour}`} className="calendar-cell">
-                      {dayEvents.length > 0 ? (
-                        <div className="calendar-events-container">
-                          {dayEvents.map((event, index) => {
-                            const position = getEventPositionStyle(event, hourRowHeight);
-                            const widthPercent = 100 / dayEvents.length;
-
-                            return (
-                              <div
-                                key={event.id}
-                                className="calendar-event start"
-                                style={{
-                                  backgroundColor: getRoomColor(event.resource_id),
-                                  borderLeft: `4px solid ${getStatusColor(event.status)}`,
-                                  top: position.top,
-                                  height: position.height,
-                                  left: `calc(${index * widthPercent}% + 2px)`,
-                                  width: `calc(${widthPercent}% - 4px)`
-                                }}
-                                onClick={() => setSelectedEvent(event)}
-                                title={`${event.resource_name}: ${event.purpose}`}
-                              >
-                                <div className="event-title">{event.resource_name}</div>
-                                <div className="event-user">{event.user_name}</div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div></div>
-                      )}
+                    <div key={`${dayStr}-${hour}`} className="calendar-cell">
+                      {dayEvents.map((event, index) => {
+                        const width = 100 / dayEvents.length;
+                        return (
+                          <button
+                            key={event.id}
+                            type="button"
+                            className={`calendar-event palette-${getEventPaletteIndex(event, index)} ${dayEvents.length >= 4 ? 'is-compact' : ''} ${dayEvents.length >= 6 ? 'is-tiny' : ''}`}
+                            style={{
+                              ...getEventPositionStyle(event, hourRowHeight),
+                              ...getEventColorStyle(event, index),
+                              left: `calc(${index * width}% + 3px)`,
+                              width: `calc(${width}% - 6px)`,
+                            }}
+                            onClick={() => setSelectedEvent(event)}
+                            title={`${event.resource_name}: ${event.purpose}`}
+                          >
+                            <span className="event-title">{event.resource_name}</span>
+                            <span className="event-user">{event.user_name}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   );
                 })}
@@ -253,49 +274,39 @@ const SchedulingCalendar = () => {
   };
 
   const renderDayView = () => {
-    const dayEvents = events.filter(event => {
-      const eventDate = event.start.split('T')[0];
-      const currentDateStr = currentDate.toISOString().split('T')[0];
-      return eventDate === currentDateStr;
-    });
-
-    const hours = Array.from({ length: 14 }, (_, i) => i + 7);
-    const hourRowHeight = 80;
+    const dayStr = currentDate.toISOString().split('T')[0];
+    const dayEvents = events.filter((event) => event.start?.split('T')[0] === dayStr);
+    const hours = Array.from({ length: 13 }, (_, index) => index + 7);
+    const hourRowHeight = 76;
 
     return (
       <div className="calendar-day-view">
         <div className="day-grid">
-          {hours.map(hour => {
-            const hourEvents = dayEvents.filter(event => {
-              const eventHour = parseInt(event.start.split('T')[1].split(':')[0]);
-              return eventHour === hour;
-            });
-
-            return (
-              <div key={hour} className="day-row">
-                <div className="time-cell">
-                  {hour.toString().padStart(2, '0')}:00
-                </div>
-                <div className="day-events-cell">
-                  {hourEvents.map(event => (
-                    <div
+          {hours.map((hour) => (
+            <div key={hour} className="day-row">
+              <div className="time-cell">{hour.toString().padStart(2, '0')}:00</div>
+              <div className="day-events-cell">
+                {dayEvents
+                  .filter((event) => new Date(event.start).getHours() === hour)
+                  .map((event, index) => (
+                    <button
                       key={event.id}
-                      className="day-event"
+                      type="button"
+                      className={`day-event palette-${getEventPaletteIndex(event, index)}`}
                       style={{
-                        borderLeftColor: getStatusColor(event.status),
+                        ...getEventColorStyle(event, index),
                         ...getEventPositionStyle(event, hourRowHeight),
                       }}
                       onClick={() => setSelectedEvent(event)}
                     >
                       <strong>{event.resource_name}</strong>
-                      <div>{event.user_name}</div>
-                      <div className="text-muted">{event.purpose}</div>
-                    </div>
+                      <span>{event.user_name}</span>
+                      <span className="text-muted">{event.purpose}</span>
+                    </button>
                   ))}
-                </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -306,56 +317,42 @@ const SchedulingCalendar = () => {
     const month = currentDate.getMonth();
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    
-    const days = [];
     const startPadding = firstDay === 0 ? 6 : firstDay - 1;
-
-    // Previous month padding
-    for (let i = 0; i < startPadding; i++) {
-      days.push(null);
-    }
-
-    // Current month days
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(i);
-    }
+    const days = [
+      ...Array.from({ length: startPadding }, () => null),
+      ...Array.from({ length: daysInMonth }, (_, index) => index + 1),
+    ];
 
     return (
       <div className="calendar-month-view">
         <div className="month-grid">
-          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
             <div key={day} className="month-header-cell">{day}</div>
           ))}
-          
+
           {days.map((day, index) => {
-            if (!day) {
-              return <div key={`empty-${index}`} className="month-cell empty"></div>;
-            }
+            if (!day) return <div key={`empty-${index}`} className="month-cell empty" />;
 
             const dayDate = new Date(year, month, day);
-            const dayStr = dayDate.toISOString().split('T')[0];
-            const dayEvents = events.filter(event => event.start.split('T')[0] === dayStr);
+            const dateStr = dayDate.toISOString().split('T')[0];
+            const dayEvents = events.filter((event) => event.start?.split('T')[0] === dateStr);
 
             return (
               <div key={day} className="month-cell">
                 <div className="month-day-number">{day}</div>
                 <div className="month-events">
-                  {dayEvents.slice(0, 3).map(event => (
-                    <div
+                  {dayEvents.slice(0, 3).map((event, index) => (
+                    <button
                       key={event.id}
-                      className="month-event"
-                      style={{ backgroundColor: getStatusColor(event.status) }}
+                      type="button"
+                      className={`month-event palette-${getEventPaletteIndex(event, index)}`}
+                      style={getEventColorStyle(event, index)}
                       onClick={() => setSelectedEvent(event)}
-                      title={`${event.resource_name}: ${event.user_name}`}
                     >
                       {event.resource_name}
-                    </div>
+                    </button>
                   ))}
-                  {dayEvents.length > 3 && (
-                    <div className="month-event-more">
-                      +{dayEvents.length - 3} more
-                    </div>
-                  )}
+                  {dayEvents.length > 3 && <div className="month-event-more">+{dayEvents.length - 3} more</div>}
                 </div>
               </div>
             );
@@ -365,60 +362,94 @@ const SchedulingCalendar = () => {
     );
   };
 
+  const renderMiniCalendar = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const startPadding = firstDay === 0 ? 6 : firstDay - 1;
+    const cells = [
+      ...Array.from({ length: startPadding }, () => null),
+      ...Array.from({ length: daysInMonth }, (_, index) => index + 1),
+    ];
+
+    while (cells.length < 42) cells.push(null);
+
+    return (
+      <aside className="calendar-side-panel">
+        <div className="mini-calendar-card">
+          <div className="mini-calendar-top">
+            <strong>{currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</strong>
+            <span className="mini-calendar-dots" aria-hidden="true"><i /><i /></span>
+          </div>
+          <div className="mini-weekdays">
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => <span key={day}>{day}</span>)}
+          </div>
+          <div className="mini-calendar-grid">
+            {cells.map((day, index) => {
+              const isSelected = day === currentDate.getDate();
+              return (
+                <button
+                  key={`${day || 'empty'}-${index}`}
+                  type="button"
+                  className={`mini-day ${day ? '' : 'empty'} ${isSelected ? 'selected' : ''}`}
+                  disabled={!day}
+                  onClick={() => day && setCurrentDate(new Date(year, month, day))}
+                >
+                  {day}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="room-selector-card">
+          <div className="room-selector-heading">
+            <img src={classroomIcon} alt="" aria-hidden="true" />
+            <span>Classroom</span>
+          </div>
+          <div className="room-selector-list">
+            {rooms.map((room) => (
+              <label key={room.id} className="room-selector-row">
+                <input
+                  type="checkbox"
+                  checked={selectedRooms.includes(room.id)}
+                  onChange={() => toggleRoom(room.id)}
+                />
+                <span>{room.name}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      </aside>
+    );
+  };
+
   return (
     <div className="scheduling-calendar">
       <div className="calendar-toolbar">
         <div className="toolbar-left">
-          <button className="btn btn-secondary" onClick={goToToday}>
-            Today
-          </button>
-          <div className="nav-buttons">
-            <button className="btn btn-icon" onClick={() => navigateDate(-1)}>
-              ‹
+          <button className="btn btn-secondary" onClick={() => setCurrentDate(new Date())}>Today</button>
+          <div className="date-chip">
+            <button className="date-nav" onClick={() => navigateDate(-1)} aria-label="Previous date range">
+              <FiChevronLeft />
             </button>
-            <button className="btn btn-icon" onClick={() => navigateDate(1)}>
-              ›
-            </button>
-          </div>
-          <h3 className="current-date">{formatDateHeader()}</h3>
-        </div>
-
-        <div className="toolbar-right">
-          <div className="view-switcher">
-            <button
-              className={`btn ${view === 'day' ? 'active' : ''}`}
-              onClick={() => setView('day')}
-            >
-              Day
-            </button>
-            <button
-              className={`btn ${view === 'week' ? 'active' : ''}`}
-              onClick={() => setView('week')}
-            >
-              Week
-            </button>
-            <button
-              className={`btn ${view === 'month' ? 'active' : ''}`}
-              onClick={() => setView('month')}
-            >
-              Month
+            <span>{formatDateHeader()}</span>
+            <button className="date-nav" onClick={() => navigateDate(1)} aria-label="Next date range">
+              <FiChevronRight />
             </button>
           </div>
         </div>
-      </div>
 
-      <div className="calendar-filters">
-        <div className="room-filters">
-          <strong>Rooms:</strong>
-          {rooms.map(room => (
-            <label key={room.id} className="room-checkbox">
-              <input
-                type="checkbox"
-                checked={selectedRooms.includes(room.id)}
-                onChange={() => toggleRoom(room.id)}
-              />
-              {room.name}
-            </label>
+        <div className="view-switcher">
+          {['day', 'week', 'month'].map((item) => (
+            <button
+              key={item}
+              className={`btn ${view === item ? 'active' : ''}`}
+              onClick={() => setView(item)}
+            >
+              {item}
+            </button>
           ))}
         </div>
       </div>
@@ -426,44 +457,44 @@ const SchedulingCalendar = () => {
       {error && (
         <div className="alert alert-error">
           {error}
-          <button onClick={() => setError(null)} className="alert-close">×</button>
+          <button onClick={() => setError(null)} className="alert-close">x</button>
         </div>
       )}
 
-      {loading ? (
-        <div className="loading">Loading calendar...</div>
-      ) : (
-        <>
-          {view === 'day' && renderDayView()}
-          {view === 'week' && renderWeekView()}
-          {view === 'month' && renderMonthView()}
-        </>
-      )}
+      <div className="calendar-workspace">
+        <div className="calendar-main-panel">
+          {loading ? (
+            <div className="loading">Loading calendar...</div>
+          ) : (
+            <>
+              {view === 'day' && renderDayView()}
+              {view === 'week' && renderWeekView()}
+              {view === 'month' && renderMonthView()}
+            </>
+          )}
+        </div>
+        {renderMiniCalendar()}
+      </div>
 
-      {/* Event Details Modal */}
       {selectedEvent && (
         <div className="modal-overlay" onClick={() => setSelectedEvent(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
               <h3>Booking Details</h3>
-              <button className="modal-close" onClick={() => setSelectedEvent(null)}>×</button>
+              <button className="modal-close" onClick={() => setSelectedEvent(null)}>x</button>
             </div>
             <div className="modal-body">
               <p><strong>Room:</strong> {selectedEvent.resource_name}</p>
               <p><strong>User:</strong> {selectedEvent.user_name}</p>
-              <p><strong>Status:</strong> <span className={`badge badge-${selectedEvent.status.toLowerCase()}`}>{selectedEvent.status}</span></p>
+              <p><strong>Status:</strong> <span className={`badge badge-${String(selectedEvent.status || '').toLowerCase()}`}>{selectedEvent.status}</span></p>
               <p><strong>Priority:</strong> {selectedEvent.priority}</p>
               <p><strong>Participants:</strong> {selectedEvent.participants_count}</p>
               <p><strong>Purpose:</strong> {selectedEvent.purpose}</p>
               <p><strong>Time:</strong> {new Date(selectedEvent.start).toLocaleString()} - {new Date(selectedEvent.end).toLocaleTimeString()}</p>
-              {selectedEvent.is_recurring && (
-                <p><span className="badge badge-info">Recurring Booking</span></p>
-              )}
+              {selectedEvent.is_recurring && <p><span className="badge badge-info">Recurring Booking</span></p>}
             </div>
             <div className="modal-actions">
-              <button className="btn btn-secondary" onClick={() => setSelectedEvent(null)}>
-                Close
-              </button>
+              <button className="btn btn-secondary" onClick={() => setSelectedEvent(null)}>Close</button>
             </div>
           </div>
         </div>
@@ -473,4 +504,3 @@ const SchedulingCalendar = () => {
 };
 
 export default SchedulingCalendar;
-

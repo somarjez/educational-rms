@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { getBookings, getEquipment, getRooms, getTimeSlots, createBooking } from '../../services/schedulingApi';
 import {
@@ -6,6 +7,7 @@ import {
   extractEquipmentRequestDetails,
 } from '../../features/equipmentRequest/equipmentRequestUtils';
 import BaseModal from '../../components/Common/Modal/BaseModal';
+import DashboardHeader from '../../features/dashboard/core/DashboardHeader';
 import './LandingPages.css';
 import './EquipmentRequestPages.css';
 
@@ -27,7 +29,8 @@ const isUncategorizedEquipment = (item) => {
 };
 
 const EquipmentRequestPage = () => {
-  const { user } = useAuthStore();
+  const navigate = useNavigate();
+  const { user, logout } = useAuthStore();
   const [equipment, setEquipment] = useState([]);
   const [allRooms, setAllRooms] = useState([]);
   const [rooms, setRooms] = useState([]);
@@ -40,6 +43,7 @@ const EquipmentRequestPage = () => {
   const [error, setError] = useState('');
   const [submitMessage, setSubmitMessage] = useState('');
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('All');
 
   const [form, setForm] = useState({
     equipmentId: '',
@@ -52,6 +56,9 @@ const EquipmentRequestPage = () => {
   });
 
   const selectedEquipment = equipment.find((item) => Number(item.id) === Number(form.equipmentId));
+  const userRoleLabel = user?.role
+    ? String(user.role).charAt(0).toUpperCase() + String(user.role).slice(1).toLowerCase()
+    : 'User';
 
   const availableTimeSlots = useMemo(() => {
     if (!form.date) return timeSlots;
@@ -64,9 +71,28 @@ const EquipmentRequestPage = () => {
     });
   }, [timeSlots, form.date]);
 
+  const equipmentCategories = useMemo(() => {
+    const categories = new Set(['All']);
+    equipment.forEach((item) => {
+      const category = item.category?.trim() || 'Uncategorized';
+      categories.add(category);
+    });
+    return Array.from(categories).sort((a, b) => {
+      if (a === 'All') return -1;
+      if (b === 'All') return 1;
+      return a.localeCompare(b);
+    });
+  }, [equipment]);
+
   const availableEquipment = useMemo(
-    () => equipment.filter((item) => item.is_active && Number(item.available_quantity || 0) > 0),
-    [equipment]
+    () => equipment.filter((item) => {
+      const isActive = item.is_active && Number(item.available_quantity || 0) > 0;
+      if (!isActive) return false;
+      if (selectedCategory === 'All') return true;
+      const itemCategory = item.category?.trim() || 'Uncategorized';
+      return itemCategory === selectedCategory;
+    }),
+    [equipment, selectedCategory]
   );
 
   const loadData = async () => {
@@ -188,6 +214,11 @@ const EquipmentRequestPage = () => {
     setIsRequestModalOpen(false);
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setSubmitMessage('');
@@ -250,14 +281,37 @@ const EquipmentRequestPage = () => {
   };
 
   return (
-    <div className="landing-page">
+    <div className="landing-page equipment-request-page">
+      <DashboardHeader
+        user={user || { role: 'User' }}
+        onLogout={handleLogout}
+        onProfileClick={() => navigate('/profile')}
+      />
+
+      <div className="equipment-request-content">
+      <div className="equipment-request-topbar">
+        <div className="equipment-request-topbar-spacer" />
+        <div className="equipment-request-topbar-actions">
+          <span className="equipment-request-bell" aria-label="Notifications">●</span>
+          <button type="button" className="equipment-request-logout" onClick={logout}>
+            Log Out
+          </button>
+          <span className="equipment-request-role-pill">{userRoleLabel}</span>
+          <span className="equipment-request-status-dot" aria-hidden="true" />
+          <div className="equipment-request-brand">
+            <strong>Educational Resource Management</strong>
+            <span>Your comprehensive resource management platform.</span>
+          </div>
+        </div>
+      </div>
+
       <div className="landing-header">
         <div>
-          <h1 className="landing-title">Request Equipment</h1>
-          <p className="landing-subtitle">Submit a request for available equipment</p>
+          <h1 className="landing-title">REQUEST EQUIPMENT</h1>
+          <p className="landing-subtitle">Resource inventory currently available.</p>
         </div>
         <button type="button" className="btn btn-primary equipment-request-trigger" onClick={openRequestModal}>
-          New Equipment Request
+          + NEW EQUIPMENT REQUEST
         </button>
       </div>
 
@@ -267,6 +321,18 @@ const EquipmentRequestPage = () => {
         <div className="empty-state">{error}</div>
       ) : (
         <>
+          <div className="equipment-category-filters">
+            {equipmentCategories.map((category) => (
+              <button
+                key={category}
+                className={`category-tab ${selectedCategory === category ? 'active' : ''}`}
+                onClick={() => setSelectedCategory(category)}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+
           <div className="landing-list equipment-available-list">
             <div className="landing-list-header">
               <span>Equipment</span>
@@ -332,7 +398,7 @@ const EquipmentRequestPage = () => {
             isOpen={isRequestModalOpen}
             typeClass="modal-info equipment-request-modal-shell"
             icon="🛠️"
-            title="Submit Equipment Request"
+            title="SUBMIT EQUIPMENT REQUEST"
             onClose={closeRequestModal}
             actions={(
               <>
@@ -347,8 +413,8 @@ const EquipmentRequestPage = () => {
           >
             <form id="equipment-request-form" className="equipment-request-form equipment-request-form--modal" onSubmit={handleSubmit}>
               <div className="equipment-request-grid">
-                <label>
-                  Equipment *
+                <label className="equipment-request-field equipment-request-field--full">
+                  <span className="equipment-request-field-label">Equipment <span className="equipment-request-required">*</span></span>
                   <select
                     value={form.equipmentId}
                     onChange={(e) => handleChange('equipmentId', e.target.value)}
@@ -361,9 +427,10 @@ const EquipmentRequestPage = () => {
                   </select>
                 </label>
 
-                <label>
-                  Quantity *
+                <label className="equipment-request-field">
+                  <span className="equipment-request-field-label">Quantity <span className="equipment-request-required">*</span></span>
                   <input
+                    className="equipment-request-quantity-input"
                     type="number"
                     min="1"
                     value={form.quantity}
@@ -372,8 +439,8 @@ const EquipmentRequestPage = () => {
                   />
                 </label>
 
-                <label>
-                  Date Needed *
+                <label className="equipment-request-field">
+                  <span className="equipment-request-field-label">Date Needed <span className="equipment-request-required">*</span></span>
                   <input
                     type="date"
                     min={new Date().toISOString().split('T')[0]}
@@ -383,8 +450,8 @@ const EquipmentRequestPage = () => {
                   />
                 </label>
 
-                <label>
-                  Time Needed *
+                <label className="equipment-request-field">
+                  <span className="equipment-request-field-label">Time Needed <span className="equipment-request-required">*</span></span>
                   <select
                     value={form.timeSlotId}
                     onChange={(e) => handleChange('timeSlotId', e.target.value)}
@@ -399,8 +466,8 @@ const EquipmentRequestPage = () => {
                   </select>
                 </label>
 
-                <label>
-                  Room *
+                <label className="equipment-request-field">
+                  <span className="equipment-request-field-label">Room / Lab <span className="equipment-request-required">*</span></span>
                   <select
                     value={form.roomId}
                     onChange={(e) => handleChange('roomId', e.target.value)}
@@ -428,8 +495,8 @@ const EquipmentRequestPage = () => {
                 )}
               </div>
 
-              <label>
-                Purpose / Reason *
+              <label className="equipment-request-field equipment-request-field--full">
+                <span className="equipment-request-field-label">Purpose / Reason <span className="equipment-request-required">*</span></span>
                 <textarea
                   rows="3"
                   value={form.purpose}
@@ -438,8 +505,8 @@ const EquipmentRequestPage = () => {
                 />
               </label>
 
-              <label>
-                Remarks
+              <label className="equipment-request-field equipment-request-field--full">
+                <span className="equipment-request-field-label">Remarks</span>
                 <textarea
                   rows="2"
                   value={form.remarks}
@@ -452,6 +519,7 @@ const EquipmentRequestPage = () => {
           </BaseModal>
         </>
       )}
+      </div>
     </div>
   );
 };

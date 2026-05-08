@@ -3,9 +3,28 @@ import {
   getRooms, createRoom, updateRoom, deleteRoom,
   getEquipment
 } from '../../../services/schedulingApi';
+import {
+  FaHome,
+  FaBox,
+  FaUsers,
+  FaStream,
+  FaBuilding,
+  FaFileAlt
+} from 'react-icons/fa';
+import {
+  FiCalendar,
+  FiChevronDown,
+  FiPlus,
+  FiSearch
+} from 'react-icons/fi';
 import api from '../../../services/api';
 import ConfirmModal from '../../../components/Common/Modal/ConfirmModal';
 import AlertModal from '../../../components/Common/Modal/AlertModal';
+import arrowsOutIcon from './assets/ArrowsOut.svg';
+import buildingsIcon from './assets/Buildings.svg';
+import shapesIcon from './assets/Shapes.svg';
+import stackIcon from './assets/Stack.svg';
+import toolboxIcon from './assets/Toolbox.svg';
 import './styles/RoomManagement.css';
 
 const RoomManagement = () => {
@@ -50,6 +69,34 @@ const RoomManagement = () => {
     { value: 'CONFERENCE', label: 'Conference Room' },
     { value: 'AUDITORIUM', label: 'Auditorium' },
     { value: 'STUDY_ROOM', label: 'Study Room' }
+  ];
+
+  const roomDetailRows = (room) => [
+    {
+      icon: shapesIcon,
+      label: 'Type',
+      value: roomTypes.find(t => t.value === room.room_type)?.label || room.room_type || 'Room'
+    },
+    {
+      icon: arrowsOutIcon,
+      label: 'Capacity',
+      value: `${room.capacity || 0} people`
+    },
+    {
+      icon: stackIcon,
+      label: 'Floor',
+      value: room.floor || '-'
+    },
+    {
+      icon: buildingsIcon,
+      label: 'Building',
+      value: room.building || '-'
+    },
+    {
+      icon: toolboxIcon,
+      label: 'Equipment Items',
+      value: `${room.equipment_count || 0} types`
+    }
   ];
 
   useEffect(() => {
@@ -378,7 +425,8 @@ const RoomManagement = () => {
       <div className="room-management-header">
         <h2>Room & Lab Management</h2>
         <button className="btn btn-primary" onClick={openCreateModal}>
-          + Add Room
+          <FiPlus aria-hidden="true" />
+          Add Room
         </button>
       </div>
 
@@ -390,69 +438,94 @@ const RoomManagement = () => {
       )}
 
       {/* Filters */}
-      <div className="filters">
-        <input
-          type="text"
-          name="search"
-          placeholder="Search rooms..."
-          value={filters.search}
-          onChange={handleFilterChange}
-          className="filter-input"
-        />
-        
-        <select
-          name="room_type"
-          value={filters.room_type}
-          onChange={handleFilterChange}
-          className="filter-select"
-        >
-          <option value="">All Types</option>
-          {roomTypes.map(type => (
-            <option key={type.value} value={type.value}>{type.label}</option>
-          ))}
-        </select>
+      <div className="filters" aria-label="Room filters">
+        <label className="room-search">
+          <FiSearch className="room-search-icon" aria-hidden="true" />
+          <input
+            type="text"
+            name="search"
+            aria-label="Search rooms"
+            value={filters.search}
+            onChange={handleFilterChange}
+            className="filter-input"
+          />
+        </label>
 
-        <select
-          name="equipment_category"
-          value={filters.equipment_category}
-          onChange={handleFilterChange}
-          className="filter-select"
-        >
-          <option value="">All Equipment Types</option>
-          {[...new Set(equipment.map(item => item.category).filter(Boolean))].map(category => (
-            <option key={category} value={category}>{category}</option>
-          ))}
-        </select>
+        <div className="filter-row">
+          <label className="select-wrap">
+            <select
+              name="room_type"
+              value={filters.room_type}
+              onChange={handleFilterChange}
+              className="filter-select filter-select-outline"
+              aria-label="Filter by room type"
+            >
+              <option value="">All Types</option>
+              {roomTypes.map(type => (
+                <option key={type.value} value={type.value}>{type.label}</option>
+              ))}
+            </select>
+            <FiChevronDown aria-hidden="true" />
+          </label>
 
-        <input
-          type="date"
-          name="date"
-          value={filters.date}
-          onChange={handleFilterChange}
-          className="filter-input"
-        />
+          <label className="select-wrap">
+            <select
+              name="availability"
+              value={filters.availability}
+              onChange={handleFilterChange}
+              className="filter-select filter-select-filled"
+              aria-label="Filter by availability"
+            >
+              <option value="">All Availability</option>
+              <option value="available">Available</option>
+              <option value="unavailable">Unavailable</option>
+            </select>
+            <FiChevronDown aria-hidden="true" />
+          </label>
 
-        <select
-          name="availability"
-          value={filters.availability}
-          onChange={handleFilterChange}
-          className="filter-select"
-        >
-          <option value="">All Availability</option>
-          <option value="available">Available</option>
-          <option value="unavailable">Unavailable</option>
-        </select>
+          <label className="select-wrap">
+            <select
+              name="is_active"
+              value={filters.is_active}
+              onChange={handleFilterChange}
+              className="filter-select filter-select-filled"
+              aria-label="Filter by active status"
+            >
+              <option value="true">Active Only</option>
+              <option value="false">Inactive Only</option>
+              <option value="">All Status</option>
+            </select>
+            <FiChevronDown aria-hidden="true" />
+          </label>
 
-        <select
-          name="is_active"
-          value={filters.is_active}
-          onChange={handleFilterChange}
-          className="filter-select"
-        >
-          <option value="true">Active Only</option>
-          <option value="false">Inactive Only</option>
-          <option value="">All Status</option>
-        </select>
+          <label className="select-wrap select-wrap-wide">
+            <select
+              name="equipment_category"
+              value={filters.equipment_category}
+              onChange={handleFilterChange}
+              className="filter-select filter-select-filled"
+              aria-label="Filter by equipment type"
+            >
+              <option value="">All Equipment Types</option>
+              {[...new Set(equipment.map(item => item.category).filter(Boolean))].map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+            <FiChevronDown aria-hidden="true" />
+          </label>
+
+          <label className="room-date">
+            <input
+              type="date"
+              name="date"
+              value={filters.date}
+              onChange={handleFilterChange}
+              className="filter-input"
+              aria-label="Filter by date"
+            />
+            <FiCalendar aria-hidden="true" />
+          </label>
+        </div>
       </div>
 
       {/* Room List */}
@@ -470,20 +543,21 @@ const RoomManagement = () => {
               </div>
               
               <div className="room-card-body">
-                <p><strong>Type:</strong> {roomTypes.find(t => t.value === room.room_type)?.label}</p>
-                <p><strong>Capacity:</strong> {room.capacity} people</p>
-                {room.floor && <p><strong>Floor:</strong> {room.floor}</p>}
-                {room.building && <p><strong>Building:</strong> {room.building}</p>}
-                <p><strong>Equipment Items:</strong> {room.equipment_count || 0} types</p>
-                {room.equipment_count > 0 && (
-                  <button
-                    className="btn-link"
-                    onClick={() => openEquipmentModal(room)}
-                    style={{ fontSize: '0.875rem', padding: '0', marginTop: '4px', textDecoration: 'underline' }}
-                  >
-                    View equipment details →
-                  </button>
-                )}
+                {roomDetailRows(room).map((row) => (
+                  <div className="room-detail-row" key={row.label}>
+                    <span className="room-detail-label">
+                      <img src={row.icon} alt="" aria-hidden="true" />
+                      <strong>{row.label}</strong>
+                    </span>
+                    <span className="room-detail-value">{row.value}</span>
+                  </div>
+                ))}
+                <button
+                  className="btn-link"
+                  onClick={() => openEquipmentModal(room)}
+                >
+                  View Equipment Details
+                </button>
               </div>
 
               <div className="room-card-actions">
@@ -516,15 +590,19 @@ const RoomManagement = () => {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3 style={{ color: '#ffffff' }}>{currentRoom ? 'Edit Room' : 'Create New Room'}</h3>
+              <h3>{currentRoom ? 'EDIT ROOM' : 'CREATE A NEW ROOM'}</h3>
               <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
             </div>
 
             <form onSubmit={handleSubmit}>
               <div className="form-grid">
                 <div className="form-group">
-                  <label>Room Name *</label>
+                  <label htmlFor="room-name">
+                    <FaHome size={12} color="#5AA8E6" />
+                    Room Name
+                  </label>
                   <input
+                    id="room-name"
                     type="text"
                     name="name"
                     value={formData.name}
@@ -535,8 +613,12 @@ const RoomManagement = () => {
                 </div>
 
                 <div className="form-group">
-                  <label>Room Type *</label>
+                  <label htmlFor="room-type">
+                    <FaBox size={12} color="#5AA8E6" />
+                    Room Type
+                  </label>
                   <select
+                    id="room-type"
                     name="room_type"
                     value={formData.room_type}
                     onChange={handleInputChange}
@@ -550,8 +632,12 @@ const RoomManagement = () => {
                 </div>
 
                 <div className="form-group">
-                  <label>Capacity *</label>
+                  <label htmlFor="capacity">
+                    <FaUsers size={12} color="#5AA8E6" />
+                    Capacity
+                  </label>
                   <input
+                    id="capacity"
                     type="number"
                     name="capacity"
                     value={formData.capacity}
@@ -563,8 +649,12 @@ const RoomManagement = () => {
                 </div>
 
                 <div className="form-group">
-                  <label>Floor</label>
+                  <label htmlFor="floor">
+                    <FaStream size={12} color="#5AA8E6" />
+                    Floor
+                  </label>
                   <input
+                    id="floor"
                     type="text"
                     name="floor"
                     value={formData.floor}
@@ -573,9 +663,13 @@ const RoomManagement = () => {
                   />
                 </div>
 
-                <div className="form-group">
-                  <label>Building</label>
+                <div className="form-group full-width">
+                  <label htmlFor="building">
+                    <FaBuilding size={12} color="#5AA8E6" />
+                    Building
+                  </label>
                   <input
+                    id="building"
                     type="text"
                     name="building"
                     value={formData.building}
@@ -585,8 +679,12 @@ const RoomManagement = () => {
                 </div>
 
                 <div className="form-group full-width">
-                  <label>Description</label>
+                  <label htmlFor="description">
+                    <FaFileAlt size={12} color="#5AA8E6" />
+                    Description
+                  </label>
                   <textarea
+                    id="description"
                     name="description"
                     value={formData.description}
                     onChange={handleInputChange}
@@ -596,8 +694,9 @@ const RoomManagement = () => {
                 </div>
 
                 <div className="form-group full-width">
-                  <label>
+                  <label htmlFor="is-active">
                     <input
+                      id="is-active"
                       type="checkbox"
                       name="is_active"
                       checked={formData.is_active}

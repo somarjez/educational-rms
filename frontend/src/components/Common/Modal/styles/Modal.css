@@ -20,7 +20,6 @@
   max-width: 500px;
   width: 90%;
   animation: slideIn 0.3s ease-out;
-  border-left: 5px solid #2196f3;
 }
 
 @keyframes slideIn {
@@ -47,7 +46,6 @@
 }
 
 .modal-content.modal-info {
-  border-left-color: #2196f3;
 }
 
 .modal-header {

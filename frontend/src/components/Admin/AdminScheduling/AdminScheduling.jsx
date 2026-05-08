@@ -1,63 +1,125 @@
-import React, { useState, lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  FiCalendar, FiClipboard, FiHome, FiSettings, FiClock,
-  FiCheckCircle, FiRefreshCcw, FiAlertTriangle, FiBookmark,
-  FiMousePointer, FiHelpCircle, FiArrowRight, FiBookOpen,
-  FiPlus, FiChevronDown,
+  FiAlertTriangle,
+  FiArrowRight,
+  FiBookOpen,
+  FiBookmark,
+  FiCalendar,
+  FiCheckCircle,
+  FiClipboard,
+  FiClock,
+  FiHelpCircle,
+  FiHome,
+  FiMousePointer,
+  FiRefreshCcw,
+  FiSettings,
 } from 'react-icons/fi';
+import DashboardHeader from '../../../features/dashboard/core/DashboardHeader';
+import { useAuthStore } from '../../../stores/authStore';
+import calendarIcon from '../../../assets/scheduling/CalendarBlank.svg';
+import gearIcon from '../../../assets/scheduling/Gear.svg';
+import houseIcon from '../../../assets/scheduling/House.svg';
+import subtractIcon from '../../../assets/scheduling/Subtract.svg';
 import './styles/AdminScheduling.css';
- 
-const RoomManagement   = lazy(() => import('../RoomManagement/RoomManagement'));
+
+const RoomManagement = lazy(() => import('../RoomManagement/RoomManagement'));
 const BookingManagement = lazy(() => import('../BookingManagement/BookingManagement'));
 const SchedulingCalendar = lazy(() => import('../SchedulingCalendar/SchedulingCalendar'));
-const ResourceSettings  = lazy(() => import('../ResourceSettings/ResourceSettings'));
- 
+const ResourceSettings = lazy(() => import('../ResourceSettings/ResourceSettings'));
+
 const AdminScheduling = () => {
-  const [activeTab, setActiveTab]   = useState('calendar');
-  const [showGuide, setShowGuide]   = useState(false);
- 
+  const [activeTab, setActiveTab] = useState('calendar');
+  const [showGuide, setShowGuide] = useState(false);
+  const { user, logout } = useAuthStore();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const requestedTab = location.state?.tab || params.get('tab');
+
+    if (['calendar', 'bookings', 'rooms', 'resources'].includes(requestedTab)) {
+      setActiveTab(requestedTab);
+    }
+  }, [location.search, location.state]);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
   const tabs = [
-    { id:'calendar',  label:'Calendar View',         icon:<FiCalendar />,  description:'View, create, and manage bookings with day/week/month calendar views. Drag-and-drop to reschedule bookings.' },
-    { id:'bookings',  label:'Bookings',               icon:<FiClipboard />, description:'Manage all bookings: create, modify, cancel, approve/reject. Handle recurring bookings and override conflicts.' },
-    { id:'rooms',     label:'Rooms',                  icon:<FiHome />,      description:'Create, edit, and delete room/lab resources. Link equipment and manage room features.' },
-    { id:'resources', label:'Equipment & Time Slots', icon:<FiSettings />,  description:'Configure equipment inventory and define time slot templates (hourly, daily, weekly).' },
+    {
+      id: 'calendar',
+      label: 'Calendar View',
+      icon: <img src={calendarIcon} alt="" />,
+      description: 'View, create, and manage bookings with day/week/month calendar views.',
+    },
+    {
+      id: 'bookings',
+      label: 'Bookings',
+      icon: <img src={subtractIcon} alt="" />,
+      description: 'Manage all bookings, recurring schedules, and approval requests.',
+    },
+    {
+      id: 'rooms',
+      label: 'Rooms',
+      icon: <img src={houseIcon} alt="" />,
+      description: 'Create, edit, and delete room or lab resources.',
+    },
+    {
+      id: 'resources',
+      label: 'Equipment & Time Slots',
+      icon: <img src={gearIcon} alt="" />,
+      description: 'Configure equipment inventory and time slot templates.',
+    },
   ];
- 
+
   const features = [{
     category: 'Scheduling & Resource Management',
     items: [
-      { icon:<FiHome />,          title:'Create, edit, and delete room/lab resources',         tab:'rooms',     location:'Rooms tab' },
-      { icon:<FiSettings />,      title:'Configure equipment linked to rooms',                  tab:'resources', location:'Equipment & Time Slots tab' },
-      { icon:<FiClock />,         title:'Manage time slot definitions (hourly, daily, weekly)', tab:'resources', location:'Equipment & Time Slots tab' },
-      { icon:<FiClipboard />,     title:'Create, modify, and cancel any booking',               tab:'bookings',  location:'Bookings tab' },
-      { icon:<FiCheckCircle />,   title:'Approve or reject booking requests',                   tab:'bookings',  location:'Bookings tab - Filter by "Pending"' },
-      { icon:<FiRefreshCcw />,    title:'Manage recurring bookings',                            tab:'bookings',  location:'Bookings tab - Look for "is_recurring" filter' },
-      { icon:<FiAlertTriangle />, title:'Override conflict detection rules when necessary',     tab:'bookings',  location:'Bookings tab - Click "Override Conflict" button' },
-      { icon:<FiBookmark />,      title:'Manage waitlists and prioritize requests',             tab:'bookings',  location:'Bookings tab - Waitlist section' },
-      { icon:<FiCalendar />,      title:'View all calendar views (day, week, month)',           tab:'calendar',  location:'Calendar View tab - Toggle view buttons' },
-      { icon:<FiMousePointer />,  title:'Use drag-and-drop scheduling for all resources',       tab:'calendar',  location:'Calendar View tab - Drag events to reschedule' },
+      { icon: <FiHome />, title: 'Create, edit, and delete room/lab resources', tab: 'rooms', location: 'Rooms tab' },
+      { icon: <FiSettings />, title: 'Configure equipment linked to rooms', tab: 'resources', location: 'Equipment & Time Slots tab' },
+      { icon: <FiClock />, title: 'Manage time slot definitions (hourly, daily, weekly)', tab: 'resources', location: 'Equipment & Time Slots tab' },
+      { icon: <FiClipboard />, title: 'Create, modify, and cancel any booking', tab: 'bookings', location: 'Bookings tab' },
+      { icon: <FiCheckCircle />, title: 'Approve or reject booking requests', tab: 'bookings', location: 'Bookings tab - Filter by "Pending"' },
+      { icon: <FiRefreshCcw />, title: 'Manage recurring bookings', tab: 'bookings', location: 'Bookings tab - Look for recurring bookings' },
+      { icon: <FiAlertTriangle />, title: 'Override conflict detection rules when necessary', tab: 'bookings', location: 'Bookings tab - Override Conflict' },
+      { icon: <FiBookmark />, title: 'Manage waitlists and prioritize requests', tab: 'bookings', location: 'Bookings tab - Waitlist section' },
+      { icon: <FiCalendar />, title: 'View all calendar views (day, week, month)', tab: 'calendar', location: 'Calendar View tab - Toggle view buttons' },
+      { icon: <FiMousePointer />, title: 'Use drag-and-drop scheduling for all resources', tab: 'calendar', location: 'Calendar View tab' },
     ],
   }];
- 
+
   return (
     <div className="admin-scheduling">
- 
-      {/* ── Header ── */}
+      <DashboardHeader
+        user={user || {}}
+        onLogout={handleLogout}
+        onProfileClick={() => navigate('/profile')}
+      />
+
       <div className="scheduling-header">
         <div className="header-content">
           <div className="header-copy">
-            <h1>Scheduling &amp; Resource Management</h1>
+            <h1 className="scheduling-title">Scheduling &amp; Resource Management</h1>
             <p className="subtitle">Resource inventory currently available.</p>
           </div>
-          <button className="guide-btn" onClick={() => setShowGuide(!showGuide)}>
-            <FiHelpCircle /> Guide
+          <button
+            className="guide-btn"
+            onClick={() => setShowGuide(!showGuide)}
+            aria-label="Open scheduling guide"
+            title="Guide"
+          >
+            <FiHelpCircle />
+            <span>Guide</span>
           </button>
         </div>
       </div>
- 
-      {/* ── Tabs ── */}
+
       <div className="tab-navigation">
-        {tabs.map(tab => (
+        {tabs.map((tab) => (
           <div key={tab.id} className="tab-wrapper">
             <button
               className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
@@ -70,16 +132,14 @@ const AdminScheduling = () => {
           </div>
         ))}
       </div>
- 
-      {/* ── Content ── */}
+
       <div className="tab-content">
- 
         {showGuide && (
           <div className="modal-overlay feature-guide-overlay" onClick={() => setShowGuide(false)}>
             <div className="modal-window feature-guide-modal" onClick={(e) => e.stopPropagation()}>
               <div className="guide-header">
                 <h3><FiBookOpen /> Feature Guide</h3>
-                <button className="close-btn" onClick={() => setShowGuide(false)}>×</button>
+                <button className="close-btn" onClick={() => setShowGuide(false)}>x</button>
               </div>
               <div className="guide-content">
                 {features.map((section, idx) => (
@@ -87,15 +147,22 @@ const AdminScheduling = () => {
                     <h4>{section.category}</h4>
                     <div className="features-list">
                       {section.items.map((item, i) => (
-                        <div key={i} className="feature-item"
-                          onClick={() => { setActiveTab(item.tab); setShowGuide(false); }}>
+                        <button
+                          key={i}
+                          type="button"
+                          className="feature-item"
+                          onClick={() => {
+                            setActiveTab(item.tab);
+                            setShowGuide(false);
+                          }}
+                        >
                           <span className="feature-icon">{item.icon}</span>
-                          <div className="feature-info">
-                            <div className="feature-title">{item.title}</div>
-                            <div className="feature-location">→ Go to: <strong>{item.location}</strong></div>
-                          </div>
+                          <span className="feature-info">
+                            <span className="feature-title">{item.title}</span>
+                            <span className="feature-location">Go to: <strong>{item.location}</strong></span>
+                          </span>
                           <span className="feature-arrow"><FiArrowRight /></span>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -104,17 +171,16 @@ const AdminScheduling = () => {
             </div>
           </div>
         )}
- 
+
         <Suspense fallback={<div className="loading">Loading section...</div>}>
-          {activeTab === 'calendar'  && <SchedulingCalendar />}
-          {activeTab === 'bookings'  && <BookingManagement />}
-          {activeTab === 'rooms'     && <RoomManagement />}
+          {activeTab === 'calendar' && <SchedulingCalendar />}
+          {activeTab === 'bookings' && <BookingManagement />}
+          {activeTab === 'rooms' && <RoomManagement />}
           {activeTab === 'resources' && <ResourceSettings />}
         </Suspense>
- 
       </div>
     </div>
   );
 };
- 
+
 export default AdminScheduling;
