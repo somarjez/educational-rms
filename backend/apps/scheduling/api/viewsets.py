@@ -26,7 +26,7 @@ class BookingPagination(PageNumberPagination):
     """Default booking pagination for responsive booking list rendering."""
     page_size = 15
     page_size_query_param = 'page_size'
-    max_page_size = 100
+    max_page_size = 500
 
 
 class EquipmentViewSet(viewsets.ModelViewSet):
@@ -284,7 +284,18 @@ class BookingViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Filter queryset based on user role and parameters."""
         user = self.request.user
-        queryset = Booking.objects.select_related('room', 'user', 'time_slot', 'approved_by')
+        queryset = Booking.objects.select_related(
+            'room', 'user', 'time_slot', 'approved_by'
+        ).only(
+            'id', 'date', 'status', 'purpose', 'priority', 'participants_count',
+            'is_recurring', 'recurrence_pattern', 'recurrence_end_date',
+            'conflict_override', 'override_reason', 'notes', 'created_at', 'updated_at',
+            'parent_booking_id',
+            'room__id', 'room__name', 'room__room_type', 'room__capacity', 'room__building',
+            'user__id', 'user__email', 'user__first_name', 'user__last_name', 'user__role',
+            'time_slot__id', 'time_slot__name', 'time_slot__start_time', 'time_slot__end_time',
+            'approved_by__id', 'approved_by__email', 'approved_by__first_name', 'approved_by__last_name',
+        )
         
         # Admin sees all, others see only their bookings
         if not user.role.upper().upper() == 'ADMIN':
@@ -317,7 +328,15 @@ class BookingViewSet(viewsets.ModelViewSet):
         is_recurring = self.request.query_params.get('is_recurring')
         if is_recurring is not None:
             queryset = queryset.filter(is_recurring=is_recurring.lower() == 'true')
-        
+
+        # Filter by equipment request bookings
+        is_equipment_request = self.request.query_params.get('is_equipment_request')
+        if is_equipment_request is not None:
+            if is_equipment_request.lower() == 'true':
+                queryset = queryset.filter(purpose__startswith=self.EQUIPMENT_REQUEST_PREFIX)
+            else:
+                queryset = queryset.exclude(purpose__startswith=self.EQUIPMENT_REQUEST_PREFIX)
+
         return queryset
     
     def perform_create(self, serializer):
@@ -653,7 +672,12 @@ class BookingViewSet(viewsets.ModelViewSet):
         queryset = Booking.objects.filter(
             date__gte=start_date,
             date__lte=end_date
-        ).select_related('room', 'user', 'time_slot')
+        ).select_related('room', 'user', 'time_slot').only(
+            'id', 'date', 'status', 'purpose', 'priority', 'participants_count', 'is_recurring',
+            'room__id', 'room__name',
+            'user__id', 'user__email', 'user__first_name', 'user__last_name',
+            'time_slot__id', 'time_slot__start_time', 'time_slot__end_time',
+        )
         
         if room_ids:
             queryset = queryset.filter(room_id__in=room_ids)

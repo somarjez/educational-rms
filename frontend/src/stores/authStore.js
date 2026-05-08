@@ -60,24 +60,42 @@ export const useAuthStore = create((set, get) => ({
     const refresh = localStorage.getItem('refresh_token');
 
     if (access && refresh) {
+      // Restore cached user profile to avoid a network round-trip on every page load.
+      // If the token is stale the first protected API call will 401 and trigger a refresh anyway.
+      const cachedUser = (() => {
+        try {
+          const raw = localStorage.getItem('auth_user');
+          return raw ? JSON.parse(raw) : null;
+        } catch {
+          return null;
+        }
+      })();
+
       set({
         tokens: { access, refresh },
         isAuthenticated: true,
+        user: cachedUser,
       });
 
-      try {
-        const user = await authApi.getCurrentUser();
-        set({ user, hasInitialized: true, isInitializing: false });
-      } catch (err) {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        set({
-          tokens: { access: null, refresh: null },
-          isAuthenticated: false,
-          user: null,
-          hasInitialized: true,
-          isInitializing: false,
-        });
+      if (cachedUser) {
+        set({ hasInitialized: true, isInitializing: false });
+      } else {
+        try {
+          const user = await authApi.getCurrentUser();
+          localStorage.setItem('auth_user', JSON.stringify(user));
+          set({ user, hasInitialized: true, isInitializing: false });
+        } catch (err) {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          localStorage.removeItem('auth_user');
+          set({
+            tokens: { access: null, refresh: null },
+            isAuthenticated: false,
+            user: null,
+            hasInitialized: true,
+            isInitializing: false,
+          });
+        }
       }
     } else {
       set({ hasInitialized: true, isInitializing: false });
@@ -91,6 +109,7 @@ export const useAuthStore = create((set, get) => ({
       const data = await authApi.register(userData);
       localStorage.setItem('access_token', data.tokens.access);
       localStorage.setItem('refresh_token', data.tokens.refresh);
+      if (data.user) localStorage.setItem('auth_user', JSON.stringify(data.user));
 
       set({
         user: data.user,
@@ -118,6 +137,7 @@ export const useAuthStore = create((set, get) => ({
       const data = await authApi.login(email, password);
       localStorage.setItem('access_token', data.tokens.access);
       localStorage.setItem('refresh_token', data.tokens.refresh);
+      if (data.user) localStorage.setItem('auth_user', JSON.stringify(data.user));
 
       set({
         user: data.user,
@@ -150,6 +170,7 @@ export const useAuthStore = create((set, get) => ({
 
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    localStorage.removeItem('auth_user');
 
     set({
       user: null,

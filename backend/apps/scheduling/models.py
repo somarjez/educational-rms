@@ -172,6 +172,8 @@ class Booking(models.Model):
             models.Index(fields=['date', 'room']),
             models.Index(fields=['status']),
             models.Index(fields=['user']),
+            models.Index(fields=['date', 'status']),
+            models.Index(fields=['purpose'], name='booking_purpose_idx'),
         ]
     
     def clean(self):

@@ -1,5 +1,6 @@
 import api from './api';
-import { getRooms, getRoom, getEquipment } from './schedulingApi';
+import { getRooms, getEquipment } from './schedulingApi';
+import { cacheGet, cacheSet } from './apiCache';
 import {
   extractEquipmentRequestDetails,
   isEquipmentRequestBooking,
@@ -57,7 +58,7 @@ const fetchAllPages = async (url, params = {}) => {
       params: {
         ...params,
         page: nextPage,
-        page_size: 100,
+        page_size: 200,
       },
     });
 
@@ -74,13 +75,19 @@ const fetchAllPages = async (url, params = {}) => {
   return rows;
 };
 
+const USERS_MAP_CACHE_KEY = '/auth/users/';
+
 const fetchUsersMap = async () => {
+  const cached = cacheGet(USERS_MAP_CACHE_KEY, {});
+  if (cached) return cached;
   try {
     const users = await fetchAllPages('/auth/users/');
-    return users.reduce((acc, user) => {
+    const map = users.reduce((acc, user) => {
       acc[user.id] = user;
       return acc;
     }, {});
+    cacheSet(USERS_MAP_CACHE_KEY, {}, map);
+    return map;
   } catch (error) {
     return {};
   }
@@ -88,17 +95,7 @@ const fetchUsersMap = async () => {
 
 const fetchRoomDetailsMap = async () => {
   const rooms = toList(await getRooms({ is_active: true }));
-  const roomDetails = await Promise.all(
-    rooms.map(async (room) => {
-      try {
-        return await getRoom(room.id);
-      } catch (error) {
-        return room;
-      }
-    })
-  );
-
-  return roomDetails.reduce((acc, room) => {
+  return rooms.reduce((acc, room) => {
     acc[room.id] = room;
     return acc;
   }, {});

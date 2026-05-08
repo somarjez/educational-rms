@@ -4,11 +4,15 @@
  */
 
 import api from './api';
+import { cacheGet, cacheSet, cacheInvalidate } from './apiCache';
 
 // ============== ROOMS ==============
 
 export const getRooms = async (params = {}) => {
+  const cached = cacheGet('/scheduling/rooms/', params);
+  if (cached) return cached;
   const response = await api.get('/scheduling/rooms/', { params });
+  cacheSet('/scheduling/rooms/', params, response.data);
   return response.data;
 };
 
@@ -19,21 +23,25 @@ export const getRoom = async (id) => {
 
 export const createRoom = async (data) => {
   const response = await api.post('/scheduling/rooms/', data);
+  cacheInvalidate('/scheduling/rooms/');
   return response.data;
 };
 
 export const updateRoom = async (id, data) => {
   const response = await api.put(`/scheduling/rooms/${id}/`, data);
+  cacheInvalidate('/scheduling/rooms/');
   return response.data;
 };
 
 export const partialUpdateRoom = async (id, data) => {
   const response = await api.patch(`/scheduling/rooms/${id}/`, data);
+  cacheInvalidate('/scheduling/rooms/');
   return response.data;
 };
 
 export const deleteRoom = async (id) => {
   const response = await api.delete(`/scheduling/rooms/${id}/`);
+  cacheInvalidate('/scheduling/rooms/');
   return response.data;
 };
 
@@ -61,7 +69,10 @@ export const removeEquipmentFromRoom = async (roomId, equipmentIds) => {
 // ============== EQUIPMENT ==============
 
 export const getEquipment = async (params = {}) => {
+  const cached = cacheGet('/scheduling/equipment/', params);
+  if (cached) return cached;
   const response = await api.get('/scheduling/equipment/', { params });
+  cacheSet('/scheduling/equipment/', params, response.data);
   return response.data;
 };
 
@@ -72,23 +83,29 @@ export const getEquipmentItem = async (id) => {
 
 export const createEquipment = async (data) => {
   const response = await api.post('/scheduling/equipment/', data);
+  cacheInvalidate('/scheduling/equipment/');
   return response.data;
 };
 
 export const updateEquipment = async (id, data) => {
   const response = await api.put(`/scheduling/equipment/${id}/`, data);
+  cacheInvalidate('/scheduling/equipment/');
   return response.data;
 };
 
 export const deleteEquipment = async (id) => {
   const response = await api.delete(`/scheduling/equipment/${id}/`);
+  cacheInvalidate('/scheduling/equipment/');
   return response.data;
 };
 
 // ============== TIME SLOTS ==============
 
 export const getTimeSlots = async (params = {}) => {
+  const cached = cacheGet('/scheduling/timeslots/', params);
+  if (cached) return cached;
   const response = await api.get('/scheduling/timeslots/', { params });
+  cacheSet('/scheduling/timeslots/', params, response.data);
   return response.data;
 };
 
@@ -99,16 +116,19 @@ export const getTimeSlot = async (id) => {
 
 export const createTimeSlot = async (data) => {
   const response = await api.post('/scheduling/timeslots/', data);
+  cacheInvalidate('/scheduling/timeslots/');
   return response.data;
 };
 
 export const updateTimeSlot = async (id, data) => {
   const response = await api.put(`/scheduling/timeslots/${id}/`, data);
+  cacheInvalidate('/scheduling/timeslots/');
   return response.data;
 };
 
 export const deleteTimeSlot = async (id) => {
   const response = await api.delete(`/scheduling/timeslots/${id}/`);
+  cacheInvalidate('/scheduling/timeslots/');
   return response.data;
 };
 
