@@ -1,0 +1,15 @@
+.equipment-management-page {
+  width: 100%;
+  min-height: 100vh;
+  background: #f4efe7;
+}
+
+.equipment-management-content {
+  margin: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .equipment-management-content {
+    margin: 1rem;
+  }
+}

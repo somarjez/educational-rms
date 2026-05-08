@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { FiCalendar, FiPlus } from 'react-icons/fi';
 import {
   getBookings, approveBooking, rejectBooking, cancelBooking,
   overrideConflict, bulkCancelBookings, bulkDeleteBookings, deleteBooking,
@@ -55,7 +56,7 @@ const BookingManagement = () => {
     { value: '', label: 'All Status' },
     { value: 'PENDING', label: 'Pending' },
     { value: 'APPROVED', label: 'Approved' },
-    { value: 'REJECTED', label: 'Rejected' },
+    { value: 'REJECTED', label: 'Declined' },
     { value: 'CONFIRMED', label: 'Confirmed' },
     { value: 'CANCELLED', label: 'Cancelled' },
     { value: 'COMPLETED', label: 'Completed' }
@@ -66,6 +67,11 @@ const BookingManagement = () => {
     MEDIUM: 'badge-medium',
     HIGH: 'badge-high',
     URGENT: 'badge-urgent'
+  };
+
+  const getStatusLabel = (status) => {
+    if (status === 'REJECTED') return 'DECLINED';
+    return status;
   };
 
   useEffect(() => {
@@ -424,6 +430,15 @@ const BookingManagement = () => {
     return timeString.substring(0, 5);
   };
 
+  const statusCounts = {
+    PENDING: bookings.filter(b => b.status === 'PENDING').length,
+    APPROVED: bookings.filter(b => b.status === 'APPROVED').length,
+    CONFIRMED: bookings.filter(b => b.status === 'CONFIRMED').length,
+    COMPLETED: bookings.filter(b => b.status === 'COMPLETED').length,
+    CANCELLED: bookings.filter(b => b.status === 'CANCELLED').length,
+    REJECTED: bookings.filter(b => b.status === 'REJECTED').length
+  };
+
   return (
     <div className="booking-management">
       <div className="booking-management-header">
@@ -436,7 +451,7 @@ const BookingManagement = () => {
             className="btn btn-primary"
             onClick={() => setShowCreateBooking(true)}
           >
-            + New Booking
+            <FiPlus /> New Booking
           </button>
           {selectedBookings.length > 0 && (
             <>
@@ -459,39 +474,39 @@ const BookingManagement = () => {
       </div>
 
       {/* Booking Statistics Summary */}
-      {!loading && bookings.length > 0 && (
+      {!loading && (
         <div className="booking-stats">
           <div className="stat-box">
-            <div className="stat-icon">📅</div>
             <div className="stat-content">
               <div className="stat-label">BOOKINGS</div>
-              <div className="stat-value">{totalBookings} total</div>
+              <div className="stat-value">{totalBookings}</div>
+              <div className="stat-caption">Total all bookings</div>
             </div>
           </div>
           <div className="stat-breakdown">
             <div className="breakdown-item pending">
-              <span className="breakdown-label">PENDING:</span>
-              <span className="breakdown-value">{bookings.filter(b => b.status === 'PENDING').length}</span>
+              <span className="breakdown-label">PENDING</span>
+              <span className="breakdown-value">{statusCounts.PENDING}</span>
             </div>
             <div className="breakdown-item approved">
-              <span className="breakdown-label">APPROVED:</span>
-                <span className="breakdown-value">{bookings.filter(b => b.status === 'APPROVED').length}</span>
+              <span className="breakdown-label">APPROVED</span>
+                <span className="breakdown-value">{statusCounts.APPROVED}</span>
               </div>
               <div className="breakdown-item confirmed">
-                <span className="breakdown-label">CONFIRMED:</span>
-                <span className="breakdown-value">{bookings.filter(b => b.status === 'CONFIRMED').length}</span>
+                <span className="breakdown-label">CONFIRMED</span>
+                <span className="breakdown-value">{statusCounts.CONFIRMED}</span>
               </div>
               <div className="breakdown-item completed">
-                <span className="breakdown-label">COMPLETED:</span>
-                <span className="breakdown-value">{bookings.filter(b => b.status === 'COMPLETED').length}</span>
+                <span className="breakdown-label">COMPLETED</span>
+                <span className="breakdown-value">{statusCounts.COMPLETED}</span>
               </div>
               <div className="breakdown-item cancelled">
-                <span className="breakdown-label">CANCELLED:</span>
-                <span className="breakdown-value">{bookings.filter(b => b.status === 'CANCELLED').length}</span>
+                <span className="breakdown-label">CANCELLED</span>
+                <span className="breakdown-value">{statusCounts.CANCELLED}</span>
               </div>
               <div className="breakdown-item rejected">
-                <span className="breakdown-label">REJECTED:</span>
-                <span className="breakdown-value">{bookings.filter(b => b.status === 'REJECTED').length}</span>
+                <span className="breakdown-label">DECLINED</span>
+                <span className="breakdown-value">{statusCounts.REJECTED}</span>
               </div>
             </div>
           </div>
@@ -500,14 +515,14 @@ const BookingManagement = () => {
         {error && (
           <div className="alert alert-error">
             {error}
-            <button onClick={() => setError(null)} className="alert-close">×</button>
+            <button onClick={() => setError(null)} className="alert-close">x</button>
           </div>
         )}
 
         {success && (
           <div className="alert alert-success">
             {success}
-            <button onClick={() => setSuccess(null)} className="alert-close">×</button>
+            <button onClick={() => setSuccess(null)} className="alert-close">x</button>
           </div>
         )}
 
@@ -562,7 +577,7 @@ const BookingManagement = () => {
               onChange={handleFilterChange}
               className="filter-select"
             >
-              <option value="">All Bookings</option>
+              <option value="">All Availability</option>
               <option value="true">Recurring Only</option>
               <option value="false">One-time Only</option>
             </select>
@@ -571,8 +586,6 @@ const BookingManagement = () => {
 
         {loading ? (
           <div className="loading">Loading bookings...</div>
-        ) : bookings.length === 0 ? (
-          <div className="no-data">No bookings found</div>
         ) : (
           <>
             <div className="table-container">
@@ -599,12 +612,18 @@ const BookingManagement = () => {
                     <th>Purpose</th>
                     <th>Status</th>
                     <th>Priority</th>
-                    <th>Participants</th>
+                    <th>Participant</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {bookings.map(booking => (
+                  {bookings.length === 0 ? (
+                    <tr className="empty-table-row">
+                      <td colSpan="10">
+                        <div className="table-empty-message">No bookings found</div>
+                      </td>
+                    </tr>
+                  ) : bookings.map(booking => (
                     <tr key={booking.id} className={selectedBookings.includes(booking.id) ? 'selected' : ''}>
                       <td>
                         <input
@@ -617,12 +636,12 @@ const BookingManagement = () => {
                         <strong>{booking.room_name}</strong>
                         {booking.is_recurring && !booking.parent_booking && (
                           <span className="badge badge-info ml-1" title="This is a recurring booking - approval will apply to all instances">
-                            📅 Recurring Series
+                            Recurring Series
                           </span>
                         )}
                         {booking.is_recurring && booking.parent_booking && (
                           <span className="badge badge-light ml-1" title="This is an instance of a recurring booking">
-                            📅 Recurring Instance
+                            Recurring Instance
                           </span>
                         )}
                       </td>
@@ -651,7 +670,7 @@ const BookingManagement = () => {
                       <td className="purpose-cell">{booking.purpose}</td>
                       <td>
                         <span className={`badge badge-${booking.status.toLowerCase()}`}>
-                          {booking.status}
+                          {getStatusLabel(booking.status)}
                         </span>
                       </td>
                       <td>
@@ -664,19 +683,28 @@ const BookingManagement = () => {
                         <div className="action-buttons">
                           {booking.status === 'PENDING' && (
                             <>
+                              <div className="approval-actions">
+                                <button
+                                  className="btn btn-sm btn-success btn-approve-text"
+                                  onClick={() => handleApprove(booking.id)}
+                                  aria-label="Approve booking"
+                                >
+                                  Accept
+                                </button>
+                                <button
+                                  className="btn btn-sm btn-danger btn-decline-text"
+                                  onClick={() => handleReject(booking.id)}
+                                  aria-label="Reject booking"
+                                >
+                                  Decline
+                                </button>
+                              </div>
                               <button
-                                className="btn btn-sm btn-success"
-                                onClick={() => handleApprove(booking.id)}
-                                title="Approve"
+                                className="btn btn-sm btn-warning"
+                                onClick={() => handleCancel(booking.id)}
+                                aria-label="Cancel booking"
                               >
-                                ✓
-                              </button>
-                              <button
-                                className="btn btn-sm btn-danger"
-                                onClick={() => handleReject(booking.id)}
-                                title="Reject"
-                              >
-                                ✗
+                                Cancel
                               </button>
                             </>
                           )}
@@ -686,14 +714,23 @@ const BookingManagement = () => {
                               <button
                                 className="btn btn-sm btn-secondary"
                                 onClick={() => openModifyModal(booking)}
-                                title="Modify"
+                                aria-label="Modify booking"
                               >
                                 Modify
                               </button>
+                              {!booking.conflict_override && (
+                                <button
+                                  className="btn btn-sm btn-secondary btn-override"
+                                  onClick={() => openOverrideModal(booking)}
+                                  aria-label="Override conflict"
+                                >
+                                  Override
+                                </button>
+                              )}
                               <button
                                 className="btn btn-sm btn-warning"
                                 onClick={() => handleCancel(booking.id)}
-                                title="Cancel"
+                                aria-label="Cancel booking"
                               >
                                 Cancel
                               </button>
@@ -704,17 +741,17 @@ const BookingManagement = () => {
                             <button
                               className="btn btn-sm btn-danger"
                               onClick={() => handleDelete(booking.id)}
-                              title="Delete"
+                              aria-label="Delete booking"
                             >
                               Delete
                             </button>
                           )}
 
-                          {!booking.conflict_override && (
+                          {!['PENDING', 'APPROVED', 'CONFIRMED'].includes(booking.status) && !booking.conflict_override && (
                             <button
-                              className="btn btn-sm btn-secondary"
+                              className="btn btn-sm btn-secondary btn-override"
                               onClick={() => openOverrideModal(booking)}
-                              title="Override Conflict"
+                              aria-label="Override conflict"
                             >
                               Override
                             </button>
@@ -758,7 +795,7 @@ const BookingManagement = () => {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Override Conflict Detection</h3>
-              <button className="modal-close" onClick={() => setShowOverrideModal(false)}>×</button>
+              <button className="modal-close" onClick={() => setShowOverrideModal(false)}>x</button>
             </div>
 
             <div className="modal-body">
@@ -810,7 +847,7 @@ const BookingManagement = () => {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Modify Booking</h3>
-              <button className="modal-close" onClick={() => setShowModifyModal(false)}>×</button>
+              <button className="modal-close" onClick={() => setShowModifyModal(false)}>x</button>
             </div>
 
             <div className="modal-body">
