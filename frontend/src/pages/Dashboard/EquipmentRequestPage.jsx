@@ -4,7 +4,6 @@ import { getBookings, getEquipment, getRooms, getTimeSlots, createBooking } from
 import {
   buildEquipmentRequestPayload,
   extractEquipmentRequestDetails,
-  isEquipmentRequestBooking,
 } from '../../features/equipmentRequest/equipmentRequestUtils';
 import BaseModal from '../../components/Common/Modal/BaseModal';
 import './LandingPages.css';
@@ -77,12 +76,12 @@ const EquipmentRequestPage = () => {
         getEquipment({ is_active: true }),
         getRooms({ is_active: true }),
         getTimeSlots({ is_active: true }),
-        getBookings({ page_size: 200 }),
+        getBookings({ is_equipment_request: true, page_size: 50 }),
       ]);
 
       const equipmentList = toList(equipmentRes);
       const roomList = toList(roomRes);
-      const bookings = toList(bookingRes).filter(isEquipmentRequestBooking);
+      const bookings = toList(bookingRes);
 
       setEquipment(equipmentList);
       setAllRooms(roomList);

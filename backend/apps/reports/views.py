@@ -31,9 +31,15 @@ def _parse_date(value):
 
 
 def _booking_scope_for_user(user):
-    if user.is_admin():
-        return Booking.objects.select_related('room', 'time_slot', 'user')
-    return Booking.objects.select_related('room', 'time_slot', 'user').filter(user=user)
+    qs = Booking.objects.select_related('room', 'time_slot', 'user').only(
+        'id', 'date', 'status', 'purpose', 'notes', 'user_id',
+        'room__id', 'room__name',
+        'time_slot__id', 'time_slot__start_time', 'time_slot__end_time',
+        'user__id', 'user__username', 'user__first_name', 'user__last_name', 'user__role',
+    )
+    if not user.is_admin():
+        qs = qs.filter(user=user)
+    return qs
 
 
 def _apply_filters(queryset, request):
@@ -120,8 +126,8 @@ def _room_rows(bookings):
     return ['Room', 'Bookings', 'Approved', 'Pending', 'Cancelled', 'Total Hours Used', 'Last Used'], rows
 
 
-def _equipment_rows(bookings, equipment_id=None):
-    equipment_map = {
+def _load_equipment_map():
+    return {
         item.id: {
             'name': item.name,
             'requests': 0,
@@ -132,13 +138,16 @@ def _equipment_rows(bookings, equipment_id=None):
             'last_used': None,
         }
         for item in Equipment.objects.annotate(
-            assigned_total=Coalesce(Sum('equipment_rooms__quantity'), 0),
             available_total=ExpressionWrapper(
                 F('quantity') - Coalesce(Sum('equipment_rooms__quantity'), 0),
                 output_field=IntegerField()
             ),
-        )
+        ).only('id', 'name', 'quantity')
     }
+
+
+def _equipment_rows(bookings, equipment_id=None):
+    equipment_map = _load_equipment_map()
 
     for booking in bookings:
         if not _is_equipment_request(booking):
