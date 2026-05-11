@@ -131,6 +131,292 @@
   background: #f8fafc;
 }
 
+/* Equipment request approval reference layout */
+.admin-equipment-request-dashboard {
+  width: 100%;
+  min-height: 100vh;
+  background: #0a071f;
+  color: #111111;
+  font-family: 'Poppins', 'Roboto', Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.admin-equipment-request-page {
+  flex: 1;
+  min-height: calc(100vh - 52px);
+  padding: 2.3rem 3.15rem 3rem;
+  background: #ffffff;
+  border-top-left-radius: 30px;
+  overflow: hidden;
+}
+
+.admin-equipment-request-heading {
+  margin: 0 0 1.18rem;
+  font-family: 'Poppins', 'Roboto', Arial, sans-serif;
+}
+
+.admin-equipment-request-heading h1 {
+  margin: 0;
+  color: #050505;
+  font-size: clamp(1.72rem, 3vw, 2.18rem);
+  line-height: 0.95;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.admin-equipment-request-heading p {
+  margin: 0.56rem 0 0 2.35rem;
+  color: #b5b5b5;
+  font-size: 0.74rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.equipment-pending-summary {
+  width: min(100%, 860px);
+  min-height: 7.15rem;
+  margin: 0 auto 1.35rem;
+  padding: 1.05rem 1.9rem 1.35rem;
+  border-radius: 12px;
+  background: #e8cfa4;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  align-items: start;
+  color: #654819;
+}
+
+.equipment-pending-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.72rem;
+  justify-self: start;
+  font-size: 1.42rem;
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+.equipment-pending-label img {
+  width: 1.05rem;
+  height: 1.05rem;
+  display: block;
+  object-fit: contain;
+}
+
+.equipment-pending-summary strong {
+  align-self: center;
+  justify-self: center;
+  color: #664416;
+  font-size: 2.65rem;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.equipment-approval-list {
+  width: min(100%, 1120px);
+  margin: 0 auto;
+  display: grid;
+  gap: 1.1rem;
+}
+
+.equipment-request-empty-state {
+  width: min(100%, 860px);
+  min-height: 5rem;
+  margin: 0 auto;
+  border: none;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eeeeee;
+  color: #686868;
+  font-weight: 500;
+}
+
+.admin-equipment-request-page .equipment-approval-card {
+  position: relative;
+  min-height: 8.75rem;
+  border: none;
+  border-radius: 12px;
+  padding: 1.65rem 11.25rem 1.55rem 4.9rem;
+  background: #eeeeee;
+  box-shadow: none;
+}
+
+.admin-equipment-request-page .equipment-approval-card:hover {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.admin-equipment-request-page .equipment-approval-card .request-header {
+  margin: 0;
+  display: block;
+}
+
+.admin-equipment-request-page .equipment-approval-card .request-user {
+  gap: 0.74rem;
+}
+
+.admin-equipment-request-page .equipment-approval-card .user-icon {
+  position: absolute;
+  top: 1.6rem;
+  left: 2.35rem;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 999px;
+  background: transparent;
+  color: transparent;
+  font-size: 0;
+  box-shadow: none;
+}
+
+.admin-equipment-request-page .equipment-approval-card .user-icon img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.admin-equipment-request-page .equipment-approval-card .request-user-name {
+  margin: 0;
+  color: #09084f;
+  font-size: 1.55rem;
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.admin-equipment-request-page .equipment-approval-card .request-room {
+  margin: 0.45rem 0 0;
+  color: #777777;
+  font-size: 0.7rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.admin-equipment-request-page .equipment-approval-card .priority-badge {
+  position: absolute;
+  top: 1.35rem;
+  right: 6.4rem;
+  min-width: 6.25rem;
+  height: 1.45rem;
+  padding: 0 0.85rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffe76f;
+  color: #b08a00;
+  font-size: 0.58rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.admin-equipment-request-page .equipment-approval-card .priority-badge.low {
+  background: #d5f0ff;
+  color: #21618f;
+}
+
+.admin-equipment-request-page .equipment-approval-card .priority-badge.high,
+.admin-equipment-request-page .equipment-approval-card .priority-badge.urgent {
+  background: #ffb7b7;
+  color: #9a1515;
+  animation: none;
+}
+
+.equipment-approval-equipment {
+  margin: 1.55rem 0 0;
+  color: #bd7a00;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.equipment-approval-equipment span {
+  margin-left: 0.95rem;
+  color: #bd7a00;
+  font-weight: 500;
+}
+
+.admin-equipment-request-page .equipment-approval-card .request-details {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.8rem 1.35rem;
+  margin: 1.25rem 0 0;
+}
+
+.admin-equipment-request-page .equipment-approval-card .request-details p {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #172653;
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.admin-equipment-request-page .equipment-approval-card .request-details img {
+  width: 0.78rem;
+  height: 0.78rem;
+  display: block;
+  object-fit: contain;
+}
+
+.admin-equipment-request-page .equipment-approval-card .request-actions {
+  position: absolute;
+  top: 3.35rem;
+  right: 6.4rem;
+  margin: 0;
+  display: grid;
+  gap: 0.58rem;
+}
+
+.admin-equipment-request-page .equipment-approval-card .approve-btn-quick,
+.admin-equipment-request-page .equipment-approval-card .reject-btn-quick {
+  width: 6.25rem;
+  height: 1.7rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.14rem;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: none;
+  transform: none;
+}
+
+.admin-equipment-request-page .equipment-approval-card .approve-btn-quick {
+  background: #a8f18a;
+  color: #0b7f25;
+}
+
+.admin-equipment-request-page .equipment-approval-card .reject-btn-quick {
+  background: #ff6868;
+  color: #ffffff;
+}
+
+.admin-equipment-request-page .equipment-approval-card .approve-btn-quick:hover,
+.admin-equipment-request-page .equipment-approval-card .approve-btn-quick:focus,
+.admin-equipment-request-page .equipment-approval-card .reject-btn-quick:hover,
+.admin-equipment-request-page .equipment-approval-card .reject-btn-quick:focus {
+  box-shadow: none;
+  transform: none;
+}
+
+.admin-equipment-request-page .equipment-approval-card .approve-btn-quick img,
+.admin-equipment-request-page .equipment-approval-card .reject-btn-quick img {
+  display: none;
+}
+
 .notifications-dashboard {
   min-height: 100vh;
   background: linear-gradient(180deg, #0a071f 0 88px, #ffffff 88px 100%);
