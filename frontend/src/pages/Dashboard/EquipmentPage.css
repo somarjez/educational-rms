@@ -1,15 +1,201 @@
 .equipment-management-page {
   width: 100%;
   min-height: 100vh;
-  background: #f4efe7;
+  background: #0a071f;
+  font-family: 'Poppins', 'Roboto', Arial, sans-serif;
 }
 
 .equipment-management-content {
-  margin: 1.5rem;
+  min-height: calc(100vh - 52px);
+  padding: 25px 2.6rem 2.5rem;
+  background: #ffffff;
+  border-top-left-radius: 30px;
+  color: #050505;
+}
+
+.equipment-heading {
+  width: 100%;
+  margin: 0 0 1.18rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.equipment-title {
+  margin: 0;
+  color: #050505;
+  font-size: clamp(1.72rem, 3vw, 2.18rem);
+  line-height: 0.95;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.equipment-subtitle {
+  margin: 0.56rem 0 0 2.35rem;
+  color: #b5b5b5;
+  font-size: 0.74rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.equipment-request-button {
+  height: 2.12rem;
+  min-height: 0;
+  margin-top: 0.06rem;
+  padding: 0 1.05rem;
+  background: #070443 !important;
+  color: #ffffff !important;
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.equipment-request-button span {
+  font-size: 0.72rem;
+  line-height: 1;
+  font-weight: 900;
+  margin-top: 0;
+}
+
+.equipment-request-button:hover,
+.equipment-request-button:focus,
+.equipment-request-button:focus-visible {
+  background: #070443 !important;
+  color: #ffffff !important;
+}
+
+.equipment-category-tabs {
+  width: 100%;
+  margin: 0 0 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: safe center;
+  gap: clamp(1.25rem, 3vw, 2.4rem);
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  padding: 0.15rem 0.1rem 0.35rem;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.equipment-category-tabs::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.equipment-category-tab {
+  border: 0 !important;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent !important;
+  color: #c2af91;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: inherit;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: none !important;
+  outline: none !important;
+  transform: none !important;
+}
+
+button.equipment-category-tab:hover:not(:disabled),
+button.equipment-category-tab:active:not(:disabled),
+button.equipment-category-tab:focus,
+button.equipment-category-tab:focus-visible {
+  background: transparent !important;
+  color: #c2af91 !important;
+  outline: none !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.equipment-category-tab.active {
+  color: #0033ff !important;
+}
+
+.equipment-inventory-table {
+  width: min(100%, 66rem);
+  margin: 0 auto;
+  border: 0;
+  border-radius: 2.05rem;
+  overflow: hidden;
+  background: #eeeeee;
+  box-shadow: none;
+}
+
+.equipment-table-row {
+  min-height: 3.05rem;
+  display: grid;
+  grid-template-columns: minmax(12rem, 1.38fr) minmax(8rem, 1fr) minmax(5rem, 0.68fr) minmax(5rem, 0.68fr);
+  align-items: center;
+  gap: 0;
+  padding: 0 2.05rem;
+  border-bottom: 1px solid #c9c9c9;
+  color: #050505;
+  font-size: 0.84rem;
+  line-height: 1.2;
+  font-weight: 600;
+  text-align: center;
+}
+
+.equipment-table-row span:first-child {
+  text-align: center;
+}
+
+.equipment-table-header {
+  min-height: 3.78rem;
+  background: #eeeeee;
+  border-bottom-color: #9b9b9b;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.equipment-table-row:last-child {
+  border-bottom: none;
 }
 
 @media (max-width: 768px) {
   .equipment-management-content {
-    margin: 1rem;
+    padding: 25px 1.25rem 2rem;
+  }
+
+  .equipment-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 1.2rem;
+  }
+
+  .equipment-request-button {
+    width: 100%;
+  }
+
+  .equipment-category-tabs {
+    gap: 1.3rem;
+    margin-bottom: 1.35rem;
+    width: 100%;
+  }
+
+  .equipment-category-tab {
+    font-size: 0.84rem;
+  }
+
+  .equipment-inventory-table {
+    border-radius: 1.2rem;
+  }
+
+  .equipment-table-row,
+  .equipment-table-header {
+    grid-template-columns: minmax(8rem, 1.3fr) minmax(7rem, 1fr) minmax(4rem, 0.6fr) minmax(4rem, 0.6fr);
+    min-width: 38rem;
+    min-height: 3.05rem;
+    padding: 0 1rem;
+  }
+
+  .equipment-inventory-table {
+    overflow-x: auto;
   }
 }
