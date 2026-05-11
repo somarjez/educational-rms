@@ -172,9 +172,7 @@
 .login-layout .assist-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  width: 100%;
+  justify-content: flex-start;
   margin-top: -0.25rem;
   margin-bottom: 0.8rem;
 }
@@ -182,7 +180,6 @@
 .login-layout .remember-label {
   display: inline-flex;
   align-items: center;
-  flex: 1;
   gap: 6px;
   font-size: 0.8rem;
   font-weight: 400;
@@ -201,16 +198,9 @@
 .forgot-link {
   color: #2563eb;
   text-decoration: none;
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   font-weight: 500;
   font-family: 'Poppins', sans-serif;
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  line-height: 1;
-  white-space: nowrap;
-  margin-left: auto;
-  text-align: right;
 }
 
 .forgot-link:hover {

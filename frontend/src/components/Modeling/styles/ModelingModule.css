@@ -924,19 +924,16 @@ tbody tr.idle:hover {
 
 .rec-item.high-priority {
   background: #fef2f2;
-  border-left: 4px solid #ef4444;
   color: #7f1d1d;
 }
 
 .rec-item.medium-priority {
   background: #fffbeb;
-  border-left: 4px solid #f59e0b;
   color: #78350f;
 }
 
 .rec-item.low-priority {
   background: #ecfdf5;
-  border-left: 4px solid #10b981;
   color: #065f46;
 }
 
@@ -944,7 +941,6 @@ tbody tr.idle:hover {
 .info-card {
   padding: 1.5rem;
   background: linear-gradient(135deg, #f0f9ff 0%, #f5f3ff 100%);
-  border-left: 4px solid #2563eb;
 }
 
 .info-card h3 {

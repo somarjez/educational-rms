@@ -140,7 +140,7 @@
   width: 100%;
   min-height: calc(100vh - 52px);
   padding: 2.15rem 2rem 3rem;
-  background: #ffffff;
+  background: #d9d9d9;
   border-top-left-radius: 30px;
   font-family: 'Poppins', 'Roboto', Arial, sans-serif;
 }
@@ -612,6 +612,342 @@
   color: #0f172a;
   font-weight: 500;
   text-align: right;
+}
+
+/* Settings reference layout */
+.settings-dashboard {
+  width: 100%;
+  min-height: 100vh;
+  background: #0a071f;
+  color: #111111;
+  font-family: 'Poppins', 'Roboto', Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.settings-topbar {
+  min-height: 52px;
+  padding: 0.25rem 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  background-image: linear-gradient(180deg, #0a071f 0%, #181252 100%);
+  background-size: 100% 100vh;
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+.settings-topbar-cluster {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.settings-notification-button,
+.settings-avatar-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #ffffff;
+  box-shadow: none;
+  transform: none;
+}
+
+.settings-notification-button {
+  width: 2.4rem;
+  height: 2.4rem;
+}
+
+.settings-notification-button svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.settings-logout-button,
+.settings-role-pill {
+  height: 1.4rem;
+  min-width: 4.3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.9rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: #d8d8dc;
+  color: #364998;
+  font-size: 0.66rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.settings-logout-button {
+  cursor: pointer;
+}
+
+.settings-notification-button:hover,
+.settings-notification-button:active,
+.settings-notification-button:focus,
+.settings-notification-button:focus-visible,
+.settings-avatar-button:hover,
+.settings-avatar-button:active,
+.settings-avatar-button:focus,
+.settings-avatar-button:focus-visible {
+  background: transparent;
+  color: #ffffff;
+  outline: none;
+  box-shadow: none;
+  transform: none;
+}
+
+.settings-logout-button:hover,
+.settings-logout-button:active,
+.settings-logout-button:focus,
+.settings-logout-button:focus-visible {
+  background: #d8d8dc;
+  color: #364998;
+  outline: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transform: none;
+}
+
+.settings-avatar {
+  width: 1.55rem;
+  height: 1.55rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 1px solid #2a245f;
+  background: #9dd0f1;
+  color: #12104f;
+  box-shadow: 0 0 0 0.1rem rgba(255, 255, 255, 0.9), 0 0 0 0.18rem rgba(217, 217, 217, 0.95);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.settings-avatar.role-admin {
+  background: #d9c8a1;
+}
+
+.settings-avatar.role-faculty {
+  background: #fff175;
+}
+
+.settings-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.settings-brand-lockup {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.08rem;
+  padding-top: 0.42rem;
+  text-align: right;
+}
+
+.settings-brand-lockup strong {
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.05;
+  white-space: nowrap;
+}
+
+.settings-brand-lockup span {
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 0.5rem;
+  font-weight: 500;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.settings-page {
+  flex: 1;
+  min-height: calc(100vh - 52px);
+  padding: 25px 2.6rem 2.5rem;
+  background: #ffffff;
+  border-top-left-radius: 30px;
+  overflow: hidden;
+}
+
+.settings-heading {
+  width: 100%;
+  margin: 0 0 1.18rem;
+  transform: none;
+}
+
+.settings-heading h1 {
+  margin: 0;
+  color: #050505;
+  font-size: clamp(1.72rem, 3vw, 2.18rem);
+  line-height: 0.95;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.settings-heading p {
+  margin: 0.56rem 0 0 2.35rem;
+  color: #b8b8b8;
+  font-size: 0.74rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.settings-shell {
+  width: min(100%, 960px);
+  min-height: 700px;
+  margin: 0 auto;
+  padding: 2.15rem 5.55rem 2.65rem;
+  border: 1px solid rgba(0, 0, 0, 0.45);
+  border-radius: 18px;
+  background: #ebebeb;
+}
+
+.settings-panel-stack {
+  display: grid;
+  gap: 1.9rem;
+}
+
+.settings-panel {
+  min-height: 205px;
+  overflow: hidden;
+  border: none;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.settings-panel-heading {
+  min-height: 5.55rem;
+  display: flex;
+  align-items: center;
+  gap: 1.12rem;
+  padding: 1.12rem 1.5rem 1rem;
+  border-bottom: 1px solid #cfcfcf;
+}
+
+.settings-panel-icon {
+  width: 2.8rem;
+  height: 2.8rem;
+  flex-shrink: 0;
+  display: block;
+}
+
+.settings-panel-heading h2 {
+  margin: 0;
+  color: #c99e5b;
+  font-size: 1.25rem;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.settings-panel-heading p {
+  margin: 0.32rem 0 0;
+  color: #a8a8a8;
+  font-size: 0.78rem;
+  line-height: 1.25;
+  font-weight: 500;
+}
+
+.settings-field-list {
+  display: grid;
+  gap: 1.08rem;
+  padding: 1.25rem 4.65rem 1.65rem 2.55rem;
+}
+
+.settings-field {
+  display: grid;
+  gap: 0.42rem;
+}
+
+.settings-field-label {
+  color: #a7a7a7;
+  font-size: 0.78rem;
+  line-height: 1;
+  font-weight: 600;
+}
+
+.settings-field-value {
+  min-height: 2.42rem;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0 1.3rem;
+  border-radius: 7px;
+  background: #d9d9d9;
+  color: #000000;
+  font-size: 0.88rem;
+  line-height: 1.2;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .settings-page {
+    padding: 25px 1.25rem 2rem;
+  }
+
+  .settings-shell {
+    padding: 1rem;
+  }
+
+  .settings-field-list {
+    padding-right: 1.2rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .settings-topbar {
+    align-items: flex-end;
+    padding: 0.45rem 0.85rem;
+  }
+
+  .settings-topbar-cluster {
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .settings-brand-lockup {
+    width: 100%;
+    order: -1;
+  }
+
+  .settings-brand-lockup strong,
+  .settings-brand-lockup span {
+    white-space: normal;
+  }
+
+  .settings-heading {
+    padding-left: 0;
+  }
+
+  .settings-heading p {
+    margin-left: 0;
+  }
+
+  .settings-panel-heading {
+    align-items: flex-start;
+  }
+
+  .settings-field-list {
+    padding: 0.75rem;
+  }
 }
 
 @media (max-width: 900px) {

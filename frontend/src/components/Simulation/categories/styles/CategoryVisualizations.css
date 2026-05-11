@@ -424,7 +424,6 @@
 .scenario-card {
   border: 2px solid #e0e0e0;
   border-radius: 8px;
-  border-left: 4px solid #2196f3;
   padding: 16px;
   background: #ffffff;
   position: relative;
@@ -436,12 +435,10 @@
 }
 
 .scenario-card.best {
-  border-left-color: #66bb6a;
   background: #f1f8f4;
 }
 
 .scenario-card.worst {
-  border-left-color: #d32f2f;
   background: #fef1f1;
 }
 
@@ -641,7 +638,6 @@
   margin-top: 24px;
   padding: 16px;
   background: #f9f9f9;
-  border-left: 4px solid #ff9800;
   border-radius: 8px;
 }
 
@@ -666,23 +662,19 @@
 .insight {
   padding: 12px;
   border-radius: 6px;
-  border-left: 3px solid;
 }
 
 .recommendation-item.severity-high,
 .insight.warning {
-  border-left-color: #ff9800;
   background: #fff3e0;
 }
 
 .recommendation-item.severity-critical,
 .insight.critical {
-  border-left-color: #d32f2f;
   background: #ffebee;
 }
 
 .insight.info {
-  border-left-color: #2196f3;
   background: #e3f2fd;
 }
 
@@ -958,7 +950,6 @@
   margin-top: 24px;
   padding: 16px;
   background: #e3f2fd;
-  border-left: 4px solid #2196f3;
   border-radius: 8px;
 }
 
@@ -1039,7 +1030,6 @@
   background: white;
   padding: 12px;
   border-radius: 6px;
-  border-left: 3px solid #2196f3;
 }
 
 .rec-scenario {
@@ -1163,7 +1153,6 @@
   margin: 24px 0;
   padding: 16px;
   background: #f9f9f9;
-  border-left: 4px solid #2196f3;
   border-radius: 8px;
 }
 
@@ -1224,19 +1213,16 @@
 
 .finding.critical {
   background: #ffebee;
-  border-left: 3px solid #d32f2f;
   color: #c62828;
 }
 
 .finding.warning {
   background: #fff3e0;
-  border-left: 3px solid #ff9800;
   color: #e65100;
 }
 
 .finding.info {
   background: #e3f2fd;
-  border-left: 3px solid #2196f3;
   color: #1565c0;
 }
 

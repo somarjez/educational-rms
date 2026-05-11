@@ -25,8 +25,8 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 
 # Install dependencies
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 # Apply migrations
 .\.venv\Scripts\python.exe manage.py migrate
 

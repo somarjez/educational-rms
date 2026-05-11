@@ -1,63 +1,125 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
+import { getInitials } from '../../utils/userUtils';
+import { DashboardBellIcon } from '../../features/dashboard/icons/DashboardIcons';
+import accountIcon from '../../assets/settings/account.svg';
+import securityIcon from '../../assets/settings/security.svg';
+import displayIcon from '../../assets/settings/display.svg';
 import './LandingPages.css';
 
 const SettingsPage = () => {
-  const { user } = useAuthStore();
+  const navigate = useNavigate();
+  const { user, logout } = useAuthStore();
+  const fullName = `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.username || 'N/A';
+  const role = user?.role || 'Student';
+  const normalizedRole = String(role).toLowerCase();
+  const avatarSrc = user?.avatar || user?.avatar_url || '';
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
+  const settingsSections = [
+    {
+      title: 'Account',
+      icon: accountIcon,
+      description: 'Manage identity and profile details connected to your account.',
+      fields: [
+        ['Full Name', fullName],
+        ['Email', user?.email || 'N/A'],
+        ['Role', role],
+      ],
+    },
+    {
+      title: 'Security',
+      icon: securityIcon,
+      description: 'Password changes and session controls are available from your account endpoints.',
+      fields: [
+        ['Password', 'Managed in account security.'],
+        ['Active Session', 'Current device session.'],
+      ],
+    },
+    {
+      title: 'Display',
+      icon: displayIcon,
+      description: 'Dashboard and navigation preferences can be applied as frontend options.',
+      fields: [
+        ['Sidebar', 'Collapsible navigation'],
+        ['Landing Pages', 'Connected to dashboard sections'],
+      ],
+    },
+  ];
 
   return (
-    <div className="landing-page">
-      <div className="landing-header">
-        <div>
-          <h1 className="landing-title">Settings</h1>
-          <p className="landing-subtitle">Account and application preferences.</p>
+    <div className="settings-dashboard">
+      <header className="settings-topbar">
+        <div className="settings-topbar-cluster">
+          <button
+            type="button"
+            className="settings-notification-button"
+            aria-label="Notifications"
+            onClick={() => navigate('/notifications')}
+          >
+            <DashboardBellIcon />
+          </button>
+          <button type="button" className="settings-logout-button" onClick={handleLogout}>
+            Log Out
+          </button>
+          <span className="settings-role-pill">{role}</span>
+          <button
+            type="button"
+            className="settings-avatar-button"
+            aria-label="Open profile"
+            onClick={() => navigate('/profile')}
+          >
+            <span className={`settings-avatar role-${normalizedRole}`}>
+              {avatarSrc ? (
+                <img src={avatarSrc} alt={fullName} />
+              ) : (
+                <span>{getInitials(user?.first_name, user?.last_name, user?.username)}</span>
+              )}
+            </span>
+          </button>
+          <div className="settings-brand-lockup">
+            <strong>Educational Resource Management</strong>
+            <span>Your comprehensive resource management platform.</span>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div className="settings-grid">
-        <div className="settings-card">
-          <h3>Account</h3>
-          <p>Manage identity and profile details connected to your account.</p>
-          <div className="profile-row">
-            <span className="profile-label">Name</span>
-            <span className="profile-value">{`${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'N/A'}</span>
-          </div>
-          <div className="profile-row">
-            <span className="profile-label">Email</span>
-            <span className="profile-value">{user?.email || 'N/A'}</span>
-          </div>
-          <div className="profile-row">
-            <span className="profile-label">Role</span>
-            <span className="profile-value">{user?.role || 'N/A'}</span>
-          </div>
-        </div>
+      <main className="settings-page">
+        <section className="settings-heading" aria-labelledby="settings-title">
+          <h1 id="settings-title">SETTINGS</h1>
+          <p>Account and application preferences.</p>
+        </section>
 
-        <div className="settings-card">
-          <h3>Security</h3>
-          <p>Password changes and session controls are available from your account endpoints.</p>
-          <div className="profile-row">
-            <span className="profile-label">Password</span>
-            <span className="profile-value">Managed in account security</span>
-          </div>
-          <div className="profile-row">
-            <span className="profile-label">Active Session</span>
-            <span className="profile-value">Current device session</span>
-          </div>
-        </div>
+        <section className="settings-shell" aria-label="Settings preferences">
+          <div className="settings-panel-stack">
+            {settingsSections.map((section) => (
+              <article className="settings-panel" key={section.title}>
+                <div className="settings-panel-heading">
+                  <img src={section.icon} alt="" aria-hidden="true" className="settings-panel-icon" />
+                  <div>
+                    <h2>{section.title}</h2>
+                    <p>{section.description}</p>
+                  </div>
+                </div>
 
-        <div className="settings-card">
-          <h3>Display</h3>
-          <p>Dashboard and navigation preferences can be applied as frontend options.</p>
-          <div className="profile-row">
-            <span className="profile-label">Sidebar</span>
-            <span className="profile-value">Collapsible navigation</span>
+                <div className="settings-field-list">
+                  {section.fields.map(([label, value]) => (
+                    <div className="settings-field" key={label}>
+                      <span className="settings-field-label">{label}</span>
+                      <span className="settings-field-value">{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            ))}
           </div>
-          <div className="profile-row">
-            <span className="profile-label">Landing Pages</span>
-            <span className="profile-value">Connected to dashboard sections</span>
-          </div>
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 };
