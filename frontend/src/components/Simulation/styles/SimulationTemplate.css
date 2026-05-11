@@ -4,7 +4,6 @@
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  border-left: 4px solid #f59e0b;
 }
 
 .simulation-warning svg {
